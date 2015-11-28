@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="64dp">
+
+        <ImageView
+            android:id="@+id/musicAlbum"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:src="@drawable/img_appwidget_album_cover"/>
+
+        <LinearLayout
+            android:layout_width="70dp"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:layout_marginStart="10dp">
+
+            <TextView
+                android:id="@+id/musicName"
+                android:layout_width="wrap_content"
+                android:layout_marginTop="10dp"
+                android:layout_height="25dp"
+                android:singleLine="true"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textSize="15sp"
+                android:textColor="#000"
+                tools:text="少年锦时"/>
+
+            <TextView
+                android:id="@+id/artist"
+                android:layout_width="wrap_content"
+                android:layout_height="20dp"
+                android:singleLine="true"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textSize="12sp"
+                tools:text="赵雷"/>
+
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/playButton"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginTop="15dp"
+            android:src="@drawable/img_button_notification_play_play_grey"/>
+
+        <ImageView
+            android:id="@+id/nextButton"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_marginTop="15dp"
+            android:src="@drawable/img_button_notification_play_next_grey"/>
+
+        <ImageView
+            android:id="@+id/closeService"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:padding="5dp"
+            android:layout_marginStart="5dp"
+            android:layout_marginTop="18dp"
+            android:src="@drawable/img_button_notification_exit"/>
+
+</LinearLayout>

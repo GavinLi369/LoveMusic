@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">LoveMusic</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="app_chinese_name">爱音乐</string>
+</resources>

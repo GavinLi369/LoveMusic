@@ -1,0 +1,99 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <LinearLayout
+        android:id="@+id/myTitle"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:orientation="horizontal"
+        android:background="#CA1524">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="35dp"
+            android:layout_marginStart="20dp"
+            android:textColor="#fff"
+            android:textSize="22sp"
+            android:text="@string/app_chinese_name"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/playColumn"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:orientation="horizontal"
+        android:background="#fff"
+        android:layout_alignParentBottom="true">
+
+        <ImageView
+            android:id="@+id/musicAlbum"
+            android:padding="5dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            tools:src="@drawable/img_appwidget_album_cover"/>
+
+        <LinearLayout
+            android:layout_width="180dp"
+            android:orientation="vertical"
+            android:layout_marginStart="10dp"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:id="@+id/musicName"
+                android:layout_width="wrap_content"
+                android:layout_marginTop="5dp"
+                android:layout_height="25dp"
+                android:singleLine="true"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textSize="15sp"
+                android:textColor="#000"
+                tools:text="少年锦时"/>
+
+            <TextView
+                android:id="@+id/artist"
+                android:layout_width="wrap_content"
+                android:layout_height="20dp"
+                android:singleLine="true"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textSize="12sp"
+                tools:text="赵雷"/>
+
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/playButton"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginTop="7dp"
+            android:background="@drawable/img_button_notification_play_play_grey"/>
+
+        <ImageButton
+            android:id="@+id/nextButton"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_marginTop="7dp"
+            android:background="@drawable/img_button_notification_play_next_grey"/>
+
+    </LinearLayout>
+
+    <ListView
+        android:id="@+id/musicList"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/myTitle"
+        android:layout_above="@id/playColumn"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp">
+
+    </ListView>
+
+</RelativeLayout>
