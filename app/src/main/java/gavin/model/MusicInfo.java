@@ -87,13 +87,13 @@ public class MusicInfo{
             albumId = cursor.getLong(3);                //专辑ID
             musicId = cursor.getLong(4);
             duration = cursor.getLong(5);
-            initAlbum();
+//            initAlbum();
         }
         cursor.close();
         cursor = null;
     }
 
-    public void initAlbum() {
+    public Bitmap getAlbum() {
         DBOperation dbOperation = new DBOperation(mContext);
         dbOperation.openOrCreateDataBase();
 //        Cursor cursor = dbOperation.selectMusicInfo(DBOperation.NAME + "=?", new String[]{musicName});
@@ -103,14 +103,17 @@ public class MusicInfo{
 //            Log.i("gavin.test", "--------------------->getAlbumFromDataBase");
 //            cursor.close();
 //        } else {
+        if (album==null) {
             try {
                 album = getAlbumFromTag(new FileInputStream(musicFile));
 //                dbOperation.insertMusicInfo(this);
-            } catch (Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
 //        }
 
+        return album;
     }
 
     public Bitmap getAlbumFromTag(InputStream mp3InputStream) throws Exception {
@@ -254,9 +257,9 @@ public class MusicInfo{
         return artist;
     }
 
-    public Bitmap getAlbum() {
-        return album;
-    }
+//    public Bitmap getAlbum() {
+//        return album;
+//    }
 
     public String getAlbumName() {
         return albumName;
