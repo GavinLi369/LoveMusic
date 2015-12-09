@@ -7,6 +7,6 @@ import java.io.File;
  *
  */
 public class AppConstant {
-    public static final String APP_DIR = /*"/Music";*/
-            File.separator + "Netease" + File.separator + "cloudmusic" + File.separator + "Music";
+    public static final String APP_DIR = "/Music";
+//            File.separator + "Android/data/com.netease.cloudmusic/files/Documents" + File.separator + "Music";
 }

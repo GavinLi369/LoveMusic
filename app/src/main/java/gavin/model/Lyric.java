@@ -22,6 +22,7 @@ public class Lyric {
 
     public Lyric(MusicInfo musicInfo, Context context) {
         this.musicInfo = musicInfo;
+        this.context = context;
         init();
     }
 
@@ -36,7 +37,7 @@ public class Lyric {
      * 根据歌曲文件名和歌曲路径获得Lrc文件
      */
     public File getLrcOfSong(String path) {
-        String lrcFileName = path.replace(".mp3", ".lrc");
+        String lrcFileName = path.replace(".mp3", ".lrc").replace("/Music", "/Musiclrc").replace(" - ", "-");
         return new File(lrcFileName);
     }
 
@@ -58,7 +59,7 @@ public class Lyric {
             return;
         }
         lyricList = new ArrayList<>();
-        Pattern pattern = Pattern.compile("\\[(\\d{2}:\\d{2}\\.\\d{2})\\]([^\\n]+)");
+        Pattern pattern = Pattern.compile("\\[(\\d{2}:\\d{2}\\.\\d{2,3})\\]([^\\n]+)");
         Matcher matcher = pattern.matcher(lyricStr);
         while (matcher.find()) {
             LyricContent lyricContent = new LyricContent
@@ -76,7 +77,7 @@ public class Lyric {
         }
         float minute = 0;
         float second = 0;
-        Pattern pattern = Pattern.compile("(\\d{2}):(\\d{2}\\.\\d{2})");
+        Pattern pattern = Pattern.compile("(\\d{2}):(\\d{2}\\.\\d{2,3})");
         Matcher matcher = pattern.matcher(dateTime);
         while (matcher.find()) {
             minute = Float.parseFloat(matcher.group(1));

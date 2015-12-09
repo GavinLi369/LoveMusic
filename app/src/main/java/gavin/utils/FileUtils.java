@@ -10,9 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.RandomAccessFile;
 import java.util.ArrayList;
-import java.util.List;
 
 import android.content.Context;
 import android.os.Environment;
@@ -30,36 +28,23 @@ public class FileUtils {
     }
 
     /**
-     * 取得当前外部存储卡的路径
-     *
-     * @return
-     */
-    public String getSDCardRoot() {
-        return mSDCardRoot;
-    }
-
-    /**
      * 在SD卡上创建文件
-     *
-     * @throws IOException
      */
     public File createFileInSDCard(String fileName, String dir)
             throws IOException {
-        File file = new File(mSDCardRoot + dir + File.separator + fileName);
-
-        return file;
+        return new File(mSDCardRoot + dir + File.separator + fileName);
     }
 
     /**
      * 在SD卡上创建目录
-     *
-     * @throws IOException
      */
     public File createDirInSDCard(String dir) throws IOException {
         File dirFile = new File(mSDCardRoot + dir + File.separator);
-        dirFile.mkdir();
+        if(dirFile.mkdir()){
+            return dirFile;
+        }
 
-        return dirFile;
+        return null;
     }
 
     /**
@@ -75,7 +60,7 @@ public class FileUtils {
         String buffer = "";
         try {
             reader = new BufferedReader
-                    (new InputStreamReader(new FileInputStream(file), "GBK"));
+                    (new InputStreamReader(new FileInputStream(file), "UTF-8"));
             while ((line = reader.readLine()) != null) {
                 buffer = buffer + line + "\n";
             }
@@ -94,7 +79,6 @@ public class FileUtils {
      */
     public boolean isFileExist(String fileName, String path) {
         File file = new File(mSDCardRoot + path + File.separator + fileName);
-
         return file.exists();
     }
 
@@ -103,7 +87,6 @@ public class FileUtils {
      */
     public boolean isDirExist(String path) {
         File file = new File(mSDCardRoot + path);
-
         return file.exists();
     }
 
@@ -143,39 +126,12 @@ public class FileUtils {
         if (filePath.listFiles().length != 0){
             File[] files = filePath.listFiles();
             for(File file : files) {
-                if (file.getName().endsWith("mp3")) {
+                if (file.getName().endsWith(".mp3")) {
                     MusicInfo mp3Info = new MusicInfo(file, context);
                     musicInfoList.add(mp3Info);
                 }
             }
         }
-
         return musicInfoList;
-    }
-
-    /**
-     * 获取MP3文件的详细信息
-     */
-    public byte[] getMp3Info(File file) {
-        byte[] buffer = new byte[128];
-        RandomAccessFile mp3File;
-        try {
-            mp3File = new RandomAccessFile(file, "r");
-            mp3File.seek(mp3File.length() - 128);
-            mp3File.read(buffer);
-            mp3File.close();
-
-            if (buffer.length != 128) {
-                throw new Exception("MP3文件长度不合法!");
-            }
-
-            if (!"TAG".equalsIgnoreCase(new String(buffer, 0, 3))) {
-                throw new Exception("MP3标签信息数据格式不正确！");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return buffer;
     }
 }
