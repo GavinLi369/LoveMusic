@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.IBinder;
@@ -71,18 +72,21 @@ public class PlayService extends Service {
     public static MusicInfo currentMusic;
     public static boolean prepared;
 
-    public static List<MusicInfo> musicList = new ArrayList<>();
+    public static ArrayList<MusicInfo> musicList = null;
 
     private Notification notification;
     private RemoteViews contentView;
 
+    private static PlayService playService;
+
     @Override
     public void onCreate() {
         super.onCreate();
+        playService = this;
         FileUtils fileUtils = new FileUtils(this);
-        musicList = fileUtils.getSongFiles(AppConstant.APP_DIR);
-        for (int i = 0; i < PlayService.musicList.size(); i++) {
-            PlayService.musicList.get(i).setId(i);
+        musicList = fileUtils.getSongFiles(AppConstant.APP_DIR + "/Music");
+        for (int i = 0; i < musicList.size(); i++) {
+            musicList.get(i).setId(i);
         }
 
         currentMusic = musicList.get(0);
@@ -341,6 +345,9 @@ public class PlayService extends Service {
 
         contentView.setTextViewText(R.id.musicName, currentMusic.getMusicName());
         contentView.setTextViewText(R.id.artist, currentMusic.getArtist());
+//        Bitmap bitmap = currentMusic.getAlbum();
+//        contentView.setImageViewBitmap(R.id.musicAlbum, bitmap);
+//        bitmap.recycle();
         contentView.setImageViewBitmap(R.id.musicAlbum, currentMusic.getAlbum());
 
         startForeground(NOTIFICATION_ID, notification);

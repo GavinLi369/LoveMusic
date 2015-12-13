@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -49,7 +50,7 @@ public class PlayerActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
         }
@@ -97,7 +98,7 @@ public class PlayerActivity extends Activity {
     /**
      * 播放下一首歌曲
      */
-    private void nextMusic(){
+    private void nextMusic() {
         Intent intent = new Intent(this, PlayService.class);
         intent.putExtra("musicCommand", PlayService.NEXT_MUSIC);
         this.startService(intent);
@@ -106,7 +107,7 @@ public class PlayerActivity extends Activity {
     /**
      * 播放上一首歌曲
      */
-    private void previousMusic(){
+    private void previousMusic() {
         Intent intent = new Intent(this, PlayService.class);
         intent.putExtra("musicCommand", PlayService.PREVIOUS_MUSIC);
         this.startService(intent);
@@ -146,12 +147,12 @@ public class PlayerActivity extends Activity {
         public void run() {
             while (true) {
                 try {
-                    Lyric lyric = new Lyric(PlayService.currentMusic,PlayerActivity.this);
+                    Lyric lyric = new Lyric(PlayService.currentMusic, PlayerActivity.this);
                     lyricList = lyric.getLyricList();
                     lyricView.setLyricList(lyricList);
                     lyricView.setIndex(getLyricIndex());
                     if (PlayService.prepared) {
-                        mLyricSeekBar.setProgress((int)getCurrentTime());
+                        mLyricSeekBar.setProgress((int) getCurrentTime());
                     }
                     handler.post(updateLyricRunnable);
                     Thread.sleep(100);
@@ -322,7 +323,7 @@ public class PlayerActivity extends Activity {
     private void findView() {
         mMusicName = (TextView) findViewById(R.id.musicName);
         mArtist = (TextView) findViewById(R.id.artist);
-        mBgImageView = (ImageView)findViewById(R.id.bgImageView);
+        mBgImageView = (ImageView) findViewById(R.id.bgImageView);
         mPreviousButton = (ImageButton) findViewById(R.id.previousButton);
         mPlayButton = (ImageButton) findViewById(R.id.playButton);
         mNextButton = (ImageButton) findViewById(R.id.nextButton);
@@ -358,7 +359,7 @@ public class PlayerActivity extends Activity {
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (intent.getAction().equals(PlayService.SERVICE_COMMAND)){
+            if (intent.getAction().equals(PlayService.SERVICE_COMMAND)) {
                 if (intent.getExtras() == null) {
                     updateUI();
                 }
@@ -380,7 +381,7 @@ public class PlayerActivity extends Activity {
     /**
      * 以mm:ss形式获取歌曲已播放的时间
      */
-    public String getCurrentTimeStr () {
+    public String getCurrentTimeStr() {
         String currentTimeStr;
         int currentTimeMinute = PlayService.mediaPlayer.getCurrentPosition() / 60000;
         int currentTimeSecond = (PlayService.mediaPlayer.getCurrentPosition() / 1000) % 60;
@@ -400,7 +401,7 @@ public class PlayerActivity extends Activity {
     /**
      * 以mm:ss形式获取歌曲时长
      */
-    public String getDurationStr () {
+    public String getDurationStr() {
         String durationStr;
         int durationMinute = PlayService.mediaPlayer.getDuration() / 60000;
         int durationSecond = (PlayService.mediaPlayer.getDuration() / 1000) % 60;

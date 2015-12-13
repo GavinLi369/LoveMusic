@@ -14,43 +14,43 @@ import java.util.ArrayList;
 
 import android.content.Context;
 import android.os.Environment;
+import android.util.Log;
 
 public class FileUtils {
-    private final String mSDCardRoot = "/storage/sdcard1";
+    private static final String mSDCardRoot = "/storage/sdcard1";
+    private static String mExternalStorage;
     private Context context;
 
     public FileUtils(Context context) {
-//        得到当前内部存储卡的路径
-//        mSDCardRoot = Environment.getExternalStorageDirectory()
-//                .getAbsolutePath();
-//        mSDCardRoot = Environment.getExternalStorageDirectory().getPath();
+        mExternalStorage = Environment.getExternalStorageDirectory().getPath();
         this.context = context;
     }
 
     /**
      * 在SD卡上创建文件
      */
-    public File createFileInSDCard(String fileName, String dir)
+    public static File createFileOnSDCard(String dir, String fileName)
             throws IOException {
-        return new File(mSDCardRoot + dir + File.separator + fileName);
+        if (!isFileExist(dir)){
+            createDirOnSDCard(dir);
+        }
+        File file = new File(mExternalStorage + File.separator + dir + File.separator + fileName);
+        file.createNewFile();
+        return file;
     }
 
     /**
      * 在SD卡上创建目录
      */
-    public File createDirInSDCard(String dir) throws IOException {
-        File dirFile = new File(mSDCardRoot + dir + File.separator);
-        if(dirFile.mkdir()){
-            return dirFile;
-        }
-
-        return null;
+    public static boolean createDirOnSDCard(String dir) throws IOException {
+        File dirFile = new File(mExternalStorage + dir);
+        return dirFile.mkdirs();
     }
 
     /**
      * 将文本文件转换为String
      */
-    public String parseFile2String (File file) {
+    public String parseFile2String(File file) {
         if (file == null) {
             return "";
         }
@@ -75,17 +75,9 @@ public class FileUtils {
 
 
     /**
-     * 判断SD卡上的文件是否存在
+     * 判断SD卡上的文件或目录是否存在
      */
-    public boolean isFileExist(String fileName, String path) {
-        File file = new File(mSDCardRoot + path + File.separator + fileName);
-        return file.exists();
-    }
-
-    /**
-     * 判断SD卡上的文件夹是否存在
-     */
-    public boolean isDirExist(String path) {
+    public static boolean isFileExist(String path) {
         File file = new File(mSDCardRoot + path);
         return file.exists();
     }
@@ -93,13 +85,14 @@ public class FileUtils {
     /**
      * 将一个InputStream里面的数据写入到SD卡中
      */
-    public File writeToSDFromInput(String path, String fileName,
-                                   InputStream inputStream) {
+    public static File write2SDCard(String path, String fileName, InputStream inputStream) {
         File file = null;
         OutputStream outputStream;
         try {
-            createDirInSDCard(path);
-            file = createFileInSDCard(fileName, path);
+            if (isFileExist(path)) {
+                createDirOnSDCard(path);
+            }
+            file = createFileOnSDCard(path, fileName);
             outputStream = new FileOutputStream(file);
             byte[] buffer = new byte[1024 * 4];
             int temp;
@@ -115,17 +108,15 @@ public class FileUtils {
     }
 
 
-
     /**
      * 获取path目录里面的所有mp3文件
      */
-
     public ArrayList<MusicInfo> getSongFiles(String path) {
         ArrayList<MusicInfo> musicInfoList = new ArrayList<>();
         File filePath = new File(mSDCardRoot + path);
-        if (filePath.listFiles().length != 0){
+        if (filePath.listFiles().length != 0) {
             File[] files = filePath.listFiles();
-            for(File file : files) {
+            for (File file : files) {
                 if (file.getName().endsWith(".mp3")) {
                     MusicInfo mp3Info = new MusicInfo(file, context);
                     musicInfoList.add(mp3Info);

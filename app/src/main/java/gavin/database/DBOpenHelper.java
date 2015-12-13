@@ -18,7 +18,11 @@ public class DBOpenHelper extends SQLiteOpenHelper {
         db.execSQL("CREATE TABLE " + DBOperation.TABLE_NAME + "(" +
                 DBOperation.ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
                 DBOperation.NAME + " VARCHAR NOT NULL," +
-                DBOperation.ALBUM + " BLOB);");
+                DBOperation.PATH + " VARCHAR," +
+                DBOperation.ARTIST + " VARCHAR," +
+                DBOperation.ALBUM_NAME + " VARCHAR," +
+                DBOperation.ALBUM + " VARCHAR," +
+                DBOperation.DURATION + " INTEGER);");
     }
 
 
