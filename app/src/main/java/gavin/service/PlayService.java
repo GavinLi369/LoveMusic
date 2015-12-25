@@ -8,21 +8,19 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
+import android.database.Cursor;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.IBinder;
+import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.widget.RemoteViews;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import gavin.activity.PlayerActivity;
-import gavin.lovemusic.AppConstant;
-import gavin.lovemusic.R;
+import gavin.constant.R;
 import gavin.model.MusicInfo;
-import gavin.utils.FileUtils;
 
 /**
  * Created by Gavin on 2015/11/3.
@@ -77,14 +75,10 @@ public class PlayService extends Service {
     private Notification notification;
     private RemoteViews contentView;
 
-    private static PlayService playService;
-
     @Override
     public void onCreate() {
         super.onCreate();
-        playService = this;
-        FileUtils fileUtils = new FileUtils(this);
-        musicList = fileUtils.getSongFiles(AppConstant.APP_DIR + "/Music");
+        musicList = getMusicList();
         for (int i = 0; i < musicList.size(); i++) {
             musicList.get(i).setId(i);
         }
@@ -100,6 +94,29 @@ public class PlayService extends Service {
     }
 
     /**
+     * 获取手机里的所有歌曲，并将其添加进List
+     */
+    private ArrayList<MusicInfo> getMusicList() {
+        ArrayList<MusicInfo> musicInfos = new ArrayList<>();
+        Cursor cursor = this.getContentResolver().query(
+                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                new String[]{MediaStore.Audio.Media.MIME_TYPE,
+                        MediaStore.Audio.Media.DATA},
+                MediaStore.Audio.Media.MIME_TYPE + "=?",
+                new String[]{"audio/mpeg"}, null
+        );
+
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                MusicInfo musicInfo = new MusicInfo(cursor.getString(1), this);
+                musicInfos.add(musicInfo);
+            } while (cursor.moveToNext());
+            cursor.close();
+        }
+        return musicInfos;
+    }
+
+    /**
      * 对从Activity发来的请求进行处理
      */
     @Override
@@ -109,7 +126,15 @@ public class PlayService extends Service {
             switch (musicCommand) {
                 case INIT_SERVICE:
                     int musicId = intent.getExtras().getInt("musicId");
-                    currentMusic = musicList.get(musicId);
+                    /**
+                     * 防止删除歌曲后数据越界
+                     */
+                    try {
+                        currentMusic = musicList.get(musicId);
+                    } catch (IndexOutOfBoundsException e){
+                        currentMusic = musicList.get(0);
+                        e.printStackTrace();
+                    }
                     mediaPlayer = MediaPlayer.create
                             (PlayService.this, Uri.parse("file://" + currentMusic.getMusicPath()));
                     prepared = true;
@@ -319,7 +344,7 @@ public class PlayService extends Service {
 
         Intent intentActivity = new Intent(this, PlayerActivity.class);
         intentActivity.addFlags
-                (Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+                (Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
         notification.contentIntent = PendingIntent.getActivity
                 (getApplicationContext(), 0, intentActivity, 0);
 
@@ -345,9 +370,6 @@ public class PlayService extends Service {
 
         contentView.setTextViewText(R.id.musicName, currentMusic.getMusicName());
         contentView.setTextViewText(R.id.artist, currentMusic.getArtist());
-//        Bitmap bitmap = currentMusic.getAlbum();
-//        contentView.setImageViewBitmap(R.id.musicAlbum, bitmap);
-//        bitmap.recycle();
         contentView.setImageViewBitmap(R.id.musicAlbum, currentMusic.getAlbum());
 
         startForeground(NOTIFICATION_ID, notification);

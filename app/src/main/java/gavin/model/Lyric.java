@@ -1,8 +1,5 @@
 package gavin.model;
 
-
-import android.content.Context;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
@@ -18,11 +15,9 @@ public class Lyric {
     private String lyricStr = "";
     private ArrayList<LyricContent> lyricList = null;
     private MusicInfo musicInfo;
-    private Context context;
 
-    public Lyric(MusicInfo musicInfo, Context context) {
+    public Lyric(MusicInfo musicInfo) {
         this.musicInfo = musicInfo;
-        this.context = context;
         init();
     }
 
@@ -46,8 +41,7 @@ public class Lyric {
      */
     private void init() {
         File lrcFile = getLrcOfSong(musicInfo.getMusicPath());
-        FileUtils fileUtils = new FileUtils(context);
-        lyricStr = fileUtils.parseFile2String(lrcFile);
+        lyricStr = FileUtils.parseFile2String(lrcFile);
         parseLyric();
     }
 

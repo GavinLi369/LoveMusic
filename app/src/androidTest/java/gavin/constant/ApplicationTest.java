@@ -1,4 +1,4 @@
-package gavin.lovemusic;
+package gavin.constant;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;

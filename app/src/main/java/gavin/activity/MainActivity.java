@@ -31,8 +31,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import gavin.lovemusic.AppConstant;
-import gavin.lovemusic.R;
+import gavin.constant.AppConstant;
+import gavin.constant.R;
 import gavin.service.PlayService;
 import gavin.utils.FileUtils;
 

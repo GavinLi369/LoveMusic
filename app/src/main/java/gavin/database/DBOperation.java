@@ -11,7 +11,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
 
-import gavin.lovemusic.AppConstant;
+import gavin.constant.AppConstant;
 import gavin.model.MusicInfo;
 import gavin.utils.FileUtils;
 

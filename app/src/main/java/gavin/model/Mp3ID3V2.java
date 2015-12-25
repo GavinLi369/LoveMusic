@@ -1,22 +1,25 @@
 package gavin.model;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.util.Log;
-
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by Gavin on 2015/12/10.
- * Mp3文件的ID3V2处理模型
+ * ID3V2标签处于MP3文件开头，长度不固定<br>
+ * 由于长度不固定，所以该标签包含了歌曲的大部分信息<br>
+ * 如果想获取歌曲更多的信息，请使用该类。
+ *
+ * @author Gavin
+ * @version 1.0
  */
 public class Mp3ID3V2 {
     private InputStream in;
     private Map<String, byte[]> tags = new HashMap<>();
 
+    /**
+     * @param in 需要解析的mp3的Stream
+     */
     public Mp3ID3V2(InputStream in) {
         this.in = in;
         try {
@@ -26,7 +29,13 @@ public class Mp3ID3V2 {
         }
     }
 
-    public void init() throws Exception {
+    /**
+     * 分析mp3的Stream数据，找出ID3V2标签<br>
+     * 分析ID3V2取出ID3V2中存储的信息，并将其存储在Map中
+     *
+     * @throws Exception
+     */
+    private void init() throws Exception {
         byte[] header = new byte[10];
         if (in.read(header) == 0) {
             return;
@@ -56,48 +65,143 @@ public class Mp3ID3V2 {
     }
 
     /**
+     * 返回歌曲的专辑图片信息<br>
      * 通过分析album数组的二进制文件发现，在图片数据之前还有一段数据（应该是表示图片格式的），
-     * 长度为13字节,所以在解析Bitmap时从第13个字节开始
+     * 长度为13字节,所以返回从第13个字节开始的数组
+     *
+     * @return 歌曲专辑图片
      */
-    public Bitmap getAlbumByteArray() {
-        byte[] album = tags.get("APIC");
-        Bitmap bitmap = null;
-        try {
-            bitmap = BitmapFactory.decodeByteArray(album, 13, album.length - 13);
-        } catch (OutOfMemoryError e){
-            e.printStackTrace();
-        }
-        return bitmap;
+    public byte[] getAlbumByteArray() {
+        byte[] apic = tags.get("APIC");
+        byte[] album = new byte[apic.length - 13];
+        System.arraycopy(apic, 13, album, 0, apic.length - 13);
+        return album;
     }
 
-    public String getMusicName() {
-        byte[] title = tags.get("TIT2");
-        try {
-            return new String(title, 1, title.length - 1, getEncoding(title[0]));
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+    /**
+     * 返回mp3的歌曲名称，如果ID3V2中不包含此信息则返回unknown
+     *
+     * @return 歌曲名称
+     */
+    public String getTitle() {
+        String artist = "unknown";
+        byte[] artistArray = tags.get("TIT2");
+        if (artistArray != null) {
+            try {
+                artist = new String(artistArray, 1, artistArray.length - 1, getEncoding(artistArray[0]));
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
         }
-        return null;
+        return artist;
     }
 
+    /**
+     * 返回mp3的艺术家，如果ID3V2中不包含此信息则返回unknown
+     *
+     * @return 艺术家
+     */
     public String getArtist() {
-        byte[] artist = tags.get("TPE1");
-        try {
-            return new String(artist, 1, artist.length - 1, getEncoding(artist[0]));
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+        String artist = "unknown";
+        byte[] artistArray = tags.get("TPE2");
+        if (artistArray != null) {
+            try {
+                artist = new String(artistArray, 1, artistArray.length - 1, getEncoding(artistArray[0]));
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
         }
-        return null;
+        return artist;
     }
 
-    public String getAlbumName() {
-        byte[] albumName = tags.get("TALB");
-        try {
-            return new String(albumName, 1, albumName.length - 1, getEncoding(albumName[0]));
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+    /**
+     * 返回mp3的乐队，如果ID3V2中不包含此信息则返回unknown
+     *
+     * @return 乐队
+     */
+    public String getBand() {
+        String artist = "unknown";
+        byte[] artistArray = tags.get("TPE1");
+        if (artistArray != null) {
+            try {
+                artist = new String(artistArray, 1, artistArray.length - 1, getEncoding(artistArray[0]));
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
         }
-        return null;
+        return artist;
+    }
+
+    /**
+     * 返回mp3的艺术家，如果ID3V2中不包含此信息则返回unknown
+     *
+     * @return 艺术家
+     */
+    public String getGenre() {
+        String artist = "unknown";
+        byte[] artistArray = tags.get("TCON");
+        if (artistArray != null) {
+            try {
+                artist = new String(artistArray, 1, artistArray.length - 1, getEncoding(artistArray[0]));
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+        return artist;
+    }
+
+    /**
+     * 返回mp3的发行人，如果ID3V2中不包含此信息则返回unknown
+     *
+     * @return 发行人
+     */
+    public String getPublisher() {
+        String artist = "unknown";
+        byte[] artistArray = tags.get("TPUB");
+        if (artistArray != null) {
+            try {
+                artist = new String(artistArray, 1, artistArray.length - 1, getEncoding(artistArray[0]));
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+        return artist;
+    }
+
+    /**
+     * 返回mp3的歌曲专辑名称，如果ID3V2中不包含此信息则返回unknown
+     *
+     * @return 歌曲专辑名称
+     */
+    public String getAlbum() {
+        String artist = "unknown";
+        byte[] artistArray = tags.get("TALB");
+        if (artistArray != null) {
+            try {
+                artist = new String(artistArray, 1, artistArray.length - 1, getEncoding(artistArray[0]));
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+        return artist;
+    }
+
+    /**
+     * 返回mp3的歌曲曲号，如果ID3V2中不包含此信息则返回unknown
+     *
+     * @return 歌曲曲号
+     */
+    public String getTrack() {
+        String artist = "unknown";
+        byte[] artistArray = tags.get("TRCK");
+        if (artistArray != null) {
+            try {
+                artist = new String(artistArray, 1, artistArray.length - 1, getEncoding(artistArray[0]));
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+        return artist;
     }
 
     private String getEncoding(byte data) {
@@ -121,7 +225,10 @@ public class Mp3ID3V2 {
         return encoding;
     }
 
-    public void close(){
+    /**
+     * 为了让GC能尽快释放内存，请在使用完该类后调用此方法。
+     */
+    public void close() {
         in = null;
         tags = null;
     }

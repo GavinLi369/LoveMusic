@@ -5,7 +5,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -19,7 +18,7 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 
-import gavin.lovemusic.R;
+import gavin.constant.R;
 import gavin.model.Lyric;
 import gavin.model.LyricContent;
 import gavin.service.PlayService;
@@ -147,7 +146,7 @@ public class PlayerActivity extends Activity {
         public void run() {
             while (true) {
                 try {
-                    Lyric lyric = new Lyric(PlayService.currentMusic, PlayerActivity.this);
+                    Lyric lyric = new Lyric(PlayService.currentMusic);
                     lyricList = lyric.getLyricList();
                     lyricView.setLyricList(lyricList);
                     lyricView.setIndex(getLyricIndex());

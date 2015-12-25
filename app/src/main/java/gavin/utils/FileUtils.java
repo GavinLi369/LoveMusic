@@ -14,10 +14,8 @@ import java.util.ArrayList;
 
 import android.content.Context;
 import android.os.Environment;
-import android.util.Log;
 
 public class FileUtils {
-    private static final String mSDCardRoot = "/storage/sdcard1";
     private static String mExternalStorage;
     private Context context;
 
@@ -50,7 +48,7 @@ public class FileUtils {
     /**
      * 将文本文件转换为String
      */
-    public String parseFile2String(File file) {
+    public static String parseFile2String(File file) {
         if (file == null) {
             return "";
         }
@@ -78,7 +76,7 @@ public class FileUtils {
      * 判断SD卡上的文件或目录是否存在
      */
     public static boolean isFileExist(String path) {
-        File file = new File(mSDCardRoot + path);
+        File file = new File(mExternalStorage + path);
         return file.exists();
     }
 
@@ -113,7 +111,7 @@ public class FileUtils {
      */
     public ArrayList<MusicInfo> getSongFiles(String path) {
         ArrayList<MusicInfo> musicInfoList = new ArrayList<>();
-        File filePath = new File(mSDCardRoot + path);
+        File filePath = new File(mExternalStorage + path);
         if (filePath.listFiles().length != 0) {
             File[] files = filePath.listFiles();
             for (File file : files) {

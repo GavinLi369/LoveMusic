@@ -12,7 +12,7 @@
 
         <TextView
             android:id="@+id/itemId"
-            android:layout_width="30dp"
+            android:layout_width="35dp"
             android:layout_height="30dp"
             android:layout_marginStart="10dp"
             android:layout_marginTop="10dp"
@@ -23,7 +23,6 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginStart="5dp"
             android:orientation="vertical">
 
             <TextView
@@ -31,6 +30,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="25dp"
                 android:layout_marginTop="5dp"
+                android:singleLine="true"
+                android:maxLines="1"
+                android:ellipsize="end"
                 android:textColor="#000"
                 android:textSize="15sp"
                 tools:text="猛犸" />
@@ -40,6 +42,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="20dp"
                 android:textSize="12sp"
+                android:singleLine="true"
+                android:maxLines="1"
+                android:ellipsize="end"
                 tools:text="后海大鲨鱼-猛犸" />
 
         </LinearLayout>

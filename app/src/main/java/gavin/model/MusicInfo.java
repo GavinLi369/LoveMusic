@@ -5,14 +5,10 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaMetadataRetriever;
-import android.util.Log;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
 import gavin.database.DBOperation;
 
@@ -23,7 +19,6 @@ import gavin.database.DBOperation;
 public class MusicInfo {
     private String musicName;   //歌曲名称
     private String artist;   //歌手名称
-//    private byte[] album;   //歌曲专辑封面
     private String albumName;    //歌曲专辑名称
     private long duration;        //歌曲时长
 
@@ -33,10 +28,21 @@ public class MusicInfo {
     private int id;                  //歌曲Id
     private File musicFile;                 //歌曲文件
     private Context mContext;                //上下文
-//    private Mp3ID3V2 mp3ID3V2;
+
 
     /**
      * SongInfo的构造方法
+     * @param path  music文件路径
+     */
+    public MusicInfo(String path, Context context){
+        this.musicFile = new File(path);
+        mContext = context;
+        init();
+    }
+
+    /**
+     * SongInfo的构造方法
+     * @param musicFile music文件
      */
     public MusicInfo(File musicFile, Context context) {
         this.musicFile = musicFile;
@@ -72,9 +78,9 @@ public class MusicInfo {
     private void initByMusicFile() {
         try {
             Mp3ID3V2 mp3ID3V2 = new Mp3ID3V2(new FileInputStream(musicFile));
-            musicName = mp3ID3V2.getMusicName();
+            musicName = mp3ID3V2.getTitle();
             artist = mp3ID3V2.getArtist();
-            albumName = mp3ID3V2.getAlbumName();
+            albumName = mp3ID3V2.getTitle();
             mp3ID3V2.close();
 
             /**
@@ -110,7 +116,8 @@ public class MusicInfo {
         } else {
             try {
                 Mp3ID3V2 mp3ID3V2 = new Mp3ID3V2(new FileInputStream(musicFile));
-                bitmap = mp3ID3V2.getAlbumByteArray();
+                byte[] albumArray = mp3ID3V2.getAlbumByteArray();
+                bitmap = BitmapFactory.decodeByteArray(albumArray, 0, albumArray.length);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -121,7 +128,8 @@ public class MusicInfo {
     public Bitmap getAlbumByID3V2 () {
         try {
             Mp3ID3V2 mp3ID3V2 = new Mp3ID3V2(new FileInputStream(musicFile));
-            Bitmap bitmap = mp3ID3V2.getAlbumByteArray();
+            byte[] albumArray = mp3ID3V2.getAlbumByteArray();
+            Bitmap bitmap = BitmapFactory.decodeByteArray(albumArray, 0, albumArray.length);
             mp3ID3V2.close();
             return bitmap;
         } catch (IOException e){
