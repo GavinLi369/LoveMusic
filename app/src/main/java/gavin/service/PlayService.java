@@ -8,18 +8,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.database.Cursor;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.IBinder;
-import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.widget.RemoteViews;
 
-import java.util.ArrayList;
-
 import gavin.activity.PlayerActivity;
 import gavin.constant.R;
+import gavin.controller.MusicPlayer;
 import gavin.model.MusicInfo;
 
 /**
@@ -29,15 +26,6 @@ import gavin.model.MusicInfo;
  */
 public class PlayService extends Service {
     public static final String SERVICE_COMMAND = "gavin.music.service";
-
-    public static final int INIT_SERVICE = 0;
-    public static final int PLAY_MUSIC = 1;
-    public static final int PAUSE_MUSIC = 2;
-    public static final int RESUME_MUSIC = 3;
-    public static final int PREVIOUS_MUSIC = 4;
-    public static final int NEXT_MUSIC = 5;
-    public static final int CHANGE_PLAY_MODE = 6;
-    public static final int CHANGE_PROGRESS = 7;
 
     /**
      * 歌曲播放模式
@@ -70,20 +58,15 @@ public class PlayService extends Service {
     public static MusicInfo currentMusic;
     public static boolean prepared;
 
-    public static ArrayList<MusicInfo> musicList = null;
-
     private Notification notification;
     private RemoteViews contentView;
+
+    private MusicPlayer musicPlayer;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        musicList = getMusicList();
-        for (int i = 0; i < musicList.size(); i++) {
-            musicList.get(i).setId(i);
-        }
-
-        currentMusic = musicList.get(0);
+        musicPlayer = MusicPlayer.getInstance();
 
         IntentFilter intentFilterPlay = new IntentFilter(NOTIFICATION_PLAY);
         registerReceiver(broadcastReceiver, intentFilterPlay);
@@ -94,53 +77,15 @@ public class PlayService extends Service {
     }
 
     /**
-     * 获取手机里的所有歌曲，并将其添加进List
-     */
-    private ArrayList<MusicInfo> getMusicList() {
-        ArrayList<MusicInfo> musicInfos = new ArrayList<>();
-        Cursor cursor = this.getContentResolver().query(
-                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                new String[]{MediaStore.Audio.Media.MIME_TYPE,
-                        MediaStore.Audio.Media.DATA},
-                MediaStore.Audio.Media.MIME_TYPE + "=?",
-                new String[]{"audio/mpeg"}, null
-        );
-
-        if (cursor != null && cursor.moveToFirst()) {
-            do {
-                MusicInfo musicInfo = new MusicInfo(cursor.getString(1), this);
-                musicInfos.add(musicInfo);
-            } while (cursor.moveToNext());
-            cursor.close();
-        }
-        return musicInfos;
-    }
-
-    /**
      * 对从Activity发来的请求进行处理
      */
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null) {
-            int musicCommand = intent.getExtras().getInt("musicCommand");
-            switch (musicCommand) {
+            ActivityCommand activityCommand = (ActivityCommand)intent.getSerializableExtra("musicCommand");
+            switch (activityCommand) {
                 case INIT_SERVICE:
-                    int musicId = intent.getExtras().getInt("musicId");
-                    /**
-                     * 防止删除歌曲后数据越界
-                     */
-                    try {
-                        currentMusic = musicList.get(musicId);
-                    } catch (IndexOutOfBoundsException e){
-                        currentMusic = musicList.get(0);
-                        e.printStackTrace();
-                    }
-                    mediaPlayer = MediaPlayer.create
-                            (PlayService.this, Uri.parse("file://" + currentMusic.getMusicPath()));
-                    prepared = true;
-                    Intent onCreateIntent = new Intent(SERVICE_COMMAND);
-                    onCreateIntent.putExtra("command", "onCreate");
-                    sendBroadcast(onCreateIntent);
+                    initMusic(intent);
                     break;
                 case PLAY_MUSIC:
                     startMusic();
@@ -180,10 +125,29 @@ public class PlayService extends Service {
         super.onDestroy();
     }
 
+    private void initMusic(Intent intent){
+        int musicId = intent.getExtras().getInt("musicId");
+        playMode = intent.getExtras().getInt("playMode");
+        /**
+         * 防止删除歌曲后数据越界
+         */
+        try {
+            currentMusic = musicPlayer.getMusicList().get(musicId);
+
+        } catch (IndexOutOfBoundsException e){
+            currentMusic = musicPlayer.getMusicList().get(0);
+            e.printStackTrace();
+        }
+        mediaPlayer = MediaPlayer.create
+                (PlayService.this, Uri.parse("file://" + currentMusic.getMusicPath()));
+        prepared = true;
+        musicPlayer.serviceCreated();
+    }
+
     /**
      * 开始一首新的歌曲
      */
-    public void startMusic() {
+    private void startMusic() {
         if (mediaPlayer != null) {
             stopMusic();
         }
@@ -194,9 +158,7 @@ public class PlayService extends Service {
         mediaPlayer.start();
         prepared = true;
         musicState = PLAYING;
-
-        Intent intent = new Intent(SERVICE_COMMAND);
-        sendBroadcast(intent);
+        musicPlayer.musicStatusChanged();
 
         showNotification();
     }
@@ -204,11 +166,10 @@ public class PlayService extends Service {
     /**
      * 暂停后开始播放歌曲
      */
-    public void resumeMusic() {
+    private void resumeMusic() {
         mediaPlayer.start();
         musicState = PLAYING;
-        Intent intent = new Intent(SERVICE_COMMAND);
-        sendBroadcast(intent);
+        musicPlayer.musicStatusChanged();
 
         contentView.setImageViewResource
                 (R.id.playButton, R.drawable.img_button_notification_play_pause_grey);
@@ -218,11 +179,10 @@ public class PlayService extends Service {
     /**
      * 暂停正在播放的歌曲
      */
-    public void pauseMusic() {
+    private void pauseMusic() {
         mediaPlayer.pause();
         musicState = PAUSE;
-        Intent intent = new Intent(SERVICE_COMMAND);
-        sendBroadcast(intent);
+        musicPlayer.musicStatusChanged();
 
         contentView.setImageViewResource
                 (R.id.playButton, R.drawable.img_button_notification_play_play_grey);
@@ -232,9 +192,10 @@ public class PlayService extends Service {
     /**
      * 停止正在播放的歌曲
      */
-    public void stopMusic() {
+    private void stopMusic() {
         prepared = false;
         musicState = STOP;
+        musicPlayer.musicStatusChanged();
         mediaPlayer.stop();
         mediaPlayer.release();
         mediaPlayer = null;
@@ -243,11 +204,11 @@ public class PlayService extends Service {
     /**
      * 播放上一首歌曲
      */
-    public void previousMusic() {
+    private void previousMusic() {
         if (currentMusic.getId() != 0) {
-            currentMusic = musicList.get(currentMusic.getId() - 1);
+            currentMusic = musicPlayer.getMusicList().get(currentMusic.getId() - 1);
         } else {
-            currentMusic = musicList.get(musicList.size() - 1);
+            currentMusic = musicPlayer.getMusicList().get(musicPlayer.getMusicList().size() - 1);
         }
 
         startMusic();
@@ -256,20 +217,20 @@ public class PlayService extends Service {
     /**
      * 播放下一首歌曲
      */
-    public void nextMusic() {
+    private void nextMusic() {
         switch (playMode) {
             case REPEAT:
-                if (currentMusic.getId() != musicList.size() - 1) {
-                    currentMusic = musicList.get(currentMusic.getId() + 1);
+                if (currentMusic.getId() != musicPlayer.getMusicList().size() - 1) {
+                    currentMusic = musicPlayer.getMusicList().get(currentMusic.getId() + 1);
                 } else {
-                    currentMusic = musicList.get(0);
+                    currentMusic = musicPlayer.getMusicList().get(0);
                 }
                 break;
             case REPEAT_ONE:
                 break;
             case SHUFFLE:
-                int index = (int) (Math.random() * musicList.size() - 1);
-                currentMusic = musicList.get(index);
+                int index = (int) (Math.random() * musicPlayer.getMusicList().size() - 1);
+                currentMusic = musicPlayer.getMusicList().get(index);
                 break;
         }
 
@@ -279,7 +240,7 @@ public class PlayService extends Service {
     /**
      * 歌曲播放完毕，则开始下一首
      */
-    class MyCompletionListener implements MediaPlayer.OnCompletionListener {
+    private class MyCompletionListener implements MediaPlayer.OnCompletionListener {
         @Override
         public void onCompletion(MediaPlayer mp) {
             nextMusic();
@@ -289,7 +250,7 @@ public class PlayService extends Service {
     /**
      * 设置播放进度
      */
-    public void setProgress(int progress) {
+    private void setProgress(int progress) {
         mediaPlayer.seekTo(progress);
     }
 
@@ -322,8 +283,6 @@ public class PlayService extends Service {
                     mediaPlayer = MediaPlayer.create
                             (PlayService.this, Uri.parse("file://" + currentMusic.getMusicPath()));
                     prepared = true;
-                    Intent serviceIntent = new Intent(SERVICE_COMMAND);
-                    sendBroadcast(serviceIntent);
                     break;
                 default:
                     break;

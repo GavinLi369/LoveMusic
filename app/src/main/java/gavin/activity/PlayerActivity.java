@@ -1,9 +1,5 @@
 package gavin.activity;
 
-import android.app.Activity;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Bundle;
@@ -19,17 +15,17 @@ import android.widget.Toast;
 import java.util.ArrayList;
 
 import gavin.constant.R;
+import gavin.controller.MusicPlayer;
 import gavin.model.Lyric;
 import gavin.model.LyricContent;
 import gavin.service.PlayService;
 import gavin.view.LyricView;
 
-
 /**
  * Created by Gavin on 2015/8/24.
  * 播放界面
  */
-public class PlayerActivity extends Activity {
+public class PlayerActivity extends BaseActivity {
     private TextView mMusicName;
     private TextView mArtist;
     private ImageView mBgImageView;
@@ -46,6 +42,8 @@ public class PlayerActivity extends Activity {
     private ArrayList<LyricContent> lyricList = null;
     private Handler handler = new Handler();
 
+    private MusicPlayer musicPlayer;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,62 +52,17 @@ public class PlayerActivity extends Activity {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
         }
         setContentView(R.layout.activity_player);
+        musicPlayer = MusicPlayer.getInstance(this);
 
-        this.findView();
-        this.setListener();
-        this.updateUI();
+        findView();
+        setListener();
+        updateUI();
         new Thread(new lyricRunnable()).start();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unregisterReceiver(broadcastReceiver);
-    }
-
-    /**
-     * 开始一首新的歌曲
-     */
-    private void startMusic() {
-        Intent intent = new Intent(this, PlayService.class);
-        intent.putExtra("musicCommand", PlayService.PLAY_MUSIC);
-        this.startService(intent);
-    }
-
-    /**
-     * 暂停后开始播放歌曲
-     */
-    private void resumeMusic() {
-        Intent intent = new Intent(this, PlayService.class);
-        intent.putExtra("musicCommand", PlayService.RESUME_MUSIC);
-        this.startService(intent);
-    }
-
-    /**
-     * 暂停正在播放的歌曲
-     */
-    private void pauseMusic() {
-        Intent intent = new Intent(this, PlayService.class);
-        intent.putExtra("musicCommand", PlayService.PAUSE_MUSIC);
-        this.startService(intent);
-    }
-
-    /**
-     * 播放下一首歌曲
-     */
-    private void nextMusic() {
-        Intent intent = new Intent(this, PlayService.class);
-        intent.putExtra("musicCommand", PlayService.NEXT_MUSIC);
-        this.startService(intent);
-    }
-
-    /**
-     * 播放上一首歌曲
-     */
-    private void previousMusic() {
-        Intent intent = new Intent(this, PlayService.class);
-        intent.putExtra("musicCommand", PlayService.PREVIOUS_MUSIC);
-        this.startService(intent);
     }
 
     /**
@@ -131,7 +84,7 @@ public class PlayerActivity extends Activity {
         @Override
         public void onStopTrackingTouch(SeekBar seekBar) {
             if (PlayService.prepared) {
-                setMusicProgress(seekBar.getProgress());
+                musicPlayer.setMusicProgress(seekBar.getProgress());
                 mCurrentTime.setText(getCurrentTimeStr());
                 mDuration.setText(getDurationStr());
             }
@@ -166,7 +119,7 @@ public class PlayerActivity extends Activity {
     /**
      * 歌词视图更新
      */
-    Runnable updateLyricRunnable = new Runnable() {
+    private Runnable updateLyricRunnable = new Runnable() {
         @Override
         public void run() {
             lyricView.invalidate();              //更新视图
@@ -176,15 +129,15 @@ public class PlayerActivity extends Activity {
     /**
      * 按钮监听器
      */
-    class myListener implements View.OnClickListener {
+    class ButtonListener implements View.OnClickListener {
         @Override
         public void onClick(View v) {
             switch (v.getId()) {
                 case R.id.previousButton:
-                    previousMusic();
+                    musicPlayer.previousMusic();
                     break;
                 case R.id.nextButton:
-                    nextMusic();
+                    musicPlayer.nextMusic();
                     break;
                 case R.id.backButton:
                     PlayerActivity.this.finish();
@@ -257,13 +210,13 @@ public class PlayerActivity extends Activity {
         public void onClick(View v) {
             switch (PlayService.musicState) {
                 case PlayService.STOP:
-                    startMusic();
+                    musicPlayer.startMusic();
                     break;
                 case PlayService.PLAYING:
-                    pauseMusic();
+                    musicPlayer.pauseMusic();
                     break;
                 case PlayService.PAUSE:
-                    resumeMusic();
+                    musicPlayer.resumeMusic();
                     break;
             }
         }
@@ -272,6 +225,7 @@ public class PlayerActivity extends Activity {
     /**
      * UI更新
      */
+    @Override
     public void updateUI() {
         switch (PlayService.musicState) {
             case PlayService.PLAYING:
@@ -338,9 +292,9 @@ public class PlayerActivity extends Activity {
      * 绑定监听器
      */
     private void setListener() {
-        mPreviousButton.setOnClickListener(new myListener());
-        mNextButton.setOnClickListener(new myListener());
-        mBackButton.setOnClickListener(new myListener());
+        mPreviousButton.setOnClickListener(new ButtonListener());
+        mNextButton.setOnClickListener(new ButtonListener());
+        mBackButton.setOnClickListener(new ButtonListener());
         mPlayButton.setOnClickListener(new PlayButtonListener());
         mPlayModeButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -352,35 +306,12 @@ public class PlayerActivity extends Activity {
 
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(PlayService.SERVICE_COMMAND);
-        registerReceiver(broadcastReceiver, intentFilter);
-    }
-
-    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (intent.getAction().equals(PlayService.SERVICE_COMMAND)) {
-                if (intent.getExtras() == null) {
-                    updateUI();
-                }
-
-            }
-        }
-    };
-
-    /**
-     * 设置播放进度
-     */
-    public void setMusicProgress(int progress) {
-        Intent intent = new Intent(this, PlayService.class);
-        intent.putExtra("musicCommand", PlayService.CHANGE_PROGRESS);
-        intent.putExtra("progress", progress);
-        startService(intent);
     }
 
     /**
      * 以mm:ss形式获取歌曲已播放的时间
      */
-    public String getCurrentTimeStr() {
+    private String getCurrentTimeStr() {
         String currentTimeStr;
         int currentTimeMinute = PlayService.mediaPlayer.getCurrentPosition() / 60000;
         int currentTimeSecond = (PlayService.mediaPlayer.getCurrentPosition() / 1000) % 60;
