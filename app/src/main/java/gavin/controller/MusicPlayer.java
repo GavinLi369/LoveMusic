@@ -7,7 +7,6 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Handler;
 import android.os.Message;
-import android.provider.MediaStore;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,6 +15,7 @@ import java.util.ArrayList;
 import gavin.activity.BaseActivity;
 import gavin.activity.MainActivity;
 import gavin.constant.AppConstant;
+import gavin.database.DBOperation;
 import gavin.model.MusicInfo;
 import gavin.service.ActivityCommand;
 import gavin.service.PlayService;
@@ -76,19 +76,11 @@ public class MusicPlayer {
      * 初始化歌曲List
      */
     public void initMusicList(){
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                musicList = getMusicFromSDCard();
-                for (int i = 0; i < musicList.size(); i++) {
-                    musicList.get(i).setId(i);
-                }
-                initService();
-//                Message msg = new Message();
-//                msg.what = 0;
-//                mHandler.sendMessage(msg);
-            }
-        }).start();
+        musicList = getMusicByDataBase();
+        for (int i = 0; i < musicList.size(); i++) {
+            musicList.get(i).setId(i);
+        }
+        initService();
     }
 
     public ArrayList<MusicInfo> getMusicList(){
@@ -170,6 +162,22 @@ public class MusicPlayer {
         mContext.startService(intent);
     }
 
+    public void refreshMusicList(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                musicList = getMusicFromSDCard();
+                for (int i = 0; i < musicList.size(); i++) {
+                    musicList.get(i).setId(i);
+                }
+                initService();
+                Message message = new Message();
+                message.what = 0;
+                mHandler.sendMessage(message);
+            }
+        }).start();
+    }
+
     /**
      * 当歌曲状态改变
      */
@@ -186,22 +194,23 @@ public class MusicPlayer {
      * 获取手机里的所有歌曲，并将其添加进List
      */
     private ArrayList<MusicInfo> getMusicFromSDCard() {
-        ArrayList<MusicInfo> musicList = new ArrayList<>();
-        Cursor cursor = mContext.getContentResolver().query(
-                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                new String[]{MediaStore.Audio.Media.MIME_TYPE,
-                        MediaStore.Audio.Media.DATA},
-                MediaStore.Audio.Media.MIME_TYPE + "=?",
-                new String[]{"audio/mpeg"}, null
-        );
+        return FileUtils.getSongFiles("/storage/", mContext);
+    }
 
+    private ArrayList<MusicInfo> getMusicByDataBase(){
+        ArrayList<MusicInfo> musicList = new ArrayList<>();
+        DBOperation dbOperation = new DBOperation(mContext);
+        dbOperation.openOrCreateDataBase();
+        Cursor cursor = dbOperation.selectAll();
         if (cursor != null && cursor.moveToFirst()) {
             do {
-                MusicInfo musicInfo = new MusicInfo(cursor.getString(1), mContext);
+                File file = new File(cursor.getString(cursor.getColumnIndexOrThrow(DBOperation.PATH)));
+                MusicInfo musicInfo = new MusicInfo(file, mContext);
                 musicList.add(musicInfo);
             } while (cursor.moveToNext());
             cursor.close();
         }
+        dbOperation.closeDataBase();
         return musicList;
     }
 

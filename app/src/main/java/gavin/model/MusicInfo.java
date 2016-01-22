@@ -29,17 +29,6 @@ public class MusicInfo {
     private File musicFile;                 //歌曲文件
     private Context mContext;                //上下文
 
-
-    /**
-     * SongInfo的构造方法
-     * @param path  music文件路径
-     */
-    public MusicInfo(String path, Context context){
-        this.musicFile = new File(path);
-        mContext = context;
-        init();
-    }
-
     /**
      * SongInfo的构造方法
      * @param musicFile music文件
@@ -51,27 +40,21 @@ public class MusicInfo {
     }
 
     public void init() {
-//        try {
-//            mp3ID3V2 = new Mp3ID3V2(new FileInputStream(musicFile));
-//        } catch (IOException e){
-//            e.printStackTrace();
-//        }
-
         DBOperation dbOperation = new DBOperation(mContext);
         dbOperation.openOrCreateDataBase();
         Cursor cursor = dbOperation.selectMusicInfo(new String[]{DBOperation.PATH, DBOperation.NAME,
                         DBOperation.ARTIST, DBOperation.ALBUM_NAME, DBOperation.DURATION, DBOperation.ALBUM},
                 DBOperation.PATH + "=?", new String[]{getMusicPath()});
-        if (cursor.moveToFirst()) {
+        if (cursor != null && cursor.moveToFirst()) {
             musicName = cursor.getString(cursor.getColumnIndexOrThrow(DBOperation.NAME));
             artist = cursor.getString(cursor.getColumnIndexOrThrow(DBOperation.ARTIST));
             albumName = cursor.getString(cursor.getColumnIndexOrThrow(DBOperation.ALBUM_NAME));
             duration = cursor.getLong(cursor.getColumnIndexOrThrow(DBOperation.DURATION));
+            cursor.close();
         } else {
             initByMusicFile();
-//            dbOperation.insertMusicInfo(this);
+            dbOperation.insertMusicInfo(this);
         }
-        cursor.close();
         dbOperation.closeDataBase();
     }
 
@@ -98,22 +81,22 @@ public class MusicInfo {
 
     public Bitmap getAlbum() {
         Bitmap bitmap = null;
-        DBOperation dbOperation = new DBOperation(mContext);
-        dbOperation.openOrCreateDataBase();
-        Cursor cursor = dbOperation.selectMusicInfo(new String[]{DBOperation.PATH, DBOperation.ALBUM},
-                DBOperation.PATH + "=?", new String[]{getMusicPath()});
-        if (cursor.moveToFirst()){
-            String albumPath = cursor.getString(cursor.getColumnIndexOrThrow(DBOperation.ALBUM));
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inSampleSize = 4;
-            cursor.close();
-            dbOperation.closeDataBase();
-            try {
-                bitmap = BitmapFactory.decodeFile(albumPath, options);
-            } catch (OutOfMemoryError e){
-                e.printStackTrace();
-            }
-        } else {
+//        DBOperation dbOperation = new DBOperation(mContext);
+//        dbOperation.openOrCreateDataBase();
+//        Cursor cursor = dbOperation.selectMusicInfo(new String[]{DBOperation.PATH, DBOperation.ALBUM},
+//                DBOperation.PATH + "=?", new String[]{getMusicPath()});
+//        if (cursor.moveToFirst()){
+//            String albumPath = cursor.getString(cursor.getColumnIndexOrThrow(DBOperation.ALBUM));
+//            BitmapFactory.Options options = new BitmapFactory.Options();
+//            options.inSampleSize = 4;
+//            cursor.close();
+//            dbOperation.closeDataBase();
+//            try {
+//                bitmap = BitmapFactory.decodeFile(albumPath, options);
+//            } catch (OutOfMemoryError e){
+//                e.printStackTrace();
+//            }
+//        } else {
             try {
                 Mp3ID3V2 mp3ID3V2 = new Mp3ID3V2(new FileInputStream(musicFile));
                 byte[] albumArray = mp3ID3V2.getAlbumByteArray();
@@ -121,7 +104,7 @@ public class MusicInfo {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+//        }
         return bitmap;
     }
 

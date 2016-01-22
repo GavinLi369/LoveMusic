@@ -1,10 +1,12 @@
 package gavin.utils;
 
+import gavin.model.Mp3ID3V2;
 import gavin.model.MusicInfo;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,13 +18,9 @@ import android.content.Context;
 import android.os.Environment;
 
 public class FileUtils {
-    private static String mExternalStorage;
-    private Context context;
+    private static String mExternalStorage = Environment.getExternalStorageDirectory().getPath();
 
-    public FileUtils(Context context) {
-        mExternalStorage = Environment.getExternalStorageDirectory().getPath();
-        this.context = context;
-    }
+    private FileUtils() {}
 
     /**
      * 在SD卡上创建文件
@@ -109,15 +107,26 @@ public class FileUtils {
     /**
      * 获取path目录里面的所有mp3文件
      */
-    public ArrayList<MusicInfo> getSongFiles(String path) {
+    public static ArrayList<MusicInfo> getSongFiles(String path, Context context) {
         ArrayList<MusicInfo> musicInfoList = new ArrayList<>();
-        File filePath = new File(mExternalStorage + path);
+        File filePath = new File(path);
         if (filePath.listFiles().length != 0) {
             File[] files = filePath.listFiles();
             for (File file : files) {
-                if (file.getName().endsWith(".mp3")) {
-                    MusicInfo mp3Info = new MusicInfo(file, context);
-                    musicInfoList.add(mp3Info);
+                if (file.isDirectory()) {
+                    musicInfoList.addAll(getSongFiles(file.getPath(), context));
+                } else {
+                    if (file.getName().endsWith(".mp3")) {
+                        try {
+                            Mp3ID3V2 mp3ID3V2 = new Mp3ID3V2(new FileInputStream(file));
+                            if (mp3ID3V2.isMusicFile()) {
+                                MusicInfo mp3Info = new MusicInfo(file, context);
+                                musicInfoList.add(mp3Info);
+                            }
+                        } catch (FileNotFoundException e) {
+                            e.printStackTrace();
+                        }
+                    }
                 }
             }
         }

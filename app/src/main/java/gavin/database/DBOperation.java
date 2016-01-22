@@ -42,15 +42,15 @@ public class DBOperation {
         mSqLiteDatabase = dbOpenHelper.getWritableDatabase();
     }
 
-//    public Cursor selectAll(){
-//        if (mSqLiteDatabase != null) {
-//            return mSqLiteDatabase.query(TABLE_NAME,
-//                    new String[]{NAME, ALBUM},
-//                    null, null, null, null, null);
-//        }
-//
-//        return null;
-//    }
+    public Cursor selectAll(){
+        if (mSqLiteDatabase != null) {
+            return mSqLiteDatabase.query(TABLE_NAME,
+                    new String[]{NAME, PATH},
+                    null, null, null, null, null);
+        }
+
+        return null;
+    }
 
     public Cursor selectMusicInfo(String[] columns, String selection, String[] selectionArgs){
         return selectMusicInfo(columns, selection, selectionArgs, null, null, null);
@@ -77,10 +77,11 @@ public class DBOperation {
 //            new Thread(new Runnable() {
 //                @Override
 //                public void run() {
-                    values.put(ALBUM, writeAlbum2SDCard(musicInfo.getAlbumByID3V2()).getPath());
-                    mSqLiteDatabase.insert(TABLE_NAME, "", values);
+//                    values.put(ALBUM, writeAlbum2SDCard(musicInfo.getAlbumByID3V2()).getPath());
+//
 //                }
 //            }).start();
+            mSqLiteDatabase.insert(TABLE_NAME, "", values);
         }
     }
 

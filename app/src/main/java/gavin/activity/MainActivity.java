@@ -5,9 +5,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.AdapterView;
@@ -41,18 +44,28 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-            getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
-        }
         setContentView(R.layout.activity_main);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
         findView();                                     //初始化控件
         setListener();                               //绑定监听器
         musicPlayer = MusicPlayer.getInstance(this);
         musicPlayer.initMusicList();
+    }
 
-//        setSongListView();                          //初始化歌曲列表
-//        updateUI();                                   //更新UI视图
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id == R.id.refresh_music_list) {
+            musicPlayer.refreshMusicList();
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -208,7 +221,7 @@ public class MainActivity extends BaseActivity {
                         (R.drawable.img_button_notification_play_play_grey);
                 break;
         }
-        mSongName.setText(PlayService.currentMusic.getMusicName());     //初始化播放栏歌曲信息
+        mSongName.setText(PlayService.currentMusic.getMusicName());
         mArtist.setText(PlayService.currentMusic.getArtist());
         mMusicAlbum.setImageBitmap(PlayService.currentMusic.getAlbum());
     }
@@ -217,6 +230,7 @@ public class MainActivity extends BaseActivity {
      * 初始化歌曲文件列表
      */
     public void setSongListView() {
+        mListView.removeHeaderView(mHeader);
         String musicNum = "（共" + musicPlayer.getMusicList().size() + "首）";
         mSongNum.setText(musicNum);
 

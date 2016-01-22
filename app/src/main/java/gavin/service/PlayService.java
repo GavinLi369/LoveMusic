@@ -126,22 +126,23 @@ public class PlayService extends Service {
     }
 
     private void initMusic(Intent intent){
-        int musicId = intent.getExtras().getInt("musicId");
-        playMode = intent.getExtras().getInt("playMode");
-        /**
-         * 防止删除歌曲后数据越界
-         */
-        try {
-            currentMusic = musicPlayer.getMusicList().get(musicId);
-
-        } catch (IndexOutOfBoundsException e){
-            currentMusic = musicPlayer.getMusicList().get(0);
-            e.printStackTrace();
+        if (!musicPlayer.getMusicList().isEmpty()) {
+            int musicId = intent.getExtras().getInt("musicId");
+            playMode = intent.getExtras().getInt("playMode");
+            /**
+             * 防止删除歌曲后数据越界
+             */
+            try {
+                currentMusic = musicPlayer.getMusicList().get(musicId);
+            } catch (IndexOutOfBoundsException e) {
+                currentMusic = musicPlayer.getMusicList().get(0);
+                e.printStackTrace();
+            }
+            mediaPlayer = MediaPlayer.create
+                    (PlayService.this, Uri.parse("file://" + currentMusic.getMusicPath()));
+            prepared = true;
+            musicPlayer.serviceCreated();
         }
-        mediaPlayer = MediaPlayer.create
-                (PlayService.this, Uri.parse("file://" + currentMusic.getMusicPath()));
-        prepared = true;
-        musicPlayer.serviceCreated();
     }
 
     /**

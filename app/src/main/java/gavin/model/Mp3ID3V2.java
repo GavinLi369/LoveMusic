@@ -15,6 +15,7 @@ import java.util.Map;
  */
 public class Mp3ID3V2 {
     private InputStream in;
+    private boolean musicFile = true;
     private Map<String, byte[]> tags = new HashMap<>();
 
     /**
@@ -42,6 +43,7 @@ public class Mp3ID3V2 {
         }
 
         if (header[0] != 'I' || header[1] != 'D' || header[2] != '3') {
+            musicFile = false;
             throw new Exception("not invalid mp3 ID3V2 tag");
         }
         int tagSize = ((header[6] & 0xff) << 21) + ((header[7] & 0xff) << 14) +
@@ -62,6 +64,10 @@ public class Mp3ID3V2 {
             pos = pos + length + 10;
         }
         in.close();
+    }
+
+    public boolean isMusicFile(){
+        return musicFile;
     }
 
     /**
