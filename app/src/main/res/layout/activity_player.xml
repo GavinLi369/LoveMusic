@@ -136,7 +136,7 @@
 
         </LinearLayout>
 
-        <gavin.view.LyricView
+        <gavin.lovemusic.playdetail.view.LyricView
             android:id="@+id/lyricView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
