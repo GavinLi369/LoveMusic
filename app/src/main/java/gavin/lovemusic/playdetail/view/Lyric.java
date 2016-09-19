@@ -1,4 +1,4 @@
-package gavin.lovemusic.model;
+package gavin.lovemusic.playdetail.view;
 
 import java.io.File;
 import java.util.ArrayList;

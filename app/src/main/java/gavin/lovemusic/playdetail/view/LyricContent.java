@@ -1,4 +1,4 @@
-package gavin.lovemusic.model;
+package gavin.lovemusic.playdetail.view;
 
 /**
  * Created by Gavin on 2015/8/26.
@@ -27,15 +27,7 @@ public class LyricContent {
         return lyricStr;
     }
 
-    public void setLyricStr(String lyricStr) {
-        this.lyricStr = lyricStr;
-    }
-
     public long getLyricTime() {
         return lyricTime;
-    }
-
-    public void setLyricTime(long lyricTime) {
-        this.lyricTime = lyricTime;
     }
 }

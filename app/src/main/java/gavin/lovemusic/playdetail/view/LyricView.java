@@ -9,8 +9,6 @@ import android.view.View;
 
 import java.util.ArrayList;
 
-import gavin.lovemusic.model.LyricContent;
-
 /**
  * Created by Gavin on 2015/8/24.
  * 歌词View

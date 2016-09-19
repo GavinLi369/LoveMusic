@@ -1,7 +1,12 @@
 package gavin.lovemusic.playdetail.view;
 
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.ImageButton;
@@ -16,10 +21,10 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import gavin.lovemusic.constant.R;
-import gavin.lovemusic.model.Lyric;
-import gavin.lovemusic.model.LyricContent;
 import gavin.lovemusic.playdetail.presenter.IPlayDetailPresenter;
 import gavin.lovemusic.playdetail.presenter.PlayDetailPresenter;
+import gavin.lovemusic.service.ActivityCommand;
+import gavin.lovemusic.service.IServiceListener;
 import gavin.lovemusic.service.PlayService;
 
 /**
@@ -47,6 +52,7 @@ public class PlayDetailActivity extends AppCompatActivity implements IPlayDetail
         setContentView(R.layout.activity_player);
         ButterKnife.bind(this);
         playDetailPresenter = new PlayDetailPresenter(this);
+
         setListener();
         updateUI();
         new Thread(() -> {
@@ -103,13 +109,17 @@ public class PlayDetailActivity extends AppCompatActivity implements IPlayDetail
     void onButtonClick(View v) {
         switch (v.getId()) {
             case R.id.previousButton:
-                playDetailPresenter.previousMusic(this); break;
+                playDetailPresenter.changeMusic(this, ActivityCommand.PREVIOUS_MUSIC);
+                break;
             case R.id.nextButton:
-                playDetailPresenter.nextMusic(this); break;
-            case R.id.backButton:
-                finish(); break;
+                playDetailPresenter.changeMusic(this, ActivityCommand.NEXT_MUSIC);
+                break;
             case R.id.playModeButton:
-                changePlayMode(); break;
+                changePlayMode();
+                break;
+            case R.id.backButton:
+                finish(); 
+                break;
         }
     }
 
@@ -277,5 +287,29 @@ public class PlayDetailActivity extends AppCompatActivity implements IPlayDetail
      */
     public long getDuration() {
         return PlayService.currentMusic.getDuration();
+    }
+
+    private ServiceConnection conn  = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+            ((PlayService.ServiceBinder) iBinder).getService()
+                    .setServiceLinstener((IServiceListener) playDetailPresenter);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {}
+    };
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Intent intent = new Intent(this, PlayService.class);
+        bindService(intent, conn, Context.BIND_AUTO_CREATE);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unbindService(conn);
     }
 }

@@ -1,4 +1,4 @@
-package gavin.lovemusic.musiclist.view;
+package gavin.lovemusic.localmusic.view;
 
 import android.content.Context;
 import android.view.LayoutInflater;

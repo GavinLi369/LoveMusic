@@ -1,4 +1,4 @@
-package gavin.lovemusic.musiclist.view;
+package gavin.lovemusic.localmusic.view;
 
 /**
  * Created by gavinli on 16-9-10.
@@ -6,5 +6,4 @@ package gavin.lovemusic.musiclist.view;
  */
 public interface IMusicListView {
     void updateUI();
-    void setSongListView();
 }

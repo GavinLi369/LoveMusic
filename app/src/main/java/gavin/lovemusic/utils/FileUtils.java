@@ -1,12 +1,10 @@
 package gavin.lovemusic.utils;
 
-import gavin.lovemusic.model.Mp3ID3V2;
 import gavin.lovemusic.data.Music;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,6 +14,10 @@ import java.util.ArrayList;
 
 import android.content.Context;
 import android.os.Environment;
+
+import com.mpatric.mp3agic.InvalidDataException;
+import com.mpatric.mp3agic.Mp3File;
+import com.mpatric.mp3agic.UnsupportedTagException;
 
 public class FileUtils {
     private static String mExternalStorage = Environment.getExternalStorageDirectory().getPath();
@@ -120,12 +122,12 @@ public class FileUtils {
                 } else {
                     if (file.getName().endsWith(".mp3")) {
                         try {
-                            Mp3ID3V2 mp3ID3V2 = new Mp3ID3V2(new FileInputStream(file));
-                            if (mp3ID3V2.isMusicFile()) {
+                            Mp3File mp3File = new Mp3File(file.getAbsoluteFile());
+                            if (mp3File.hasId3v2Tag()) {
                                 Music mp3Info = new Music(file, context);
                                 musicList.add(mp3Info);
                             }
-                        } catch (FileNotFoundException e) {
+                        } catch (IOException | UnsupportedTagException | InvalidDataException e) {
                             e.printStackTrace();
                         }
                     }

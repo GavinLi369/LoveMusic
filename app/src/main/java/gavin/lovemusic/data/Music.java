@@ -4,14 +4,16 @@ import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.media.MediaMetadataRetriever;
+
+import com.mpatric.mp3agic.ID3v2;
+import com.mpatric.mp3agic.InvalidDataException;
+import com.mpatric.mp3agic.Mp3File;
+import com.mpatric.mp3agic.UnsupportedTagException;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 
 import gavin.lovemusic.data.database.DBOperation;
-import gavin.lovemusic.model.Mp3ID3V2;
 
 /**
  * Created by Gavin on 2015/8/23.
@@ -61,21 +63,15 @@ public class Music {
 
     private void initByMusicFile() {
         try {
-            Mp3ID3V2 mp3ID3V2 = new Mp3ID3V2(new FileInputStream(musicFile));
-            musicName = mp3ID3V2.getTitle();
-            artist = mp3ID3V2.getArtist();
-            albumName = mp3ID3V2.getTitle();
-            mp3ID3V2.close();
-
-            /**
-             * Mp3文件的ID3V2标签中没有歌曲长度，
-             * 所以通过MediaMetadataRetriever解析mp3文件获取
-             */
-            MediaMetadataRetriever retriever = new MediaMetadataRetriever();
-            retriever.setDataSource(getMusicPath());
-            String durationStr = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
-            duration = Long.parseLong(durationStr);
-        } catch (IOException e) {
+            Mp3File mp3File = new Mp3File(musicFile);
+            if(mp3File.hasId3v2Tag()) {
+                ID3v2 id3v2 = mp3File.getId3v2Tag();
+                musicName = id3v2.getTitle();
+                artist = id3v2.getArtist();
+                albumName = id3v2.getAlbum();
+                duration = id3v2.getLength();
+            }
+        } catch(IOException | UnsupportedTagException | InvalidDataException e) {
             e.printStackTrace();
         }
     }
@@ -83,10 +79,12 @@ public class Music {
     public Bitmap getAlbum() {
         Bitmap bitmap = null;
         try {
-            Mp3ID3V2 mp3ID3V2 = new Mp3ID3V2(new FileInputStream(musicFile));
-            byte[] albumArray = mp3ID3V2.getAlbumByteArray();
-            bitmap = BitmapFactory.decodeByteArray(albumArray, 0, albumArray.length);
-        } catch (IOException e) {
+            Mp3File mp3File = new Mp3File(musicFile);
+            if(mp3File.hasId3v2Tag()) {
+                byte[] albumArray = mp3File.getId3v2Tag().getAlbumImage();
+                bitmap = BitmapFactory.decodeByteArray(albumArray, 0, albumArray.length);
+            }
+        } catch (IOException | UnsupportedTagException | InvalidDataException e) {
             e.printStackTrace();
         }
         return bitmap;

@@ -5,24 +5,18 @@ import android.content.Intent;
 
 import gavin.lovemusic.playdetail.view.IPlayDetailView;
 import gavin.lovemusic.service.ActivityCommand;
+import gavin.lovemusic.service.IServiceListener;
 import gavin.lovemusic.service.PlayService;
 
 /**
  * Created by GavinLi on 16-9-10.
  * PlayDetailPresenter
  */
-public class PlayDetailPresenter implements IPlayDetailPresenter {
+public class PlayDetailPresenter implements IPlayDetailPresenter, IServiceListener {
     private IPlayDetailView playDetailView;
-
-    private static PlayDetailPresenter playDetailPresenter;
 
     public PlayDetailPresenter(IPlayDetailView playDetailView) {
         this.playDetailView = playDetailView;
-        playDetailPresenter = this;
-    }
-
-    public static PlayDetailPresenter getPlayDetailPresenter() {
-        return playDetailPresenter;
     }
 
     @Override
@@ -59,16 +53,9 @@ public class PlayDetailPresenter implements IPlayDetailPresenter {
     }
 
     @Override
-    public void nextMusic(Context context) {
+    public void changeMusic(Context context, ActivityCommand command) {
         Intent intent = new Intent(context, PlayService.class);
-        intent.putExtra("musicCommand", ActivityCommand.NEXT_MUSIC);
-        context.startService(intent);
-    }
-
-    @Override
-    public void previousMusic(Context context) {
-        Intent intent = new Intent(context, PlayService.class);
-        intent.putExtra("musicCommand", ActivityCommand.PREVIOUS_MUSIC);
+        intent.putExtra("musicCommand", command);
         context.startService(intent);
     }
 
