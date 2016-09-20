@@ -1,4 +1,4 @@
-package gavin.lovemusic;
+package gavin.lovemusic.localmusic.view;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -29,10 +29,8 @@ import butterknife.OnClick;
 import gavin.lovemusic.constant.R;
 import gavin.lovemusic.localmusic.presenter.IMusicListPresenter;
 import gavin.lovemusic.localmusic.presenter.MusicListPresenter;
-import gavin.lovemusic.localmusic.view.IMusicListView;
-import gavin.lovemusic.localmusic.view.LocalMusicFragment;
 import gavin.lovemusic.networkmusic.NetworkMusicFragment;
-import gavin.lovemusic.playdetail.view.PlayDetailActivity;
+import gavin.lovemusic.detailmusic.view.PlayDetailFragment;
 import gavin.lovemusic.service.ActivityCommand;
 import gavin.lovemusic.service.IServiceListener;
 import gavin.lovemusic.service.PlayService;
@@ -46,13 +44,14 @@ public class MainActivity extends AppCompatActivity implements IMusicListView {
     @BindView(R.id.playButton) ImageButton mPlayButton;
     @BindView(R.id.musicName) TextView mMusicName;
     @BindView(R.id.artist) TextView mArtist;
+    PlayDetailFragment mPlayDetailFragment;
 
     private IMusicListPresenter musicListPresenter;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.acitivity_main);
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
 
         ViewPager viewPager = (ViewPager) findViewById(R.id.view_pager);
@@ -63,6 +62,9 @@ public class MainActivity extends AppCompatActivity implements IMusicListView {
         ButterKnife.bind(this);
 
         musicListPresenter = new MusicListPresenter(this);
+
+        mPlayDetailFragment = (PlayDetailFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.fragment_music_detail);
 
         TelephonyManager tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         tm.listen(new exPhoneCallListener(), PhoneStateListener.LISTEN_CALL_STATE);
@@ -83,18 +85,8 @@ public class MainActivity extends AppCompatActivity implements IMusicListView {
         return super.onOptionsItemSelected(item);
     }
 
-    @OnClick(R.id.playColumn) void onPlayColumnClick() {
-        Intent intent = new Intent();
-        intent.setClass(this, PlayDetailActivity.class);
-        startActivityForResult(intent, 0);
-    }
-
     @OnClick(R.id.playButton) void onPlayButtonClick() {
         musicListPresenter.onPlayButtonClick(this);
-    }
-
-    @OnClick(R.id.nextButton) void onNextButtonClick() {
-        musicListPresenter.changeMusicStatus(this, ActivityCommand.NEXT_MUSIC);
     }
 
     /**
@@ -119,6 +111,8 @@ public class MainActivity extends AppCompatActivity implements IMusicListView {
             mArtist.setText(PlayService.currentMusic.getArtist());
             mMusicAlbum.setImageBitmap(PlayService.currentMusic.getAlbum());
         }
+
+        mPlayDetailFragment.updateUI();
     }
 
     /**
@@ -182,8 +176,10 @@ public class MainActivity extends AppCompatActivity implements IMusicListView {
     private ServiceConnection conn  = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-            ((PlayService.ServiceBinder) iBinder).getService()
-                    .setServiceLinstener((IServiceListener) musicListPresenter);
+            PlayService playService = ((PlayService.ServiceBinder) iBinder).getService();
+            playService.addServiceLinstener((IServiceListener) musicListPresenter);
+            playService.addServiceLinstener((IServiceListener) mPlayDetailFragment.getPlayDetailPresenter());
+            mPlayDetailFragment.init();
             updateUI();
         }
 

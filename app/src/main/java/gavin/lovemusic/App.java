@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 
-import gavin.lovemusic.data.Music;
+import gavin.lovemusic.entity.Music;
 import gavin.lovemusic.utils.FileUtils;
 
 /**

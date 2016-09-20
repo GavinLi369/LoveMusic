@@ -1,19 +1,16 @@
-package gavin.lovemusic.playdetail.view;
+package gavin.lovemusic.detailmusic.view;
 
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.IBinder;
-import android.support.v7.app.AppCompatActivity;
+import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 
@@ -21,22 +18,19 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import gavin.lovemusic.constant.R;
-import gavin.lovemusic.playdetail.presenter.IPlayDetailPresenter;
-import gavin.lovemusic.playdetail.presenter.PlayDetailPresenter;
+import gavin.lovemusic.detailmusic.presenter.IPlayDetailPresenter;
+import gavin.lovemusic.detailmusic.presenter.PlayDetailPresenter;
 import gavin.lovemusic.service.ActivityCommand;
-import gavin.lovemusic.service.IServiceListener;
 import gavin.lovemusic.service.PlayService;
 
 /**
- * Created by Gavin on 2015/8/24.
- * 播放界面
+ * Created by GavinLi
+ * on 16-9-20.
  */
-public class PlayDetailActivity extends AppCompatActivity implements IPlayDetailView {
-    @BindView(R.id.musicName) TextView mMusicName;
-    @BindView(R.id.artist) TextView mArtist;
+public class PlayDetailFragment extends Fragment implements IPlayDetailView {
     @BindView(R.id.bgImageView) ImageView mBgImageView;
     @BindView(R.id.playButton) ImageButton mPlayButton;
-    @BindView(R.id.playModeButton) ImageButton mPlayModeButton;
+//    @BindView(R.id.playModeButton) ImageButton mPlayModeButton;
     @BindView(R.id.lyricSeekBar) SeekBar mLyricSeekBar;
     @BindView(R.id.currentTime) TextView mCurrentTime;
     @BindView(R.id.duration) TextView mDuration;
@@ -46,15 +40,21 @@ public class PlayDetailActivity extends AppCompatActivity implements IPlayDetail
 
     private IPlayDetailPresenter playDetailPresenter;
 
+    @Nullable
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_player);
-        ButterKnife.bind(this);
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
+        View rootView = inflater.inflate(R.layout.fragment_music_detail, container, false);
+        ButterKnife.bind(this, rootView);
+
         playDetailPresenter = new PlayDetailPresenter(this);
 
         setListener();
-        updateUI();
+
+        return rootView;
+    }
+
+    public void init() {
         new Thread(() -> {
             while (true) {
                 try {
@@ -65,7 +65,7 @@ public class PlayDetailActivity extends AppCompatActivity implements IPlayDetail
                     if (PlayService.prepared) {
                         mLyricSeekBar.setProgress((int) getCurrentTime());
                     }
-                    PlayDetailActivity.this.runOnUiThread(() -> lyricView.invalidate());
+                    getActivity().runOnUiThread(() -> lyricView.invalidate());
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -94,7 +94,7 @@ public class PlayDetailActivity extends AppCompatActivity implements IPlayDetail
         @Override
         public void onStopTrackingTouch(SeekBar seekBar) {
             if (PlayService.prepared) {
-                playDetailPresenter.setMusicProgress(seekBar.getProgress(), PlayDetailActivity.this);
+                playDetailPresenter.setMusicProgress(seekBar.getProgress(), getActivity());
                 mCurrentTime.setText(getCurrentTimeStr());
                 mDuration.setText(getDurationStr());
             }
@@ -102,52 +102,48 @@ public class PlayDetailActivity extends AppCompatActivity implements IPlayDetail
     }
 
     @OnClick(R.id.playButton) void onPlayButtonClick() {
-        playDetailPresenter.onPlayButtonClick(this);
+        playDetailPresenter.onPlayButtonClick(getActivity());
     }
 
-    @OnClick({R.id.previousButton, R.id.nextButton, R.id.backButton, R.id.playModeButton})
+    @OnClick({R.id.previousButton, R.id.nextButton})
     void onButtonClick(View v) {
         switch (v.getId()) {
             case R.id.previousButton:
-                playDetailPresenter.changeMusic(this, ActivityCommand.PREVIOUS_MUSIC);
+                playDetailPresenter.changeMusic(getActivity(), ActivityCommand.PREVIOUS_MUSIC);
                 break;
             case R.id.nextButton:
-                playDetailPresenter.changeMusic(this, ActivityCommand.NEXT_MUSIC);
+                playDetailPresenter.changeMusic(getActivity(), ActivityCommand.NEXT_MUSIC);
                 break;
-            case R.id.playModeButton:
-                changePlayMode();
-                break;
-            case R.id.backButton:
-                finish(); 
-                break;
+//            case R.id.playModeButton:
+//                changePlayMode();
+//                break;
         }
     }
 
-    /**
-     * 播放模式切换
-     */
+    /*
     private void changePlayMode() {
         switch (PlayService.playMode) {
             case PlayService.REPEAT:
                 PlayService.playMode = PlayService.REPEAT_ONE;
                 mPlayModeButton.setBackgroundResource
                         (R.drawable.img_appwidget_playmode_repeatone);
-                Toast.makeText(PlayDetailActivity.this, "单曲循环", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), "单曲循环", Toast.LENGTH_SHORT).show();
                 break;
             case PlayService.REPEAT_ONE:
                 PlayService.playMode = PlayService.SHUFFLE;
                 mPlayModeButton.setBackgroundResource
                         (R.drawable.img_appwidget_playmode_shuffle);
-                Toast.makeText(PlayDetailActivity.this, "随机播放", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), "随机播放", Toast.LENGTH_SHORT).show();
                 break;
             case PlayService.SHUFFLE:
                 PlayService.playMode = PlayService.REPEAT;
                 mPlayModeButton.setBackgroundResource
                         (R.drawable.img_appwidget_playmode_repeat);
-                Toast.makeText(PlayDetailActivity.this, "顺序播放", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), "顺序播放", Toast.LENGTH_SHORT).show();
                 break;
         }
     }
+    */
 
     /**
      * 根据当前播放时间获取歌词索引
@@ -185,7 +181,6 @@ public class PlayDetailActivity extends AppCompatActivity implements IPlayDetail
     public void updateUI() {
         switch (PlayService.musicState) {
             case PlayService.PLAYING:
-                mMusicName.setText(PlayService.currentMusic.getMusicName());
                 mPlayButton.setBackgroundResource
                         (R.drawable.img_button_notification_play_pause_grey);
                 break;
@@ -199,6 +194,7 @@ public class PlayDetailActivity extends AppCompatActivity implements IPlayDetail
                 break;
         }
 
+        /*
         switch (PlayService.playMode) {
             case PlayService.REPEAT:
                 mPlayModeButton.setBackgroundResource
@@ -213,9 +209,8 @@ public class PlayDetailActivity extends AppCompatActivity implements IPlayDetail
                         (R.drawable.img_appwidget_playmode_shuffle);
                 break;
         }
+        */
 
-        mMusicName.setText(PlayService.currentMusic.getMusicName());
-        mArtist.setText(PlayService.currentMusic.getArtist());
         mBgImageView.setImageBitmap(PlayService.currentMusic.getAlbum());
 
         if (PlayService.prepared) {
@@ -289,27 +284,7 @@ public class PlayDetailActivity extends AppCompatActivity implements IPlayDetail
         return PlayService.currentMusic.getDuration();
     }
 
-    private ServiceConnection conn  = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-            ((PlayService.ServiceBinder) iBinder).getService()
-                    .setServiceLinstener((IServiceListener) playDetailPresenter);
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName componentName) {}
-    };
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        Intent intent = new Intent(this, PlayService.class);
-        bindService(intent, conn, Context.BIND_AUTO_CREATE);
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        unbindService(conn);
+    public IPlayDetailPresenter getPlayDetailPresenter() {
+        return playDetailPresenter;
     }
 }

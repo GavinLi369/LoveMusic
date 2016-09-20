@@ -1,4 +1,4 @@
-package gavin.lovemusic.playdetail.view;
+package gavin.lovemusic.detailmusic.view;
 
 import android.content.Context;
 import android.graphics.Canvas;

@@ -1,11 +1,11 @@
-package gavin.lovemusic.playdetail.view;
+package gavin.lovemusic.detailmusic.view;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import gavin.lovemusic.data.Music;
+import gavin.lovemusic.entity.Music;
 import gavin.lovemusic.utils.FileUtils;
 
 /**

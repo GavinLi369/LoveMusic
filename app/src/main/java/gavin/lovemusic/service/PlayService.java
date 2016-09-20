@@ -15,10 +15,13 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.widget.RemoteViews;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import gavin.lovemusic.App;
-import gavin.lovemusic.playdetail.view.PlayDetailActivity;
+import gavin.lovemusic.localmusic.view.MainActivity;
 import gavin.lovemusic.constant.R;
-import gavin.lovemusic.data.Music;
+import gavin.lovemusic.entity.Music;
 
 /**
  * Created by Gavin on 2015/11/3.
@@ -55,7 +58,7 @@ public class PlayService extends Service {
 
     private App app;
 
-    private IServiceListener linstener;
+    private List<IServiceListener> listeners = new ArrayList<>();
 
     @Override
     public void onCreate() {
@@ -149,7 +152,8 @@ public class PlayService extends Service {
         mediaPlayer.start();
         prepared = true;
         musicState = PLAYING;
-        linstener.musicStatusChanged();
+        for(IServiceListener listener : listeners)
+            listener.musicStatusChanged();
 
         showNotification();
     }
@@ -160,7 +164,8 @@ public class PlayService extends Service {
     private void resumeMusic() {
         mediaPlayer.start();
         musicState = PLAYING;
-        linstener.musicStatusChanged();
+        for(IServiceListener listener : listeners)
+            listener.musicStatusChanged();
 
         contentView.setImageViewResource
                 (R.id.playButton, R.drawable.img_button_notification_play_pause_grey);
@@ -173,7 +178,8 @@ public class PlayService extends Service {
     private void pauseMusic() {
         mediaPlayer.pause();
         musicState = PAUSE;
-        linstener.musicStatusChanged();
+        for(IServiceListener listener : listeners)
+            listener.musicStatusChanged();
 
         contentView.setImageViewResource
                 (R.id.playButton, R.drawable.img_button_notification_play_play_grey);
@@ -186,7 +192,8 @@ public class PlayService extends Service {
     private void stopMusic() {
         prepared = false;
         musicState = STOP;
-        linstener.musicStatusChanged();
+        for(IServiceListener listener : listeners)
+            listener.musicStatusChanged();
         mediaPlayer.stop();
         mediaPlayer.release();
         mediaPlayer = null;
@@ -292,7 +299,7 @@ public class PlayService extends Service {
         notification.contentView = contentView;
         notification.flags = Notification.FLAG_ONGOING_EVENT;
 
-        Intent intentActivity = new Intent(this, PlayDetailActivity.class);
+        Intent intentActivity = new Intent(this, MainActivity.class);
         intentActivity.addFlags
                 (Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
         notification.contentIntent = PendingIntent.getActivity
@@ -325,8 +332,8 @@ public class PlayService extends Service {
         startForeground(NOTIFICATION_ID, notification);
     }
 
-    public void setServiceLinstener(IServiceListener linstener) {
-        this.linstener = linstener;
+    public void addServiceLinstener(IServiceListener listener) {
+        listeners.add(listener);
     }
 
     /**

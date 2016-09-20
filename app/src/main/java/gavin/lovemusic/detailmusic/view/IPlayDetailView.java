@@ -1,4 +1,4 @@
-package gavin.lovemusic.playdetail.view;
+package gavin.lovemusic.detailmusic.view;
 
 /**
  * Created by GavinLi on 16-9-10.

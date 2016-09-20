@@ -1,6 +1,6 @@
 package gavin.lovemusic.utils;
 
-import gavin.lovemusic.data.Music;
+import gavin.lovemusic.entity.Music;
 
 import java.io.BufferedReader;
 import java.io.File;

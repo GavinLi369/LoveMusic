@@ -1,9 +1,9 @@
-package gavin.lovemusic.playdetail.presenter;
+package gavin.lovemusic.detailmusic.presenter;
 
 import android.content.Context;
 import android.content.Intent;
 
-import gavin.lovemusic.playdetail.view.IPlayDetailView;
+import gavin.lovemusic.detailmusic.view.IPlayDetailView;
 import gavin.lovemusic.service.ActivityCommand;
 import gavin.lovemusic.service.IServiceListener;
 import gavin.lovemusic.service.PlayService;

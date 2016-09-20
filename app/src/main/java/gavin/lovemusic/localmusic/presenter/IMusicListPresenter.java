@@ -4,7 +4,7 @@ import android.content.Context;
 
 import java.util.ArrayList;
 
-import gavin.lovemusic.data.Music;
+import gavin.lovemusic.entity.Music;
 import gavin.lovemusic.service.ActivityCommand;
 
 /**

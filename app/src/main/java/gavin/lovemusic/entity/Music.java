@@ -1,4 +1,4 @@
-package gavin.lovemusic.data;
+package gavin.lovemusic.entity;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -13,7 +13,7 @@ import com.mpatric.mp3agic.UnsupportedTagException;
 import java.io.File;
 import java.io.IOException;
 
-import gavin.lovemusic.data.database.DBOperation;
+import gavin.lovemusic.database.DBOperation;
 
 /**
  * Created by Gavin on 2015/8/23.

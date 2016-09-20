@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <android.support.design.widget.CoordinatorLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fitsSystemWindows="true">
+
+        <android.support.design.widget.AppBarLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:theme="@style/AppTheme.AppBarOverlay">
+
+            <android.support.v7.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:background="?attr/colorPrimary"
+                app:popupTheme="@style/AppTheme.PopupOverlay" />
+
+            <android.support.design.widget.TabLayout
+                android:id="@+id/tabs"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+
+        </android.support.design.widget.AppBarLayout>
+
+        <android.support.v4.view.ViewPager
+            android:id="@+id/view_pager"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
+
+    </android.support.design.widget.CoordinatorLayout>
+
+    <gavinli.slidinglayout.SlidingLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:orientation="horizontal"
+            android:background="#fff">
+
+            <ImageView
+                android:id="@+id/musicAlbum"
+                android:padding="5dp"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                tools:src="@drawable/img_appwidget_album_cover"/>
+
+            <LinearLayout
+                android:layout_width="180dp"
+                android:orientation="vertical"
+                android:layout_marginStart="10dp"
+                android:layout_height="match_parent">
+
+                <TextView
+                    android:id="@+id/musicName"
+                    android:layout_width="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:layout_height="25dp"
+                    android:singleLine="true"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:textSize="15sp"
+                    android:textColor="#000"
+                    tools:text="少年锦时"/>
+
+                <TextView
+                    android:id="@+id/artist"
+                    android:layout_width="wrap_content"
+                    android:layout_height="20dp"
+                    android:singleLine="true"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:textSize="12sp"
+                    tools:text="赵雷"/>
+
+            </LinearLayout>
+
+            <ImageButton
+                android:id="@+id/playButton"
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:layout_marginStart="60dp"
+                android:layout_marginEnd="10dp"
+                android:layout_marginTop="7dp"
+                android:background="@drawable/img_button_notification_play_play_grey"/>
+        </LinearLayout>
+
+        <fragment
+            android:id="@+id/fragment_music_detail"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#00f"
+            android:name="gavin.lovemusic.detailmusic.view.PlayDetailFragment"
+            tools:layout="@layout/fragment_music_detail"/>
+
+    </gavinli.slidinglayout.SlidingLayout>
+
+</RelativeLayout>

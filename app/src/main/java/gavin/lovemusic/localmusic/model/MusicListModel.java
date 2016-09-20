@@ -7,8 +7,8 @@ import java.io.File;
 import java.util.ArrayList;
 
 import gavin.lovemusic.App;
-import gavin.lovemusic.data.Music;
-import gavin.lovemusic.data.database.DBOperation;
+import gavin.lovemusic.entity.Music;
+import gavin.lovemusic.database.DBOperation;
 import gavin.lovemusic.utils.FileUtils;
 
 /**

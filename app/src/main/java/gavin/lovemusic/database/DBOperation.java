@@ -1,4 +1,4 @@
-package gavin.lovemusic.data.database;
+package gavin.lovemusic.database;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -12,7 +12,7 @@ import java.io.File;
 import java.io.InputStream;
 
 import gavin.lovemusic.App;
-import gavin.lovemusic.data.Music;
+import gavin.lovemusic.entity.Music;
 import gavin.lovemusic.utils.FileUtils;
 
 /**

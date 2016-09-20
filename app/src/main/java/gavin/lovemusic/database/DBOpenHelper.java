@@ -1,4 +1,4 @@
-package gavin.lovemusic.data.database;
+package gavin.lovemusic.database;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;

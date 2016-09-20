@@ -1,4 +1,4 @@
-package gavin.lovemusic.playdetail.presenter;
+package gavin.lovemusic.detailmusic.presenter;
 
 import android.content.Context;
 

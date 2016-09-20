@@ -5,7 +5,7 @@ import android.content.Intent;
 
 import java.util.ArrayList;
 
-import gavin.lovemusic.data.Music;
+import gavin.lovemusic.entity.Music;
 import gavin.lovemusic.localmusic.model.IMusicListModel;
 import gavin.lovemusic.localmusic.model.MusicListModel;
 import gavin.lovemusic.localmusic.view.IMusicListView;
