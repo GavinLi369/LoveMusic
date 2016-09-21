@@ -3,6 +3,7 @@ package gavin.lovemusic.localmusic.presenter;
 import android.content.Context;
 import android.content.Intent;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 import gavin.lovemusic.entity.Music;
@@ -18,7 +19,7 @@ import gavin.lovemusic.service.PlayService;
  * MusicListPresenter
  */
 public class MusicListPresenter implements IMusicListPresenter, IServiceListener {
-    private IMusicListModel musicListModel = new MusicListModel();
+    private IMusicListModel musicListModel;
     private IMusicListView musicListView;
 
     private Context context;
@@ -27,7 +28,10 @@ public class MusicListPresenter implements IMusicListPresenter, IServiceListener
         this.musicListView = musicListView;
         if(musicListView instanceof Context)
             this.context = (Context) musicListView;
-        refreshMusicList(context);
+        musicListModel = new MusicListModel(context);
+        Intent intent = new Intent(context, PlayService.class);
+        intent.putExtra("musicCommand", ActivityCommand.INIT_SERVICE);
+        context.startService(intent);
     }
 
     @Override
@@ -61,7 +65,11 @@ public class MusicListPresenter implements IMusicListPresenter, IServiceListener
 
     @Override
     public void refreshMusicList(Context context) {
-        musicListModel.refreshMusicList(context);
+        try {
+            musicListModel.refreshMusicList(context);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         Intent intent = new Intent(context, PlayService.class);
         intent.putExtra("musicCommand", ActivityCommand.INIT_SERVICE);
         context.startService(intent);

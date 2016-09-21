@@ -1,16 +1,22 @@
 package gavin.lovemusic.detailmusic.view;
 
 import android.content.IntentFilter;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.graphics.Palette;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
+
+import com.bumptech.glide.Glide;
 
 import java.util.ArrayList;
 
@@ -29,6 +35,8 @@ import gavin.lovemusic.service.PlayService;
  */
 public class PlayDetailFragment extends Fragment implements IPlayDetailView {
     @BindView(R.id.bgImageView) ImageView mBgImageView;
+    @BindView(R.id.seekBarColumn) LinearLayout mSeekBarColumn;
+    @BindView(R.id.playColumn) LinearLayout mPlayCoumn;
     @BindView(R.id.playButton) ImageButton mPlayButton;
 //    @BindView(R.id.playModeButton) ImageButton mPlayModeButton;
     @BindView(R.id.lyricSeekBar) SeekBar mLyricSeekBar;
@@ -58,14 +66,14 @@ public class PlayDetailFragment extends Fragment implements IPlayDetailView {
         new Thread(() -> {
             while (true) {
                 try {
-                    Lyric lyric = new Lyric(PlayService.currentMusic);
-                    lyricList = lyric.getLyricList();
-                    lyricView.setLyricList(lyricList);
-                    lyricView.setIndex(getLyricIndex());
+//                    Lyric lyric = new Lyric(PlayService.currentMusic);
+//                    lyricList = lyric.getLyricList();
+//                    lyricView.setLyricList(lyricList);
+//                    lyricView.setIndex(getLyricIndex());
                     if (PlayService.prepared) {
                         mLyricSeekBar.setProgress((int) getCurrentTime());
                     }
-                    getActivity().runOnUiThread(() -> lyricView.invalidate());
+//                    getActivity().runOnUiThread(() -> lyricView.invalidate());
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -211,7 +219,21 @@ public class PlayDetailFragment extends Fragment implements IPlayDetailView {
         }
         */
 
-        mBgImageView.setImageBitmap(PlayService.currentMusic.getAlbum());
+        Glide.with(this)
+                .load(PlayService.currentMusic.getAlbumPath())
+                .into(mBgImageView);
+
+        Bitmap album = BitmapFactory.decodeFile(PlayService.currentMusic.getAlbumPath());
+        Palette.from(album).maximumColorCount(32).generate(palette -> {
+            Palette.Swatch swatch = palette.getVibrantSwatch();
+            if(swatch != null) {
+                mPlayCoumn.setBackgroundColor(swatch.getRgb());
+                mSeekBarColumn.setBackgroundColor(swatch.getRgb());
+            } else {
+                mPlayCoumn.setBackgroundColor(getResources().getColor(R.color.playColumnDefault));
+                mSeekBarColumn.setBackgroundColor(getResources().getColor(R.color.playColumnDefault));
+            }
+        });
 
         if (PlayService.prepared) {
             mLyricSeekBar.setMax((int) getDuration());

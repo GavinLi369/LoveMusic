@@ -65,9 +65,9 @@ public class LocalMusicFragment extends Fragment {
         for (int i = 0; i < musicListPresenter.getMusicList().size(); i++) {
             HashMap<String, String> map = new HashMap<>();
             map.put("itemId", "" + (i + 1));
-            map.put("musicName", musicListPresenter.getMusicList().get(i).getMusicName());
+            map.put("musicName", musicListPresenter.getMusicList().get(i).getTitle());
             map.put("musicInfo", musicListPresenter.getMusicList().get(i).getArtist() +
-                    " - " + musicListPresenter.getMusicList().get(i).getAlbumName());
+                    " - " + musicListPresenter.getMusicList().get(i).getAlbum());
             items.add(map);
         }
         ListViewAdapter listViewAdapter = new ListViewAdapter(items, getActivity());

@@ -4,6 +4,8 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
@@ -13,6 +15,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.graphics.Palette;
 import android.support.v7.widget.Toolbar;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
@@ -20,7 +23,7 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageButton;
-import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import butterknife.BindView;
@@ -40,11 +43,12 @@ import gavin.lovemusic.service.PlayService;
  * on 16-9-18.
  */
 public class MainActivity extends AppCompatActivity implements IMusicListView {
-    @BindView(R.id.musicAlbum) ImageView mMusicAlbum;
     @BindView(R.id.playButton) ImageButton mPlayButton;
     @BindView(R.id.musicName) TextView mMusicName;
     @BindView(R.id.artist) TextView mArtist;
+    @BindView(R.id.view_drag) LinearLayout mDragView;
     PlayDetailFragment mPlayDetailFragment;
+    SectionPagerAdapter mAdapter;
 
     private IMusicListPresenter musicListPresenter;
 
@@ -55,7 +59,8 @@ public class MainActivity extends AppCompatActivity implements IMusicListView {
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
 
         ViewPager viewPager = (ViewPager) findViewById(R.id.view_pager);
-        viewPager.setAdapter(new SectionPagerAdapter(getSupportFragmentManager()));
+        mAdapter = new SectionPagerAdapter(getSupportFragmentManager());
+        viewPager.setAdapter(mAdapter);
 
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(viewPager);
@@ -81,6 +86,8 @@ public class MainActivity extends AppCompatActivity implements IMusicListView {
         int id = item.getItemId();
         if (id == R.id.refresh_music_list) {
             musicListPresenter.refreshMusicList(this);
+            LocalMusicFragment localMusicFragment = (LocalMusicFragment) mAdapter.getItem(1);
+            localMusicFragment.setSongListView();
         }
         return super.onOptionsItemSelected(item);
     }
@@ -96,7 +103,7 @@ public class MainActivity extends AppCompatActivity implements IMusicListView {
     public void updateUI() {
         switch (PlayService.musicState) {
             case PlayService.PLAYING:
-                mMusicName.setText(PlayService.currentMusic.getMusicName());
+                mMusicName.setText(PlayService.currentMusic.getTitle());
                 mPlayButton.setBackgroundResource
                         (R.drawable.img_button_notification_play_pause_grey);
                 break;
@@ -107,9 +114,21 @@ public class MainActivity extends AppCompatActivity implements IMusicListView {
                 break;
         }
         if(PlayService.currentMusic != null) {
-            mMusicName.setText(PlayService.currentMusic.getMusicName());
+            mMusicName.setText(PlayService.currentMusic.getTitle());
             mArtist.setText(PlayService.currentMusic.getArtist());
-            mMusicAlbum.setImageBitmap(PlayService.currentMusic.getAlbum());
+            Bitmap album = BitmapFactory.decodeFile(PlayService.currentMusic.getAlbumPath());
+            Palette.from(album)
+                    .maximumColorCount(32)
+                    .generate(palette -> {
+                Palette.Swatch swatch = palette.getVibrantSwatch();
+                if(swatch != null) {
+                    mDragView.setBackgroundColor(swatch.getRgb());
+                    mMusicName.setTextColor(swatch.getTitleTextColor());
+                    mArtist.setTextColor(swatch.getBodyTextColor());
+                } else {
+                    mDragView.setBackgroundColor(getResources().getColor(R.color.playColumnDefault));
+                }
+            });
         }
 
         mPlayDetailFragment.updateUI();
@@ -179,8 +198,10 @@ public class MainActivity extends AppCompatActivity implements IMusicListView {
             PlayService playService = ((PlayService.ServiceBinder) iBinder).getService();
             playService.addServiceLinstener((IServiceListener) musicListPresenter);
             playService.addServiceLinstener((IServiceListener) mPlayDetailFragment.getPlayDetailPresenter());
-            mPlayDetailFragment.init();
-            updateUI();
+            if(PlayService.currentMusic != null) {
+                mPlayDetailFragment.init();
+                updateUI();
+            }
         }
 
         @Override
@@ -188,15 +209,20 @@ public class MainActivity extends AppCompatActivity implements IMusicListView {
     };
 
     public class SectionPagerAdapter extends FragmentPagerAdapter {
+        private NetworkMusicFragment networkMusicFragment;
+        private LocalMusicFragment localMusicFragment;
+
         public SectionPagerAdapter(FragmentManager fm) {
             super(fm);
+            networkMusicFragment = new NetworkMusicFragment();
+            localMusicFragment = new LocalMusicFragment();
         }
 
         @Override
         public Fragment getItem(int position) {
             switch (position) {
-                case 0: return new NetworkMusicFragment();
-                case 1: return new LocalMusicFragment();
+                case 0: return networkMusicFragment;
+                case 1: return localMusicFragment;
             }
             return null;
         }

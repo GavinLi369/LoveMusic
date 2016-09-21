@@ -4,16 +4,8 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.graphics.Bitmap;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.InputStream;
-
-import gavin.lovemusic.App;
 import gavin.lovemusic.entity.Music;
-import gavin.lovemusic.utils.FileUtils;
 
 /**
  * Created by Gavin on 2015/11/12.
@@ -43,13 +35,9 @@ public class DBOperation {
     }
 
     public Cursor selectAll(){
-        if (mSqLiteDatabase != null) {
-            return mSqLiteDatabase.query(TABLE_NAME,
-                    new String[]{NAME, PATH},
-                    null, null, null, null, null);
-        }
-
-        return null;
+        return selectMusicInfo(
+                new String[]{NAME, PATH, ARTIST, ALBUM_NAME, ALBUM, DURATION},
+                null, null);
     }
 
     public Cursor selectMusicInfo(String[] columns, String selection, String[] selectionArgs){
@@ -62,7 +50,6 @@ public class DBOperation {
             return mSqLiteDatabase.query(TABLE_NAME, columns,
                     selection, selectionArgs, groupBy, having, orderBy);
         }
-
         return null;
     }
 
@@ -70,28 +57,19 @@ public class DBOperation {
         if (mSqLiteDatabase != null && music != null) {
             ContentValues values = new ContentValues();
             values.put(PATH, music.getMusicPath());
-            values.put(NAME, music.getMusicName());
+            values.put(NAME, music.getTitle());
             values.put(ARTIST, music.getArtist());
-            values.put(ALBUM_NAME, music.getAlbumName());
+            values.put(ALBUM_NAME, music.getAlbum());
             values.put(DURATION, music.getDuration());
-//            new Thread(new Runnable() {
-//                @Override
-//                public void run() {
-//                    values.put(ALBUM, writeAlbum2SDCard(music.getAlbumByID3V2()).getPath());
-//
-//                }
-//            }).start();
+            values.put(ALBUM, music.getAlbumPath());
             mSqLiteDatabase.insert(TABLE_NAME, "", values);
         }
     }
 
-    private static File writeAlbum2SDCard(Bitmap album){
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        album.compress(Bitmap.CompressFormat.JPEG, 100, out);
-        InputStream inputStream = new ByteArrayInputStream(out.toByteArray());
-        return FileUtils.write2SDCard
-                (App.APP_DIR + "/Album/", "" + System.currentTimeMillis(), inputStream);
-
+    public void cleanDataBase() {
+        if(mSqLiteDatabase != null) {
+            mSqLiteDatabase.delete(TABLE_NAME, null, null);
+        }
     }
 
     public void closeDataBase(){

@@ -8,6 +8,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Binder;
@@ -135,6 +137,8 @@ public class PlayService extends Service {
             mediaPlayer = MediaPlayer.create
                     (PlayService.this, Uri.parse("file://" + currentMusic.getMusicPath()));
             prepared = true;
+            for(IServiceListener listener : listeners)
+                listener.musicStatusChanged();
         }
     }
 
@@ -325,9 +329,10 @@ public class PlayService extends Service {
                     (R.id.playButton, R.drawable.img_button_notification_play_play_grey);
         }
 
-        contentView.setTextViewText(R.id.musicName, currentMusic.getMusicName());
+        contentView.setTextViewText(R.id.musicName, currentMusic.getTitle());
         contentView.setTextViewText(R.id.artist, currentMusic.getArtist());
-        contentView.setImageViewBitmap(R.id.musicAlbum, currentMusic.getAlbum());
+        Bitmap album = BitmapFactory.decodeFile(currentMusic.getAlbumPath());
+        contentView.setImageViewBitmap(R.id.musicAlbum, album);
 
         startForeground(NOTIFICATION_ID, notification);
     }

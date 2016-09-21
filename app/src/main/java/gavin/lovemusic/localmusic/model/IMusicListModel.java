@@ -2,6 +2,7 @@ package gavin.lovemusic.localmusic.model;
 
 import android.content.Context;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 import gavin.lovemusic.entity.Music;
@@ -13,5 +14,5 @@ import gavin.lovemusic.entity.Music;
 public interface IMusicListModel {
     ArrayList<Music> getMusicList(Context context);
 
-    void refreshMusicList(Context context);
+    void refreshMusicList(Context context) throws IOException;
 }

@@ -1,12 +1,15 @@
 package gavin.lovemusic.detailmusic.view;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import gavin.lovemusic.entity.Music;
-import gavin.lovemusic.utils.FileUtils;
 
 /**
  * Created by Gavin on 2015/8/24.
@@ -42,8 +45,34 @@ public class Lyric {
      */
     private void init() {
         File lrcFile = getLrcOfSong(music.getMusicPath());
-        lyricStr = FileUtils.parseFile2String(lrcFile);
+        lyricStr = parseFile2String(lrcFile);
         parseLyric();
+    }
+
+    /**
+     * 将文本文件转换为String
+     */
+    private String parseFile2String(File file) {
+        if (file == null) {
+            return "";
+        }
+
+        BufferedReader reader;
+        String line;
+        String buffer = "";
+        try {
+            reader = new BufferedReader
+                    (new InputStreamReader(new FileInputStream(file), "UTF-8"));
+            while ((line = reader.readLine()) != null) {
+                buffer = buffer + line + "\n";
+            }
+
+            reader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return buffer;
     }
 
     /**
