@@ -9,7 +9,7 @@
             android:id="@+id/musicAlbum"
             android:layout_width="64dp"
             android:layout_height="64dp"
-            android:src="@drawable/img_appwidget_album_cover"/>
+            android:src="@drawable/defalut_album"/>
 
         <LinearLayout
             android:layout_width="70dp"
@@ -48,7 +48,7 @@
             android:layout_marginStart="20dp"
             android:layout_marginEnd="10dp"
             android:layout_marginTop="15dp"
-            android:src="@drawable/img_button_notification_play_play_grey"/>
+            android:src="@drawable/play_prey"/>
 
         <ImageView
             android:id="@+id/nextButton"

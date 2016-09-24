@@ -15,7 +15,7 @@
         android:theme="@style/AppTheme"
         android:largeHeap="true">
         <activity
-            android:name="gavin.lovemusic.localmusic.view.MainActivity"
+            android:name="gavin.lovemusic.mainview.MainActivity"
             android:theme="@style/AppTheme.NoActionBar"
             android:label="@string/app_name" >
             <intent-filter>

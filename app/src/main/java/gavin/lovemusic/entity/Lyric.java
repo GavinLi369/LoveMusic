@@ -1,4 +1,4 @@
-package gavin.lovemusic.detailmusic.view;
+package gavin.lovemusic.entity;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import gavin.lovemusic.entity.LyricContent;
 import gavin.lovemusic.entity.Music;
 
 /**

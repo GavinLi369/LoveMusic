@@ -5,7 +5,6 @@ package gavin.lovemusic.service;
  *
  */
 public enum ActivityCommand{
-    INIT_SERVICE,
     PLAY_MUSIC,            //开始播放
     PAUSE_MUSIC,          //暂停播放
     RESUME_MUSIC,          //继续播放

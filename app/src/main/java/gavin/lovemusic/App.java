@@ -2,9 +2,10 @@ package gavin.lovemusic;
 
 import android.app.Application;
 import android.os.Environment;
-import android.support.annotation.ColorInt;
 
 import com.orhanobut.logger.Logger;
+
+import org.greenrobot.eventbus.EventBus;
 
 import java.io.File;
 import java.io.IOException;
@@ -52,6 +53,7 @@ public class App extends Application {
 
     public void setMusicList(ArrayList<Music> musicList) {
         this.musicList = musicList;
+        EventBus.getDefault().post(new MusicListUpdateEvent(musicList));
     }
 
     public ArrayList<Music> getMusicList(){

@@ -1,4 +1,4 @@
-package gavin.lovemusic.localmusic.model;
+package gavin.lovemusic.localmusic;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -14,15 +14,15 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import gavin.lovemusic.App;
-import gavin.lovemusic.entity.Music;
 import gavin.lovemusic.database.DBOperation;
+import gavin.lovemusic.entity.Music;
 
 /**
- * Created by GavinLi on 16-9-10.
- * MusicListModel
+ * Created by GavinLi
+ * on 16-9-22.
  */
-public class MusicListModel implements IMusicListModel {
-    public MusicListModel(Context context) {
+public class LocalMusicModel implements LocalMusicContract.Model {
+    public LocalMusicModel(Context context) {
         App app = (App) context.getApplicationContext();
         app.setMusicList(getMusicByDataBase(context));
         for (int i = 0; i < app.getMusicList().size(); i++) {
@@ -32,13 +32,11 @@ public class MusicListModel implements IMusicListModel {
 
     @Override
     public ArrayList<Music> getMusicList(Context context) {
-        return ((App) context.getApplicationContext()).getMusicList();
+        return getMusicByDataBase(context);
     }
 
     @Override
     public void refreshMusicList(Context context) throws IOException {
-        App app = (App) context.getApplicationContext();
-
         File filePath = new File(App.APP_DIR + "/Album");
         File[] files = filePath.listFiles();
         for(File file : files) {
@@ -46,15 +44,18 @@ public class MusicListModel implements IMusicListModel {
                 throw new IOException("can't clean album bitmap");
         }
 
-        app.setMusicList(getMusicFromSDCard());
+        ArrayList<Music> musicList = getMusicFromSDCard();
         DBOperation dbOperation = new DBOperation(context);
         dbOperation.openOrCreateDataBase();
         dbOperation.cleanDataBase();
-        for (int i = 0; i < app.getMusicList().size(); i++) {
-            app.getMusicList().get(i).setId(i);
-            dbOperation.insertMusicInfo(app.getMusicList().get(i));
+        for (int i = 0; i < musicList.size(); i++) {
+            musicList.get(i).setId(i);
+            dbOperation.insertMusicInfo(musicList.get(i));
         }
         dbOperation.closeDataBase();
+
+        App app = (App) context.getApplicationContext();
+        app.setMusicList(musicList);
     }
 
     private ArrayList<Music> getMusicFromSDCard() {

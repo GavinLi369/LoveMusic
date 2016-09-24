@@ -12,16 +12,16 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaPlayer;
 import android.net.Uri;
-import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.widget.RemoteViews;
 
-import java.util.ArrayList;
-import java.util.List;
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import gavin.lovemusic.App;
-import gavin.lovemusic.localmusic.view.MainActivity;
+import gavin.lovemusic.MusicListUpdateEvent;
 import gavin.lovemusic.constant.R;
 import gavin.lovemusic.entity.Music;
 
@@ -30,15 +30,7 @@ import gavin.lovemusic.entity.Music;
  * 歌曲播放服务
  */
 public class PlayService extends Service {
-    public static final String SERVICE_COMMAND = "gavin.music.service";
-
-    public static int playMode;
-    public static final int REPEAT = 0;        //歌曲播放模式：顺序播放
-    public static final int REPEAT_ONE = 1;       //歌曲播放模式：单曲播放
-    public static final int SHUFFLE = 2;        //歌曲播放模式：随机播放
-
     public static int musicState;
-    public static final int STOP = 0;     //没有歌曲正在播放
     public static final int PLAYING = 1;        //歌曲正在播放
     public static final int PAUSE = 2;         //歌曲暂停
 
@@ -52,21 +44,17 @@ public class PlayService extends Service {
     public static final String NOTIFICATION_STOP = "gavin.notification.stop";
 
     public static MediaPlayer mediaPlayer;
-    public static Music currentMusic;
-    public static boolean prepared;
+    private Music currentMusic;
 
     private Notification notification;
     private RemoteViews contentView;
 
     private App app;
 
-    private List<IServiceListener> listeners = new ArrayList<>();
-
     @Override
     public void onCreate() {
         super.onCreate();
         app = (App) getApplicationContext();
-        initMusic();
 
         IntentFilter intentFilterPlay = new IntentFilter(NOTIFICATION_PLAY);
         registerReceiver(broadcastReceiver, intentFilterPlay);
@@ -74,6 +62,16 @@ public class PlayService extends Service {
         registerReceiver(broadcastReceiver, intentFilterNext);
         IntentFilter intentFilterStop = new IntentFilter(NOTIFICATION_STOP);
         registerReceiver(broadcastReceiver, intentFilterStop);
+
+        EventBus.getDefault().register(this);
+    }
+
+    //当PlayService被销毁时，解除广播接收器的注册
+    @Override
+    public void onDestroy() {
+        unregisterReceiver(broadcastReceiver);
+        EventBus.getDefault().unregister(this);
+        super.onDestroy();
     }
 
     /**
@@ -83,81 +81,63 @@ public class PlayService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null) {
             ActivityCommand activityCommand = (ActivityCommand)intent.getSerializableExtra("musicCommand");
-            switch (activityCommand) {
-                case INIT_SERVICE:
-                    initMusic();
-                    break;
-                case PLAY_MUSIC:
-                    startMusic();
-                    break;
-                case PAUSE_MUSIC:
-                    pauseMusic();
-                    break;
-                case RESUME_MUSIC:
-                    resumeMusic();
-                    break;
-                case PREVIOUS_MUSIC:
-                    previousMusic();
-                    break;
-                case NEXT_MUSIC:
-                    nextMusic();
-                    break;
-                case CHANGE_PLAY_MODE:
-                    playMode = intent.getExtras().getInt("playMode");
-                    break;
-                case CHANGE_PROGRESS:
-                    setProgress(intent.getExtras().getInt("progress"));
-                    break;
-                default:
-                    break;
+            if(activityCommand != null) {
+                switch (activityCommand) {
+                    case PLAY_MUSIC: startMusic(currentMusic); break;
+                    case PAUSE_MUSIC: pauseMusic(); break;
+                    case RESUME_MUSIC: resumeMusic(); break;
+                    case PREVIOUS_MUSIC: previousMusic(); break;
+                    case NEXT_MUSIC: nextMusic(); break;
+                    case CHANGE_PROGRESS:
+                        setProgress(intent.getExtras().getInt("progress"));
+                        break;
+                }
             }
         }
 
         return super.onStartCommand(intent, flags, startId);
     }
 
-    private void initMusic(){
-        if (!app.getMusicList().isEmpty()) {
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    private void initMusic(MusicListUpdateEvent event){
+        if (!event.musicList.isEmpty()) {
             int musicId = 0;
             SharedPreferences sharedPreferences =
                     app.getSharedPreferences("service_info", Service.MODE_PRIVATE);
             if (sharedPreferences != null) {
                 musicId = sharedPreferences.getInt("musicId", 0);
-                playMode = sharedPreferences.getInt("playMode", 0);
             }
             /**
              * 防止删除歌曲后数据越界
              */
             try {
-                currentMusic = app.getMusicList().get(musicId);
+                currentMusic = event.musicList.get(musicId);
             } catch (IndexOutOfBoundsException e) {
-                currentMusic = app.getMusicList().get(0);
+                currentMusic = event.musicList.get(0);
                 e.printStackTrace();
             }
             mediaPlayer = MediaPlayer.create
                     (PlayService.this, Uri.parse("file://" + currentMusic.getMusicPath()));
-            prepared = true;
-            for(IServiceListener listener : listeners)
-                listener.musicStatusChanged();
+            EventBus.getDefault().post(new MusicChangedEvent(currentMusic, musicState));
         }
     }
 
     /**
      * 开始一首新的歌曲
      */
-    private void startMusic() {
+    private void startMusic(Music music) {
+        currentMusic = music;
         if (mediaPlayer != null) {
-            stopMusic();
+            mediaPlayer.stop();
+            mediaPlayer.release();
         }
         mediaPlayer = MediaPlayer.create
-                (PlayService.this, Uri.parse("file://" + currentMusic.getMusicPath()));
+                (PlayService.this, Uri.parse("file://" + music.getMusicPath()));
         mediaPlayer.setLooping(false);
         mediaPlayer.setOnCompletionListener(new MyCompletionListener());
         mediaPlayer.start();
-        prepared = true;
         musicState = PLAYING;
-        for(IServiceListener listener : listeners)
-            listener.musicStatusChanged();
+        EventBus.getDefault().post(new MusicChangedEvent(music, musicState));
 
         showNotification();
     }
@@ -168,11 +148,9 @@ public class PlayService extends Service {
     private void resumeMusic() {
         mediaPlayer.start();
         musicState = PLAYING;
-        for(IServiceListener listener : listeners)
-            listener.musicStatusChanged();
+        EventBus.getDefault().post(new MusicChangedEvent(currentMusic, musicState));
 
-        contentView.setImageViewResource
-                (R.id.playButton, R.drawable.img_button_notification_play_pause_grey);
+        contentView.setImageViewResource(R.id.playButton, R.drawable.pause);
         startForeground(NOTIFICATION_ID, notification);
     }
 
@@ -182,25 +160,11 @@ public class PlayService extends Service {
     private void pauseMusic() {
         mediaPlayer.pause();
         musicState = PAUSE;
-        for(IServiceListener listener : listeners)
-            listener.musicStatusChanged();
+        EventBus.getDefault().post(new MusicChangedEvent(currentMusic, musicState));
 
         contentView.setImageViewResource
-                (R.id.playButton, R.drawable.img_button_notification_play_play_grey);
+                (R.id.playButton, R.drawable.play_prey);
         startForeground(NOTIFICATION_ID, notification);
-    }
-
-    /**
-     * 停止正在播放的歌曲
-     */
-    private void stopMusic() {
-        prepared = false;
-        musicState = STOP;
-        for(IServiceListener listener : listeners)
-            listener.musicStatusChanged();
-        mediaPlayer.stop();
-        mediaPlayer.release();
-        mediaPlayer = null;
     }
 
     /**
@@ -213,30 +177,44 @@ public class PlayService extends Service {
             currentMusic = app.getMusicList().get(app.getMusicList().size() - 1);
         }
 
-        startMusic();
+        startMusic(currentMusic);
     }
 
     /**
      * 播放下一首歌曲
      */
     private void nextMusic() {
-        switch (playMode) {
-            case REPEAT:
-                if (currentMusic.getId() != app.getMusicList().size() - 1) {
-                    currentMusic = app.getMusicList().get(currentMusic.getId() + 1);
-                } else {
-                    currentMusic = app.getMusicList().get(0);
-                }
-                break;
-            case REPEAT_ONE:
-                break;
-            case SHUFFLE:
-                int index = (int) (Math.random() * app.getMusicList().size() - 1);
-                currentMusic = app.getMusicList().get(index);
-                break;
+        if (currentMusic.getId() != app.getMusicList().size() - 1) {
+            currentMusic = app.getMusicList().get(currentMusic.getId() + 1);
+        } else {
+            currentMusic = app.getMusicList().get(0);
         }
 
-        startMusic();
+        startMusic(currentMusic);
+    }
+
+    @Subscribe(threadMode = ThreadMode.BACKGROUND)
+    public void changeMusic(ChangeMusicEvent event) {
+        startMusic(event.music);
+//        EventBus.getDefault().post(new MusicChangedEvent(event.music, musicState));
+    }
+
+    public static class ChangeMusicEvent {
+        public final Music music;
+
+        public ChangeMusicEvent(Music music) {
+            this.music = music;
+        }
+    }
+
+    public static class MusicChangedEvent {
+        public final Music currentMusic;
+        public final int musicState;
+
+        public MusicChangedEvent(Music currentMusic, int musicState) {
+            this.currentMusic = currentMusic;
+            this.musicState = musicState;
+        }
     }
 
     /**
@@ -278,13 +256,9 @@ public class PlayService extends Service {
                             getSharedPreferences("service_info", Service.MODE_PRIVATE);
                     SharedPreferences.Editor editor = sharedPreferences.edit();
                     editor.putInt("musicId", currentMusic.getId());
-                    editor.putInt("playMode", playMode);
                     editor.apply();
-                    stopMusic();
+                    pauseMusic();
                     stopForeground(true);
-                    mediaPlayer = MediaPlayer.create
-                            (PlayService.this, Uri.parse("file://" + currentMusic.getMusicPath()));
-                    prepared = true;
                     break;
                 default:
                     break;
@@ -303,11 +277,11 @@ public class PlayService extends Service {
         notification.contentView = contentView;
         notification.flags = Notification.FLAG_ONGOING_EVENT;
 
-        Intent intentActivity = new Intent(this, MainActivity.class);
-        intentActivity.addFlags
-                (Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
-        notification.contentIntent = PendingIntent.getActivity
-                (getApplicationContext(), 0, intentActivity, 0);
+//        Intent intentActivity = new Intent(this, MainActivity.class);
+//        intentActivity.addFlags
+//                (Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+//        notification.contentIntent = PendingIntent.getActivity
+//                (getApplicationContext(), 0, intentActivity, 0);
 
         Intent intentPlay = new Intent(NOTIFICATION_PLAY);
         PendingIntent pIntentPlay = PendingIntent.getBroadcast(this, 0, intentPlay, 0);
@@ -322,11 +296,9 @@ public class PlayService extends Service {
         contentView.setOnClickPendingIntent(R.id.closeService, pIntentClose);
 
         if (musicState == PLAYING) {
-            contentView.setImageViewResource
-                    (R.id.playButton, R.drawable.img_button_notification_play_pause_grey);
+            contentView.setImageViewResource(R.id.playButton, R.drawable.pause);
         } else {
-            contentView.setImageViewResource
-                    (R.id.playButton, R.drawable.img_button_notification_play_play_grey);
+            contentView.setImageViewResource(R.id.playButton, R.drawable.play_prey);
         }
 
         contentView.setTextViewText(R.id.musicName, currentMusic.getTitle());
@@ -337,28 +309,9 @@ public class PlayService extends Service {
         startForeground(NOTIFICATION_ID, notification);
     }
 
-    public void addServiceLinstener(IServiceListener listener) {
-        listeners.add(listener);
-    }
-
-    /**
-     * 当PlayService被销毁时，解除广播接收器的注册
-     */
-    @Override
-    public void onDestroy() {
-        unregisterReceiver(broadcastReceiver);
-        super.onDestroy();
-    }
-
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        return new ServiceBinder();
-    }
-
-    public class ServiceBinder extends Binder {
-        public PlayService getService() {
-            return PlayService.this;
-        }
+        return null;
     }
 }

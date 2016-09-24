@@ -1,4 +1,4 @@
-package gavin.lovemusic.detailmusic.view;
+package gavin.lovemusic.detailmusic;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -8,6 +8,8 @@ import android.util.AttributeSet;
 import android.view.View;
 
 import java.util.ArrayList;
+
+import gavin.lovemusic.entity.LyricContent;
 
 /**
  * Created by Gavin on 2015/8/24.
