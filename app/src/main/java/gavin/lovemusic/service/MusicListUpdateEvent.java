@@ -1,4 +1,4 @@
-package gavin.lovemusic;
+package gavin.lovemusic.service;
 
 import java.util.ArrayList;
 

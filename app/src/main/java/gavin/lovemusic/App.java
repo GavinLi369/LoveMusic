@@ -22,8 +22,6 @@ public class App extends Application {
     private static String mExternalStorage = Environment.getExternalStorageDirectory().getPath();
     public static final String APP_DIR = mExternalStorage + File.separator + "LoveMusic";
 
-    private ArrayList<Music> musicList = new ArrayList<>();
-
     @Override
     public void onCreate() {
         super.onCreate();
@@ -49,14 +47,5 @@ public class App extends Application {
             if(!dir.mkdirs())
                 throw new IOException("App dir can't make");
         }
-    }
-
-    public void setMusicList(ArrayList<Music> musicList) {
-        this.musicList = musicList;
-        EventBus.getDefault().post(new MusicListUpdateEvent(musicList));
-    }
-
-    public ArrayList<Music> getMusicList(){
-        return musicList;
     }
 }

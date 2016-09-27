@@ -1,4 +1,4 @@
-package gavin.lovemusic.localmusic;
+package gavin.lovemusic.networkmusic;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
@@ -10,29 +10,34 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 
-import java.util.List;
+import java.util.ArrayList;
 
 import gavin.lovemusic.constant.R;
 import gavin.lovemusic.entity.Music;
 
 /**
  * Created by GavinLi
- * on 16-9-23.
+ * on 16-9-24.
  */
-public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> {
-    private List<Music> mMusicList;
+public class NetworkRecyclerAdapter extends RecyclerView.Adapter<NetworkRecyclerAdapter.ViewHolder> {
+    private ArrayList<Music> mMusicList;
     private OnItemClickListener mOnItemClickListener;
     private Context context;
 
-    public RecyclerViewAdapter(List<Music> musicList) {
-        this.mMusicList = musicList;
+    public NetworkRecyclerAdapter() {
+        this.mMusicList = new ArrayList<>();
     }
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         context = parent.getContext();
         return new ViewHolder(LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.music_list_view, parent, false));
+                .inflate(R.layout.network_list_view, parent, false));
+    }
+
+    public void addMoreMusics(ArrayList<Music> musics) {
+        mMusicList.addAll(musics);
+        notifyDataSetChanged();
     }
 
     @Override
@@ -48,6 +53,10 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     @Override
     public int getItemCount() {
         return mMusicList.size();
+    }
+
+    public ArrayList<Music> getMusicList() {
+        return mMusicList;
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {

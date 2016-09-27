@@ -15,9 +15,9 @@ import gavin.lovemusic.entity.Music;
  */
 public class LocalMusicContract {
     interface Model {
-        ArrayList<Music> getMusicList(Context context);
+        ArrayList<Music> getMusicList();
 
-        void refreshMusicList(Context context) throws IOException;
+        void refreshMusicList() throws IOException;
     }
 
     interface View extends BaseView<Presenter> {

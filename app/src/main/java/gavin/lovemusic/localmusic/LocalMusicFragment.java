@@ -4,7 +4,6 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -32,7 +31,6 @@ public class LocalMusicFragment extends Fragment implements LocalMusicContract.V
         View rootView = inflater.inflate(R.layout.fragment_music_local, container, false);
         ButterKnife.bind(this, rootView);
         mListView.setLayoutManager(new LinearLayoutManager(getContext()));
-        mListView.setItemAnimator(new DefaultItemAnimator());
         mSwipeRefreshLayout.setDistanceToTriggerSync(200);
         mSwipeRefreshLayout.setOnRefreshListener(this);
         new LocalMusicPresenter(this, getContext());

@@ -88,13 +88,13 @@ public class MainActivity extends AppCompatActivity implements MainViewContract.
     }
 
     @Override
-    public void changePlayButton2Pause() {
-        mPlayButton.setBackgroundResource(R.drawable.pause);
+    public void changePlaying2Pause() {
+        mPlayButton.setBackgroundResource(R.drawable.play_prey);
     }
 
     @Override
-    public void changePauseButton2Play() {
-        mPlayButton.setBackgroundResource(R.drawable.play_prey);
+    public void changePause2Playing() {
+        mPlayButton.setBackgroundResource(R.drawable.pause);
     }
 
     @Override

@@ -21,9 +21,9 @@ public class MainViewContract {
 
         void changeDragViewColorDefault();
 
-        void changePlayButton2Pause();
+        void changePlaying2Pause();
 
-        void changePauseButton2Play();
+        void changePause2Playing();
 
         void changeMusicInfo(Music currentMusic);
     }

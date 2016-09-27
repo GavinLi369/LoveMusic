@@ -10,20 +10,29 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.io.IOException;
+
 import gavin.lovemusic.service.ActivityCommand;
 import gavin.lovemusic.service.PlayService;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import rx.Observable;
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
 /**
  * Created by GavinLi on 16-9-10.
  * MainViewPresenter
  */
 public class MainViewPresenter implements MainViewContract.Presenter {
-    private MainViewContract.View mMusicListView;
+    private MainViewContract.View mMainView;
 
 
-    public MainViewPresenter(MainViewContract.View mMusicListView) {
-        this.mMusicListView = mMusicListView;
-        mMusicListView.setPresenter(this);
+    public MainViewPresenter(MainViewContract.View mMainView) {
+        this.mMainView = mMainView;
+        mMainView.setPresenter(this);
     }
 
     @Override
@@ -46,24 +55,62 @@ public class MainViewPresenter implements MainViewContract.Presenter {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void updateUI(PlayService.MusicChangedEvent event) {
-        Bitmap album = BitmapFactory.decodeFile(event.currentMusic.getAlbumPath());
-        Palette.from(album)
-                .maximumColorCount(32)
-                .generate(palette -> {
-                    Palette.Swatch swatch = palette.getDarkVibrantSwatch();
-                    if(swatch != null) {
-                        mMusicListView.changeDragViewColor(swatch);
-                    } else {
-                        mMusicListView.changeDragViewColorDefault();
+        mMainView.changeMusicInfo(event.currentMusic);
+        Observable<Bitmap> observable = Observable.create(new Observable.OnSubscribe<Bitmap>() {
+            @Override
+            public void call(Subscriber<? super Bitmap> subscriber) {
+                if (event.currentMusic.getImage().startsWith("http")) {
+                    OkHttpClient okHttpClient = new OkHttpClient();
+                    Request request = new Request.Builder()
+                            .url(event.currentMusic.getImage())
+                            .build();
+                    try {
+                        Response response = okHttpClient.newCall(request).execute();
+                        subscriber.onNext(BitmapFactory.decodeStream(response.body().byteStream()));
+                    } catch (IOException e) {
+                        subscriber.onError(e);
                     }
-                });
+                } else {
+                    subscriber.onNext(BitmapFactory.decodeFile(event.currentMusic.getImage()));
+                }
+                subscriber.onCompleted();
+            }
+        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+        observable.subscribe(new Subscriber<Bitmap>() {
+            @Override
+            public void onCompleted() {
+            }
 
-        switch (event.musicState) {
-            case PlayService.PLAYING: mMusicListView.changePlayButton2Pause(); break;
-            case PlayService.PAUSE: mMusicListView.changePauseButton2Play(); break;
-        }
+            @Override
+            public void onError(Throwable e) {
+                e.printStackTrace();
+                mMainView.changeDragViewColorDefault();
+            }
 
-        mMusicListView.changeMusicInfo(event.currentMusic);
+            @Override
+            public void onNext(Bitmap bitmap) {
+                Palette.from(bitmap)
+                        .maximumColorCount(32)
+                        .generate(palette -> {
+                            Palette.Swatch swatch = palette.getDarkVibrantSwatch();
+                            if(swatch != null) {
+                                mMainView.changeDragViewColor(swatch);
+                            } else {
+                                mMainView.changeDragViewColorDefault();
+                            }
+                        });
+            }
+        });
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void musicPause(PlayService.MusicPauseEvent event) {
+        mMainView.changePlaying2Pause();
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void musicPause(PlayService.MusicPlayEvent event) {
+        mMainView.changePause2Playing();
     }
 
     @Override

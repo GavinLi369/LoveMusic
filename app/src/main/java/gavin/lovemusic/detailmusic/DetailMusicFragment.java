@@ -1,7 +1,5 @@
 package gavin.lovemusic.detailmusic;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -25,7 +23,6 @@ import gavin.lovemusic.constant.R;
 import gavin.lovemusic.entity.LyricContent;
 import gavin.lovemusic.entity.Music;
 import gavin.lovemusic.service.ActivityCommand;
-import gavin.lovemusic.service.PlayService;
 
 /**
  * Created by GavinLi
@@ -72,13 +69,11 @@ public class DetailMusicFragment extends Fragment implements DetailMusicContract
     }
 
     @Override
-    public void updateSeekBar(int progress) {
+    public void updateSeekBar(int duration, int progress) {
+        mLyricSeekBar.setMax(duration);
         mLyricSeekBar.setProgress(progress);
-    }
-
-    @Override
-    public void updateCurrentTimeTv(int progress) {
         mCurrentTime.setText(musicTimeFormat(progress));
+        mDuration.setText(musicTimeFormat(duration));
     }
 
     /**
@@ -116,48 +111,34 @@ public class DetailMusicFragment extends Fragment implements DetailMusicContract
     }
 
     @Override
-    public void updatePlayButton(int musicState) {
-        switch (musicState) {
-            case PlayService.PLAYING:
-                mPlayButton.setBackgroundResource(R.drawable.pause);
-                break;
-            case PlayService.PAUSE:
-                mPlayButton.setBackgroundResource(R.drawable.play_prey);
-                break;
-        }
+    public void changePlayToPause() {
+        mPlayButton.setBackgroundResource(R.drawable.play_prey);
     }
 
-    /**
-     * UI更新
-     */
     @Override
-    public void updateUI(Music currentMusic) {
+    public void changePauseToPlay() {
+        mPlayButton.setBackgroundResource(R.drawable.pause);
+    }
+
+    @Override
+    public void updateBgImage(Music currentMusic) {
         Glide.with(this)
-                .load(currentMusic.getAlbumPath())
+                .load(currentMusic.getImage())
                 .into(mBgImageView);
+    }
 
-        Bitmap album = BitmapFactory.decodeFile(currentMusic.getAlbumPath());
-        Palette.from(album).maximumColorCount(32).generate(palette -> {
-            Palette.Swatch swatch = palette.getDarkVibrantSwatch();
-            if(swatch != null) {
-                mPlayCoumn.setBackgroundColor(swatch.getRgb());
-                mSeekBarColumn.setBackgroundColor(swatch.getRgb());
-            } else {
-                //noinspection deprecation
-                mPlayCoumn.setBackgroundColor(getResources().getColor(R.color.playColumnDefault));
-                //noinspection deprecation
-                mSeekBarColumn.setBackgroundColor(getResources().getColor(R.color.playColumnDefault));
-            }
-        });
+    @Override
+    public void changeDragViewColor(Palette.Swatch swatch) {
+        mPlayCoumn.setBackgroundColor(swatch.getRgb());
+        mSeekBarColumn.setBackgroundColor(swatch.getRgb());
+    }
 
-        try {
-            mLyricSeekBar.setMax((int) currentMusic.getDuration());
-            mLyricSeekBar.setProgress(mDetailMusicPresenter.getCurrentTime());
-            mCurrentTime.setText(musicTimeFormat(mDetailMusicPresenter.getCurrentTime()));
-            mDuration.setText(musicTimeFormat(currentMusic.getDuration()));
-        } catch (IllegalStateException e) {
-            e.printStackTrace();
-        }
+    @Override
+    public void changeDragViewColorDefault() {
+        //noinspection deprecation
+        mPlayCoumn.setBackgroundColor(getResources().getColor(R.color.playColumnDefault));
+        //noinspection deprecation
+        mSeekBarColumn.setBackgroundColor(getResources().getColor(R.color.playColumnDefault));
     }
 
     @Override

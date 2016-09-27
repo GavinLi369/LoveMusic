@@ -1,7 +1,5 @@
 package gavin.lovemusic.entity;
 
-import java.io.File;
-
 /**
  * Created by Gavin on 2015/8/23.
  * MP3歌曲模型
@@ -11,18 +9,11 @@ public class Music {
     private String artist;   //歌手名称
     private String album;    //歌曲专辑名称
     private long duration;        //歌曲时长
-    private String albumPath;  //专辑封面路径
+    private String image;  //专辑封面路径
+    private String path;
 
-    //为了在歌曲列表中定位，特意设定歌曲ID，用于在下一首或上一首时定位
-    private int id;                         //歌曲Id
-    private File musicFile;                 //歌曲文件
-
-    public Music(File musicFile) {
-        this.musicFile = musicFile;
-    }
-
-    public String getAlbumPath() {
-        return albumPath;
+    public String getImage() {
+        return image;
     }
 
     public void setTitle(String title) {
@@ -41,8 +32,8 @@ public class Music {
         this.duration = duration;
     }
 
-    public void setAlbumPath(String albumPath) {
-        this.albumPath = albumPath;
+    public void setImage(String image) {
+        this.image = image;
     }
 
     public String getTitle() {
@@ -61,15 +52,33 @@ public class Music {
         return duration;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public void setPath(String path) {
+        this.path = path;
     }
 
-    public int getId() {
-        return id;
+    public String getPath() {
+        return path;
     }
 
-    public String getMusicPath() {
-        return musicFile.getPath();
+    @SuppressWarnings("SimplifiableIfStatement")
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Music)) return false;
+
+        Music music = (Music) o;
+
+        if (title != null ? !title.equals(music.title) : music.title != null) return false;
+        if (artist != null ? !artist.equals(music.artist) : music.artist != null) return false;
+        return album != null ? album.equals(music.album) : music.album == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = title != null ? title.hashCode() : 0;
+        result = 31 * result + (artist != null ? artist.hashCode() : 0);
+        result = 31 * result + (album != null ? album.hashCode() : 0);
+        return result;
     }
 }

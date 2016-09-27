@@ -1,6 +1,7 @@
 package gavin.lovemusic.detailmusic;
 
 import android.content.Context;
+import android.support.v7.graphics.Palette;
 
 import java.util.ArrayList;
 
@@ -16,15 +17,19 @@ import gavin.lovemusic.service.ActivityCommand;
  */
 public class DetailMusicContract {
     interface View extends BaseView<Presenter> {
-        void updateUI(Music currentMusic);
+        void updateBgImage(Music currentMusic);
+
+        void changeDragViewColor(Palette.Swatch swatch);
+
+        void changeDragViewColorDefault();
 
         void updateLyricView(ArrayList<LyricContent> lyricList, int duration, int currentTime);
 
-        void updatePlayButton(int musicState);
+        void changePlayToPause();
 
-        void updateSeekBar(int progress);
+        void changePauseToPlay();
 
-        void updateCurrentTimeTv(int progress);
+        void updateSeekBar(int duration, int progress);
     }
 
     interface Presenter extends BasePresenter {
@@ -33,7 +38,5 @@ public class DetailMusicContract {
         void onPlayButtonClick(Context context);
 
         void changeMusic(Context context, ActivityCommand command);
-
-        int getCurrentTime();
     }
 }

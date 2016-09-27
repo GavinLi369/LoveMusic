@@ -8,12 +8,15 @@ import com.mpatric.mp3agic.InvalidDataException;
 import com.mpatric.mp3agic.Mp3File;
 import com.mpatric.mp3agic.UnsupportedTagException;
 
+import org.greenrobot.eventbus.EventBus;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 
 import gavin.lovemusic.App;
+import gavin.lovemusic.service.MusicListUpdateEvent;
 import gavin.lovemusic.database.DBOperation;
 import gavin.lovemusic.entity.Music;
 
@@ -22,21 +25,19 @@ import gavin.lovemusic.entity.Music;
  * on 16-9-22.
  */
 public class LocalMusicModel implements LocalMusicContract.Model {
+    private Context context;
+
     public LocalMusicModel(Context context) {
-        App app = (App) context.getApplicationContext();
-        app.setMusicList(getMusicByDataBase(context));
-        for (int i = 0; i < app.getMusicList().size(); i++) {
-            app.getMusicList().get(i).setId(i);
-        }
+        this.context = context;
     }
 
     @Override
-    public ArrayList<Music> getMusicList(Context context) {
+    public ArrayList<Music> getMusicList() {
         return getMusicByDataBase(context);
     }
 
     @Override
-    public void refreshMusicList(Context context) throws IOException {
+    public void refreshMusicList() throws IOException {
         File filePath = new File(App.APP_DIR + "/Album");
         File[] files = filePath.listFiles();
         for(File file : files) {
@@ -49,13 +50,10 @@ public class LocalMusicModel implements LocalMusicContract.Model {
         dbOperation.openOrCreateDataBase();
         dbOperation.cleanDataBase();
         for (int i = 0; i < musicList.size(); i++) {
-            musicList.get(i).setId(i);
             dbOperation.insertMusicInfo(musicList.get(i));
         }
         dbOperation.closeDataBase();
-
-        App app = (App) context.getApplicationContext();
-        app.setMusicList(musicList);
+        EventBus.getDefault().post(new MusicListUpdateEvent(getMusicByDataBase(context)));
     }
 
     private ArrayList<Music> getMusicFromSDCard() {
@@ -67,13 +65,14 @@ public class LocalMusicModel implements LocalMusicContract.Model {
                 try {
                     Mp3File mp3File = new Mp3File(file.getAbsoluteFile());
                     if (mp3File.hasId3v2Tag()) {
-                        Music music = new Music(file);
+                        Music music = new Music();
                         ID3v2 id3v2 = mp3File.getId3v2Tag();
+                        music.setPath(file.getPath());
                         music.setTitle(id3v2.getTitle());
                         music.setArtist(id3v2.getArtist());
                         music.setAlbum(id3v2.getAlbum());
                         music.setDuration(mp3File.getLengthInMilliseconds());
-                        music.setAlbumPath(writeAlbum2SDCard(id3v2.getAlbumImage()));
+                        music.setImage(writeAlbum2SDCard(id3v2.getAlbumImage()));
                         musicList.add(music);
                     }
                 } catch (IOException | UnsupportedTagException | InvalidDataException e) {
@@ -115,11 +114,11 @@ public class LocalMusicModel implements LocalMusicContract.Model {
         Cursor cursor = dbOperation.selectAll();
         if (cursor != null && cursor.moveToFirst()) {
             do {
-                File file = new File(cursor.getString(cursor.getColumnIndexOrThrow(DBOperation.PATH)));
-                Music music = new Music(file);
+                Music music = new Music();
+                music.setPath(cursor.getString(cursor.getColumnIndexOrThrow(DBOperation.PATH)));
                 music.setTitle(cursor.getString(cursor.getColumnIndexOrThrow(DBOperation.NAME)));
                 music.setArtist(cursor.getString(cursor.getColumnIndexOrThrow(DBOperation.ARTIST)));
-                music.setAlbumPath(cursor.getString(cursor.getColumnIndexOrThrow(DBOperation.ALBUM)));
+                music.setImage(cursor.getString(cursor.getColumnIndexOrThrow(DBOperation.ALBUM)));
                 music.setAlbum(cursor.getString(cursor.getColumnIndexOrThrow(DBOperation.ALBUM_NAME)));
                 music.setDuration(cursor.getLong(cursor.getColumnIndexOrThrow(DBOperation.DURATION)));
                 musicList.add(music);

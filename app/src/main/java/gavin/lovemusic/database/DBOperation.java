@@ -56,12 +56,12 @@ public class DBOperation {
     public void insertMusicInfo(Music music){
         if (mSqLiteDatabase != null && music != null) {
             ContentValues values = new ContentValues();
-            values.put(PATH, music.getMusicPath());
+            values.put(PATH, music.getPath());
             values.put(NAME, music.getTitle());
             values.put(ARTIST, music.getArtist());
             values.put(ALBUM_NAME, music.getAlbum());
             values.put(DURATION, music.getDuration());
-            values.put(ALBUM, music.getAlbumPath());
+            values.put(ALBUM, music.getImage());
             mSqLiteDatabase.insert(TABLE_NAME, "", values);
         }
     }

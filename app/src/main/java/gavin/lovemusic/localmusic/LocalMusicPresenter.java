@@ -3,12 +3,11 @@ package gavin.lovemusic.localmusic;
 import android.content.Context;
 
 import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
 
 import java.io.IOException;
 import java.util.ArrayList;
 
-import gavin.lovemusic.MusicListUpdateEvent;
+import gavin.lovemusic.service.MusicListUpdateEvent;
 import gavin.lovemusic.entity.Music;
 import gavin.lovemusic.service.PlayService;
 import rx.Observable;
@@ -23,18 +22,17 @@ import rx.schedulers.Schedulers;
 public class LocalMusicPresenter implements LocalMusicContract.Presenter {
     private LocalMusicContract.View mLocalMusicView;
     private LocalMusicContract.Model mLocalMusicModel;
-    private Context context;
 
     public LocalMusicPresenter(LocalMusicContract.View localMusicView, Context context) {
         this.mLocalMusicView = localMusicView;
-        this.context = context;
         mLocalMusicModel = new LocalMusicModel(context);
         mLocalMusicView.setPresenter(this);
+        EventBus.getDefault().post(new MusicListUpdateEvent(mLocalMusicModel.getMusicList()));
     }
 
     @Override
     public void playNewMusic(int postion) {
-        Music music = mLocalMusicModel.getMusicList(context).get(postion);
+        Music music = mLocalMusicModel.getMusicList().get(postion);
         EventBus.getDefault().post(new PlayService.ChangeMusicEvent(music));
     }
 
@@ -44,8 +42,8 @@ public class LocalMusicPresenter implements LocalMusicContract.Presenter {
             @Override
             public void call(Subscriber<? super ArrayList<Music>> subscriber) {
                 try {
-                    mLocalMusicModel.refreshMusicList(context);
-                    subscriber.onNext(mLocalMusicModel.getMusicList(context));
+                    mLocalMusicModel.refreshMusicList();
+                    subscriber.onNext(mLocalMusicModel.getMusicList());
                     subscriber.onCompleted();
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -73,7 +71,7 @@ public class LocalMusicPresenter implements LocalMusicContract.Presenter {
 
     @Override
     public void subscribe() {
-        mLocalMusicView.setMusicListView(mLocalMusicModel.getMusicList(context));
+        mLocalMusicView.setMusicListView(mLocalMusicModel.getMusicList());
     }
 
     @Override

@@ -9,9 +9,6 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import gavin.lovemusic.entity.LyricContent;
-import gavin.lovemusic.entity.Music;
-
 /**
  * Created by Gavin on 2015/8/24.
  * 歌词实例
@@ -45,7 +42,7 @@ public class Lyric {
      * 初始化歌词
      */
     private void init() {
-        File lrcFile = getLrcOfSong(music.getMusicPath());
+        File lrcFile = getLrcOfSong(music.getPath());
         lyricStr = parseFile2String(lrcFile);
         parseLyric();
     }

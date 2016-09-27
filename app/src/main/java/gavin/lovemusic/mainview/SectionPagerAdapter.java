@@ -38,7 +38,7 @@ public class SectionPagerAdapter extends FragmentPagerAdapter {
     @Override
     public CharSequence getPageTitle(int position) {
         switch (position) {
-            case 0: return "下载";
+            case 0: return "热门";
             case 1: return "本地";
         }
         return null;
