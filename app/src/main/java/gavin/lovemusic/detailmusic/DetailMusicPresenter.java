@@ -15,7 +15,6 @@ import org.greenrobot.eventbus.ThreadMode;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 
-import gavin.lovemusic.entity.Lyric;
 import gavin.lovemusic.entity.Music;
 import gavin.lovemusic.service.ActivityCommand;
 import gavin.lovemusic.service.PlayService;
@@ -73,9 +72,7 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
             presenter.mCurrentTime += 500;
             if(presenter.currentMusic != null) {
                 presenter.mDetailMusicView.updateSeekBar((int) presenter.currentMusic.getDuration(), presenter.mCurrentTime);
-                Lyric lyric = new Lyric(presenter.currentMusic);
-                presenter.mDetailMusicView.updateLyricView(lyric.getLyricList(),
-                        (int) presenter.currentMusic.getDuration(), presenter.mCurrentTime);
+                presenter.mDetailMusicView.updateLyricView(presenter.mCurrentTime);
             }
         }
     }
@@ -171,9 +168,8 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
     private void initUI() {
         if(currentMusic != null) {
             mDetailMusicView.updateSeekBar((int) currentMusic.getDuration(), mCurrentTime);
-            Lyric lyric = new Lyric(currentMusic);
-            mDetailMusicView.updateLyricView(lyric.getLyricList(),
-                    (int) currentMusic.getDuration(), mCurrentTime);
+            LyricBuilder lyric = new LyricBuilder(currentMusic);
+            mDetailMusicView.changeLyricView(lyric.build());
         }
     }
 
@@ -192,7 +188,6 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
     @Override
     public void subscribe() {
         EventBus.getDefault().register(this);
-//        mDetailMusicView.updateBgImage(currentMusic);
     }
 
     @Override

@@ -4,7 +4,7 @@ package gavin.lovemusic.entity;
  * Created by Gavin on 2015/8/26.
  * 每一句歌词
  */
-public class LyricContent {
+public class LyricRow {
     /**
      * 歌词内容
       */
@@ -18,7 +18,7 @@ public class LyricContent {
     /**
      * 构造方法
      */
-    public LyricContent (long lyricTime, String lyricStr) {
+    public LyricRow(long lyricTime, String lyricStr) {
         this.lyricStr = lyricStr;
         this.lyricTime = lyricTime;
     }

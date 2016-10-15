@@ -7,7 +7,7 @@ import java.util.ArrayList;
 
 import gavin.lovemusic.BasePresenter;
 import gavin.lovemusic.BaseView;
-import gavin.lovemusic.entity.LyricContent;
+import gavin.lovemusic.entity.LyricRow;
 import gavin.lovemusic.entity.Music;
 import gavin.lovemusic.service.ActivityCommand;
 
@@ -23,7 +23,9 @@ public class DetailMusicContract {
 
         void changeDragViewColorDefault();
 
-        void updateLyricView(ArrayList<LyricContent> lyricList, int duration, int currentTime);
+        void changeLyricView(ArrayList<LyricRow> lyricList);
+
+        void updateLyricView(int currentTime);
 
         void changePlayToPause();
 

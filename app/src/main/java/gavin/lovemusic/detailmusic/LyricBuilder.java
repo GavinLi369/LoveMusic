@@ -1,4 +1,4 @@
-package gavin.lovemusic.entity;
+package gavin.lovemusic.detailmusic;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -9,42 +9,35 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import gavin.lovemusic.entity.LyricRow;
+import gavin.lovemusic.entity.Music;
+
 /**
  * Created by Gavin on 2015/8/24.
  * 歌词实例
  */
-public class Lyric {
+public class LyricBuilder {
     private String lyricStr = "";
-    private ArrayList<LyricContent> lyricList = null;
+    private ArrayList<LyricRow> lyricList;
     private Music music;
 
-    public Lyric(Music music) {
+    public LyricBuilder(Music music) {
         this.music = music;
-        init();
     }
 
-    /**
-     * 获取歌词List
-     */
-    public ArrayList<LyricContent> getLyricList() {
+    public ArrayList<LyricRow> build() {
+        File lrcFile = getLrcOfSong(music.getPath());
+        lyricStr = parseFile2String(lrcFile);
+        parseLyric();
         return lyricList;
     }
 
     /**
      * 根据歌曲文件名和歌曲路径获得Lrc文件
      */
-    public File getLrcOfSong(String path) {
-        String lrcFileName = path.replace(".mp3", ".lrc").replace("/Music", "/Musiclrc").replace(" - ", "-");
+    private File getLrcOfSong(String path) {
+        String lrcFileName = path.replace(".mp3", ".lrc").replace("/Music", "/MusicLrc").replace(" - ", " - ");
         return new File(lrcFileName);
-    }
-
-    /**
-     * 初始化歌词
-     */
-    private void init() {
-        File lrcFile = getLrcOfSong(music.getPath());
-        lyricStr = parseFile2String(lrcFile);
-        parseLyric();
     }
 
     /**
@@ -84,9 +77,9 @@ public class Lyric {
         Pattern pattern = Pattern.compile("\\[(\\d{2}:\\d{2}\\.\\d{2,3})\\]([^\\n]+)");
         Matcher matcher = pattern.matcher(lyricStr);
         while (matcher.find()) {
-            LyricContent lyricContent = new LyricContent
+            LyricRow lyricRow = new LyricRow
                     (parseDateTime(matcher.group(1)), matcher.group(2));
-            lyricList.add(lyricContent);
+            lyricList.add(lyricRow);
         }
     }
 

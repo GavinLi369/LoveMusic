@@ -5,14 +5,8 @@ import android.os.Environment;
 
 import com.orhanobut.logger.Logger;
 
-import org.greenrobot.eventbus.EventBus;
-
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-
-
-import gavin.lovemusic.entity.Music;
 
 /**
  * Created by GavinLi on 16-9-10.
@@ -43,6 +37,11 @@ public class App extends Application {
                 throw new IOException("App dir can't make");
         }
         dir = new File(APP_DIR + File.separator + "Album");
+        if (!dir.exists()) {
+            if(!dir.mkdirs())
+                throw new IOException("App dir can't make");
+        }
+        dir = new File(APP_DIR + File.separator + "MusicLrc");
         if (!dir.exists()) {
             if(!dir.mkdirs())
                 throw new IOException("App dir can't make");
