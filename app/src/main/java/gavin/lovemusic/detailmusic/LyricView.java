@@ -1,5 +1,6 @@
 package gavin.lovemusic.detailmusic;
 
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -29,6 +30,8 @@ public class LyricView extends View {
 
     private static final int TEXT_SIZE = 25;   //歌词文字大小值
     private static final int INTERVAL = 40;    //歌词每行的间隔
+
+    private float mAnimationOffset = 0;
 
     private OnLyricViewSeekListener lyricViewSeekListener;
 
@@ -66,11 +69,22 @@ public class LyricView extends View {
      */
     public void setLyricList(ArrayList<LyricRow> lyricList) {
         this.lyricList = lyricList;
+        invalidate();
     }
 
     public void setTime(long time) {
         if(!seekLyric) {
-            this.index = getLyricIndex(lyricList, time);
+            int index = getLyricIndex(lyricList, time);
+            if(this.index != index) {
+                ValueAnimator animator = ValueAnimator.ofFloat(TEXT_SIZE + INTERVAL, 0.0f);
+                animator.setDuration(600);
+                animator.addUpdateListener(animation -> {
+                    mAnimationOffset = (float) animation.getAnimatedValue();
+                    invalidate();
+                });
+                animator.start();
+                this.index = index;
+            }
         }
     }
 
@@ -89,22 +103,21 @@ public class LyricView extends View {
             return;
         }
 
-        float tempY = height / 2;
+        float centerY = height / 2f + mAnimationOffset;
         String lyric = lyricList.get(index).getLyricStr();
-        canvas.drawText(lyric, width / 2, tempY, paintHL);
+        canvas.drawText(lyric, width / 2, centerY, paintHL);
 
         for (int i = index - 1; i >= 0; i--) {
-            tempY = tempY - TEXT_SIZE - INTERVAL;
+            float tempY = centerY + (TEXT_SIZE + INTERVAL) * (i - index);
             if (tempY < 0) {
                 break;
             }
             String temp = lyricList.get(i).getLyricStr();
             canvas.drawText(temp, width / 2, tempY, paint);
         }
-        tempY = height / 2;
 
         for (int i = index + 1; i < lyricList.size(); i++) {
-            tempY = tempY + TEXT_SIZE + INTERVAL;
+            float tempY = centerY + (TEXT_SIZE + INTERVAL) * (i - index);
             if (tempY > height) {
                 break;
             }
@@ -128,21 +141,28 @@ public class LyricView extends View {
                 break;
             case MotionEvent.ACTION_MOVE:
                 float offset = event.getY() - mLastTouchPostion;
-                if(Math.abs(offset) < MIN_SEEK_FIRED_OFFSET) break;
-                int rowOffset = (int) offset / (TEXT_SIZE + INTERVAL);
-                index -= rowOffset;
-                //防止index越界
-                index = Math.max(0, index);
-                index = Math.min(index, lyricList.size() - 1);
-                mLastTouchPostion = event.getY();
-                seekLyric = true;
+                mAnimationOffset = offset;
+                if(Math.abs(offset) > MIN_SEEK_FIRED_OFFSET) {
+                    int rowOffset = (int) (offset / (TEXT_SIZE + INTERVAL));
+                    index -= rowOffset;
+                    //防止index越界
+                    index = Math.max(0, index);
+                    index = Math.min(index, lyricList.size() - 1);
+                    mLastTouchPostion = event.getY();
+                    mAnimationOffset = 0;
+                    seekLyric = true;
+                }
                 invalidate();
                 break;
+            case MotionEvent.ACTION_CANCEL:
+                seekLyric = false;
             case MotionEvent.ACTION_UP:
                 if(seekLyric) {
                     lyricViewSeekListener.lyricViewSeek(lyricList.get(index));
                     seekLyric = false;
                 }
+                mAnimationOffset = 0;
+                invalidate();
         }
         return true;
     }

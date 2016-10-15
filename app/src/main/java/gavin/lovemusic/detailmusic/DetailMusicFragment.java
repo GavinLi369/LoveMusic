@@ -71,7 +71,6 @@ public class DetailMusicFragment extends Fragment implements DetailMusicContract
     @Override
     public void updateLyricView(int currentTime) {
         mLyricView.setTime(currentTime);
-        mLyricView.invalidate();
     }
 
     @Override
