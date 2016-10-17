@@ -1,6 +1,7 @@
 package gavin.lovemusic.detailmusic;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.support.v7.graphics.Palette;
 
 import java.util.ArrayList;
@@ -17,11 +18,11 @@ import gavin.lovemusic.service.ActivityCommand;
  */
 public class DetailMusicContract {
     interface View extends BaseView<Presenter> {
-        void updateBgImage(Music currentMusic);
+        void updateBgImage(String bgImageUrl);
 
-        void changeDragViewColor(Palette.Swatch swatch);
+        void changeViewColor(Palette.Swatch swatch);
 
-        void changeDragViewColorDefault();
+        void changeViewColorDefault();
 
         void changeLyricView(ArrayList<LyricRow> lyricList);
 

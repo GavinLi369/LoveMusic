@@ -5,6 +5,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.graphics.Palette;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -43,24 +44,20 @@ public class DetailMusicFragment extends Fragment implements DetailMusicContract
 
     @Nullable
     @Override
-    public android.view.View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
-                                          @Nullable Bundle savedInstanceState) {
-        android.view.View rootView = inflater.inflate(R.layout.fragment_music_detail, container, false);
-        ButterKnife.bind(this, rootView);
-
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_music_detail, container, false);
+        ButterKnife.bind(this, view);
         mLyricSeekBar.setOnSeekBarChangeListener(new LyricSeekBarListener());
         mLyricView.setOnLyricViewSeekListener(this);
-
-        new DetailMusicPresenter(this);
         mDetailMusicPresenter.subscribe();
-
-        return rootView;
+        return view;
     }
 
     @Override
     public void onDestroyView() {
-        super.onDestroyView();
         mDetailMusicPresenter.unsubscribe();
+        super.onDestroyView();
     }
 
     @Override
@@ -131,24 +128,28 @@ public class DetailMusicFragment extends Fragment implements DetailMusicContract
     }
 
     @Override
-    public void updateBgImage(Music currentMusic) {
+    public void updateBgImage(String bgImageUrl) {
         Glide.with(this)
-                .load(currentMusic.getImage())
+                .load(bgImageUrl)
                 .into(mBgImageView);
     }
 
     @Override
-    public void changeDragViewColor(Palette.Swatch swatch) {
+    public void changeViewColor(Palette.Swatch swatch) {
         mPlayCoumn.setBackgroundColor(swatch.getRgb());
         mSeekBarColumn.setBackgroundColor(swatch.getRgb());
     }
 
     @Override
-    public void changeDragViewColorDefault() {
+    public void changeViewColorDefault() {
         //noinspection deprecation
         mPlayCoumn.setBackgroundColor(getResources().getColor(R.color.playColumnDefault));
         //noinspection deprecation
         mSeekBarColumn.setBackgroundColor(getResources().getColor(R.color.playColumnDefault));
+    }
+
+    public void initMusic(Music music) {
+        new DetailMusicPresenter(this).initMusic(music);
     }
 
     @Override

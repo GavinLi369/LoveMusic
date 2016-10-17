@@ -54,7 +54,8 @@ public class MainViewPresenter implements MainViewContract.Presenter {
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void updateUI(PlayService.MusicChangedEvent event) {
+    public void updateUI(PlayService.MusicStartedEvent event) {
+        mMainView.showMusicPlayView(event.currentMusic);
         mMainView.changeMusicInfo(event.currentMusic);
         Observable<Bitmap> observable = Observable.create(new Observable.OnSubscribe<Bitmap>() {
             @Override
@@ -109,7 +110,7 @@ public class MainViewPresenter implements MainViewContract.Presenter {
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void musicPause(PlayService.MusicPlayEvent event) {
+    public void musicPlay(PlayService.MusicPlayEvent event) {
         mMainView.changePause2Playing();
     }
 

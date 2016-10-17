@@ -33,30 +33,16 @@ import rx.schedulers.Schedulers;
 public class DetailMusicPresenter implements DetailMusicContract.Presenter {
     private DetailMusicContract.View mDetailMusicView;
 
-    private Music currentMusic;
+    private Music mCurrentMusic;
 
     private int mCurrentTime = 0;
-    private boolean isPlaying = false;
+    private boolean isPlaying = true;
 
     private UpdateViewHandler handler = new UpdateViewHandler(this);
 
     public DetailMusicPresenter(DetailMusicContract.View playDetailView) {
         this.mDetailMusicView = playDetailView;
         mDetailMusicView.setPresenter(this);
-
-        //每隔0.5秒更新一次视图
-        new Thread(() -> {
-            while(true) {
-                if(isPlaying)
-                    handler.sendEmptyMessage(0);
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                    break;
-                }
-            }
-        }).start();
     }
 
     static class UpdateViewHandler extends Handler {
@@ -70,8 +56,8 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
         public void handleMessage(Message msg) {
             DetailMusicPresenter presenter = presenterWeakReference.get();
             presenter.mCurrentTime += 500;
-            if(presenter.currentMusic != null) {
-                presenter.mDetailMusicView.updateSeekBar((int) presenter.currentMusic.getDuration(), presenter.mCurrentTime);
+            if(presenter.mCurrentMusic != null) {
+                presenter.mDetailMusicView.updateSeekBar((int) presenter.mCurrentMusic.getDuration(), presenter.mCurrentTime);
                 presenter.mDetailMusicView.updateLyricView(presenter.mCurrentTime);
             }
         }
@@ -113,18 +99,26 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void updateUI(PlayService.MusicChangedEvent event) {
-        currentMusic = event.currentMusic;
+    public void updateUI(PlayService.MusicStartedEvent event) {
+        mCurrentMusic = event.currentMusic;
         mCurrentTime = 0;
-        initUI();
-        mDetailMusicView.updateBgImage(event.currentMusic);
+        updateBgImage(event.currentMusic.getImage());
+        changeViewColor(event.currentMusic.getImage());
+        initLyricView();
+    }
+
+    private void updateBgImage(String bgImageUrl) {
+        mDetailMusicView.updateBgImage(bgImageUrl);
+    }
+
+    private void changeViewColor(String bgImageUrl) {
         Observable<Bitmap> observable = Observable.create(new Observable.OnSubscribe<Bitmap>() {
             @Override
             public void call(Subscriber<? super Bitmap> subscriber) {
-                if (event.currentMusic.getImage().startsWith("http")) {
+                if (bgImageUrl.startsWith("http")) {
                     OkHttpClient okHttpClient = new OkHttpClient();
                     Request request = new Request.Builder()
-                            .url(event.currentMusic.getImage())
+                            .url(bgImageUrl)
                             .build();
                     try {
                         Response response = okHttpClient.newCall(request).execute();
@@ -133,7 +127,7 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
                         subscriber.onError(e);
                     }
                 } else {
-                    subscriber.onNext(BitmapFactory.decodeFile(event.currentMusic.getImage()));
+                    subscriber.onNext(BitmapFactory.decodeFile(bgImageUrl));
                 }
                 subscriber.onCompleted();
             }
@@ -146,7 +140,7 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
             @Override
             public void onError(Throwable e) {
                 e.printStackTrace();
-                mDetailMusicView.changeDragViewColorDefault();
+                mDetailMusicView.changeViewColorDefault();
             }
 
             @Override
@@ -156,19 +150,18 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
                         .generate(palette -> {
                             Palette.Swatch swatch = palette.getDarkVibrantSwatch();
                             if(swatch != null) {
-                                mDetailMusicView.changeDragViewColor(swatch);
+                                mDetailMusicView.changeViewColor(swatch);
                             } else {
-                                mDetailMusicView.changeDragViewColorDefault();
+                                mDetailMusicView.changeViewColorDefault();
                             }
                         });
             }
         });
     }
 
-    private void initUI() {
-        if(currentMusic != null) {
-            mDetailMusicView.updateSeekBar((int) currentMusic.getDuration(), mCurrentTime);
-            LyricBuilder lyric = new LyricBuilder(currentMusic);
+    private void initLyricView() {
+        if(mCurrentMusic != null) {
+            LyricBuilder lyric = new LyricBuilder(mCurrentMusic);
             mDetailMusicView.changeLyricView(lyric.build());
         }
     }
@@ -188,6 +181,30 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
     @Override
     public void subscribe() {
         EventBus.getDefault().register(this);
+        //每隔0.5秒更新一次视图
+        new Thread(() -> {
+            while(true) {
+                if(isPlaying)
+                    handler.sendEmptyMessage(0);
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    break;
+                }
+            }
+        }).start();
+        mDetailMusicView.changePauseToPlay();
+        if(mCurrentMusic != null) {
+            updateBgImage(mCurrentMusic.getImage());
+            changeViewColor(mCurrentMusic.getImage());
+            initLyricView();
+        }
+    }
+
+    //TODO 用于初始化View刚显示时所播放的歌曲，代码逻辑不清晰，以后优化
+    public void initMusic(Music music) {
+        mCurrentMusic = music;
     }
 
     @Override

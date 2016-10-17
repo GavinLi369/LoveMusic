@@ -26,21 +26,17 @@ import gavin.lovemusic.entity.Music;
  */
 public class PlayService extends Service {
     public static int musicState;
-    public static final int PLAYING = 1;        //歌曲正在播放
-    public static final int PAUSE = 2;         //歌曲暂停
+    public static final int PLAYING = 0;        //歌曲正在播放
+    public static final int PAUSE = 1;         //歌曲暂停
 
-    /**
-     * Notification的识别ID
-     */
+    private Notification notification;
     public static final int NOTIFICATION_ID = 1;
 
     public static final String NOTIFICATION_PLAY = "gavin.notification.play";
     public static final String NOTIFICATION_NEXT = "gavin.notification.next";
     public static final String NOTIFICATION_STOP = "gavin.notification.stop";
 
-    private Notification notification;
     private RemoteViews contentView;
-
     private MusicPlayer mMusicPlayer;
 
     @Override
@@ -94,14 +90,13 @@ public class PlayService extends Service {
     public void initMusic(MusicListUpdateEvent event){
         mMusicPlayer.resetMusicPlayer(event.musicList);
         musicState = PAUSE;
-        EventBus.getDefault().post(new MusicChangedEvent(mMusicPlayer.getCurrentMusic()));
         EventBus.getDefault().post(new MusicPauseEvent());
     }
 
     private void startMusic(Music music) {
         mMusicPlayer.start(music);
         musicState = PLAYING;
-        EventBus.getDefault().post(new MusicChangedEvent(mMusicPlayer.getCurrentMusic()));
+        EventBus.getDefault().post(new MusicStartedEvent(mMusicPlayer.getCurrentMusic()));
         EventBus.getDefault().post(new MusicPlayEvent());
         showNotification();
     }
@@ -128,20 +123,20 @@ public class PlayService extends Service {
     private void previousMusic() {
         mMusicPlayer.previous();
         EventBus.getDefault().post(
-                new PlayService.MusicChangedEvent(mMusicPlayer.getCurrentMusic()));
+                new MusicStartedEvent(mMusicPlayer.getCurrentMusic()));
     }
 
     private void nextMusic() {
         mMusicPlayer.next();
         EventBus.getDefault().post(
-                new PlayService.MusicChangedEvent(mMusicPlayer.getCurrentMusic()));
+                new MusicStartedEvent(mMusicPlayer.getCurrentMusic()));
     }
 
     @Subscribe(threadMode = ThreadMode.BACKGROUND)
     public void changeMusic(ChangeMusicEvent event) {
         startMusic(event.music);
         EventBus.getDefault().post(
-                new PlayService.MusicChangedEvent(mMusicPlayer.getCurrentMusic()));
+                new MusicStartedEvent(mMusicPlayer.getCurrentMusic()));
     }
 
     public static class ChangeMusicEvent {
@@ -152,10 +147,10 @@ public class PlayService extends Service {
         }
     }
 
-    public static class MusicChangedEvent {
+    public static class MusicStartedEvent {
         public final Music currentMusic;
 
-        public MusicChangedEvent(Music currentMusic) {
+        public MusicStartedEvent(Music currentMusic) {
             this.currentMusic = currentMusic;
         }
     }
@@ -205,12 +200,6 @@ public class PlayService extends Service {
         //noinspection deprecation
         notification.contentView = contentView;
         notification.flags = Notification.FLAG_ONGOING_EVENT;
-
-//        Intent intentActivity = new Intent(this, MainActivity.class);
-//        intentActivity.addFlags
-//                (Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
-//        notification.contentIntent = PendingIntent.getActivity
-//                (getApplicationContext(), 0, intentActivity, 0);
 
         Intent intentPlay = new Intent(NOTIFICATION_PLAY);
         PendingIntent pIntentPlay = PendingIntent.getBroadcast(this, 0, intentPlay, 0);

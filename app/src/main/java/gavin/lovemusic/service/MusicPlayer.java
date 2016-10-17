@@ -18,7 +18,6 @@ public class MusicPlayer implements MediaPlayer.OnPreparedListener, MediaPlayer.
     private MediaPlayer mMediaPlayer = new MediaPlayer();
 
     MusicPlayer() {
-//        mMediaPlayer.setLooping(false);
     }
 
     public void start(int index) {

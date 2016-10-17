@@ -26,6 +26,8 @@ public class MainViewContract {
         void changePause2Playing();
 
         void changeMusicInfo(Music currentMusic);
+
+        void showMusicPlayView(Music music);
     }
 
     interface Presenter extends BasePresenter {
