@@ -11,55 +11,20 @@
         tools:src="@drawable/defalut_album"
         android:scaleType="centerCrop"/>
 
-    <LinearLayout
+    <RelativeLayout
         android:id="@+id/playColumn"
         android:layout_width="match_parent"
-        android:layout_height="80dp"
+        android:layout_height="120dp"
         android:layout_alignParentBottom="true"
-        android:background="@color/playColumnDefault"
+        android:background="#000"
         android:orientation="horizontal">
-
-        <ImageButton
-            android:id="@+id/previousButton"
-            android:layout_width="35dp"
-            android:layout_height="35dp"
-            android:layout_marginStart="90dp"
-            android:layout_marginTop="20dp"
-            android:background="@drawable/previous"/>
-
-        <ImageButton
-            android:id="@+id/playButton"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginStart="30dp"
-            android:layout_marginTop="17dp"
-            android:layout_marginEnd="15dp"
-            android:background="@drawable/play"/>
-
-        <ImageButton
-            android:id="@+id/nextButton"
-            android:layout_width="35dp"
-            android:layout_height="35dp"
-            android:layout_marginStart="15dp"
-            android:layout_marginTop="20dp"
-            android:background="@drawable/next"/>
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/seekBarColumn"
-        android:layout_width="match_parent"
-        android:layout_height="40dp"
-        android:orientation="horizontal"
-        android:background="@color/playColumnDefault"
-        android:layout_above="@id/playColumn">
 
         <TextView
             android:id="@+id/currentTime"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:gravity="center_vertical"
-            android:layout_marginStart="10dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginStart="15dp"
             android:textColor="#fff"
             android:textSize="13sp"
             tools:text="00:00"/>
@@ -68,7 +33,8 @@
             android:id="@+id/lyricSeekBar"
             android:layout_width="270dp"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="24dp"
             style="@style/Widget.SeekBar.Normal"
             tools:max="100"
             tools:progress="20"/>
@@ -77,18 +43,43 @@
             android:id="@+id/duration"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:gravity="center_vertical"
+            android:layout_marginTop="20dp"
+            android:layout_marginStart="310dp"
             android:textColor="#fff"
             android:textSize="13sp"
             tools:text="03:20"/>
 
-    </LinearLayout>
+        <ImageButton
+            android:id="@+id/previousButton"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_marginTop="50dp"
+            android:layout_marginStart="90dp"
+            android:background="@drawable/previous"/>
+
+        <ImageButton
+            android:id="@+id/playButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="50dp"
+            android:background="@drawable/play"/>
+
+        <ImageButton
+            android:id="@+id/nextButton"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_marginTop="50dp"
+            android:layout_marginStart="240dp"
+            android:background="@drawable/next"/>
+
+    </RelativeLayout>
 
     <gavin.lovemusic.detailmusic.LyricView
         android:id="@+id/lyricView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@id/seekBarColumn"
+        android:layout_above="@id/playColumn"
         android:layout_centerHorizontal="true"/>
 
 </RelativeLayout>

@@ -36,7 +36,7 @@ public class MainViewPresenter implements MainViewContract.Presenter {
     }
 
     @Override
-    public void onPlayButtonClick(Context context) {
+    public void onPlayButtonClicked(Context context) {
         switch (PlayService.musicState) {
             case PlayService.PLAYING:
                 changeMusicStatus(context, ActivityCommand.PAUSE_MUSIC);
@@ -54,9 +54,10 @@ public class MainViewPresenter implements MainViewContract.Presenter {
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void updateUI(PlayService.MusicStartedEvent event) {
+    public void onMusicStarted(PlayService.MusicStartedEvent event) {
         mMainView.showMusicPlayView(event.currentMusic);
-        mMainView.changeMusicInfo(event.currentMusic);
+        mMainView.changeMusicInfoes(event.currentMusic);
+        mMainView.changePause2Playing();
         Observable<Bitmap> observable = Observable.create(new Observable.OnSubscribe<Bitmap>() {
             @Override
             public void call(Subscriber<? super Bitmap> subscriber) {
@@ -105,12 +106,12 @@ public class MainViewPresenter implements MainViewContract.Presenter {
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void musicPause(PlayService.MusicPauseEvent event) {
+    public void onMusicPaused(PlayService.MusicPauseEvent event) {
         mMainView.changePlaying2Pause();
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void musicPlay(PlayService.MusicPlayEvent event) {
+    public void onMusicPlayed(PlayService.MusicPlayEvent event) {
         mMainView.changePause2Playing();
     }
 

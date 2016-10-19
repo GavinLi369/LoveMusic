@@ -25,13 +25,13 @@ public class MainViewContract {
 
         void changePause2Playing();
 
-        void changeMusicInfo(Music currentMusic);
+        void changeMusicInfoes(Music currentMusic);
 
         void showMusicPlayView(Music music);
     }
 
     interface Presenter extends BasePresenter {
-        void onPlayButtonClick(Context context);
+        void onPlayButtonClicked(Context context);
 
         void changeMusicStatus(Context context, ActivityCommand command);
     }

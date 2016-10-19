@@ -97,7 +97,7 @@ public class PlayService extends Service {
         mMusicPlayer.start(music);
         musicState = PLAYING;
         EventBus.getDefault().post(new MusicStartedEvent(mMusicPlayer.getCurrentMusic()));
-        EventBus.getDefault().post(new MusicPlayEvent());
+//        EventBus.getDefault().post(new MusicPlayEvent());
         showNotification();
     }
 
@@ -122,12 +122,14 @@ public class PlayService extends Service {
 
     private void previousMusic() {
         mMusicPlayer.previous();
+        musicState = PLAYING;
         EventBus.getDefault().post(
                 new MusicStartedEvent(mMusicPlayer.getCurrentMusic()));
     }
 
     private void nextMusic() {
         mMusicPlayer.next();
+        musicState = PLAYING;
         EventBus.getDefault().post(
                 new MusicStartedEvent(mMusicPlayer.getCurrentMusic()));
     }

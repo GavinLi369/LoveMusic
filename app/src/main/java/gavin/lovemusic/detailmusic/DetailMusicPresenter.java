@@ -99,16 +99,15 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void updateUI(PlayService.MusicStartedEvent event) {
+    public void startMusic(PlayService.MusicStartedEvent event) {
         mCurrentMusic = event.currentMusic;
         mCurrentTime = 0;
-        updateBgImage(event.currentMusic.getImage());
         changeViewColor(event.currentMusic.getImage());
+        mDetailMusicView.updateBgImage(event.currentMusic.getImage());
+        mDetailMusicView.updateSeekBar((int) event.currentMusic.getDuration(), mCurrentTime);
+        mDetailMusicView.changePauseToPlay();
         initLyricView();
-    }
-
-    private void updateBgImage(String bgImageUrl) {
-        mDetailMusicView.updateBgImage(bgImageUrl);
+        isPlaying = true;
     }
 
     private void changeViewColor(String bgImageUrl) {
@@ -196,8 +195,8 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
         }).start();
         mDetailMusicView.changePauseToPlay();
         if(mCurrentMusic != null) {
-            updateBgImage(mCurrentMusic.getImage());
             changeViewColor(mCurrentMusic.getImage());
+            mDetailMusicView.updateBgImage(mCurrentMusic.getImage());
             initLyricView();
         }
     }

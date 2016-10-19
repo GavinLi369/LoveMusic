@@ -15,7 +15,6 @@ import android.telephony.TelephonyManager;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -39,7 +38,7 @@ public class MainActivity extends AppCompatActivity implements MainViewContract.
     private TextView mMusicName;
     private TextView mArtist;
     private SlidingLayout mSlidingLayout;
-    private LinearLayout mDragView;
+    private RelativeLayout mDragView;
 
     SectionPagerAdapter mAdapter;
 
@@ -78,7 +77,7 @@ public class MainActivity extends AppCompatActivity implements MainViewContract.
     @Override
     public void onClick(View v) {
         if(v.getId() == mPlayButton.getId())
-            mMainViewPresenter.onPlayButtonClick(this);
+            mMainViewPresenter.onPlayButtonClicked(this);
     }
 
     @Override
@@ -113,7 +112,7 @@ public class MainActivity extends AppCompatActivity implements MainViewContract.
     }
 
     @Override
-    public void changeMusicInfo(Music currentMusic) {
+    public void changeMusicInfoes(Music currentMusic) {
         if(mSlidingLayout != null) {
             mMusicName.setText(currentMusic.getTitle());
             mArtist.setText(currentMusic.getArtist());
@@ -137,7 +136,7 @@ public class MainActivity extends AppCompatActivity implements MainViewContract.
             transaction.commit();
             detailMusicFragment.initMusic(music);
             mMainLayout.addView(mSlidingLayout);
-            mDragView = (LinearLayout) mSlidingLayout.findViewById(R.id.view_drag);
+            mDragView = (RelativeLayout) mSlidingLayout.findViewById(R.id.view_drag);
             mPlayButton = (ImageButton) mSlidingLayout.findViewById(R.id.playButton);
             mPlayButton.setOnClickListener(this);
             mMusicName = (TextView) mSlidingLayout.findViewById(R.id.musicName);

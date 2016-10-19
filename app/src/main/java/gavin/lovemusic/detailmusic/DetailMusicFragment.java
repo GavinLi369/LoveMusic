@@ -9,7 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -32,8 +32,7 @@ import gavin.lovemusic.service.ActivityCommand;
 public class DetailMusicFragment extends Fragment implements DetailMusicContract.View,
         OnLyricViewSeekListener{
     @BindView(R.id.bgImageView) ImageView mBgImageView;
-    @BindView(R.id.seekBarColumn) LinearLayout mSeekBarColumn;
-    @BindView(R.id.playColumn) LinearLayout mPlayCoumn;
+    @BindView(R.id.playColumn) RelativeLayout mPlayCoumn;
     @BindView(R.id.playButton) ImageButton mPlayButton;
     @BindView(R.id.currentTime) TextView mCurrentTime;
     @BindView(R.id.duration) TextView mDuration;
@@ -137,15 +136,12 @@ public class DetailMusicFragment extends Fragment implements DetailMusicContract
     @Override
     public void changeViewColor(Palette.Swatch swatch) {
         mPlayCoumn.setBackgroundColor(swatch.getRgb());
-        mSeekBarColumn.setBackgroundColor(swatch.getRgb());
     }
 
     @Override
     public void changeViewColorDefault() {
         //noinspection deprecation
         mPlayCoumn.setBackgroundColor(getResources().getColor(R.color.playColumnDefault));
-        //noinspection deprecation
-        mSeekBarColumn.setBackgroundColor(getResources().getColor(R.color.playColumnDefault));
     }
 
     public void initMusic(Music music) {
