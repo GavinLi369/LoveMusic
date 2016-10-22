@@ -145,15 +145,16 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
             @Override
             public void onNext(Bitmap bitmap) {
                 Palette.from(bitmap)
-                        .maximumColorCount(32)
+                        .maximumColorCount(24)
                         .generate(palette -> {
-                            Palette.Swatch swatch = palette.getDarkVibrantSwatch();
+                            Palette.Swatch swatch = palette.getDominantSwatch();
                             if(swatch != null) {
                                 mDetailMusicView.changeViewColor(swatch);
                             } else {
                                 mDetailMusicView.changeViewColorDefault();
                             }
                         });
+                bitmap.recycle();
             }
         });
     }

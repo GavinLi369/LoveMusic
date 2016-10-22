@@ -34,7 +34,7 @@ public class NetworkMusicModel implements NetworkMusicContract.Model {
                     .where(MusicDao.Properties.Id.eq(music.getId()))
                     .build()
                     .list();
-            if(cacheMusics.isEmpty()) {
+            if(cacheMusics.isEmpty() || !new File(cacheMusics.get(0).getImage()).exists()) {
                 try {
                     String imagePath = saveMusicImage(context, music);
                     music.setImage(imagePath);
@@ -51,7 +51,7 @@ public class NetworkMusicModel implements NetworkMusicContract.Model {
 
     private String saveMusicImage(Context context, Music music) throws IOException, InterruptedException, ExecutionException {
         Bitmap bitmap = Glide.with(context).load(music.getImage()).asBitmap().into(-1, -1).get();
-        File file = new File(App.APP_DIR + File.separator + "Album" + File.separator + Long.toString(music.getId()));
+        File file = new File(App.APP_DIR + File.separator + "Cache" + File.separator + Long.toString(music.getId()));
         if(!file.exists()) {
             if(!file.createNewFile())
                 throw new IOException("file can not create");

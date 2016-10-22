@@ -47,7 +47,7 @@ public class App extends Application {
      * 检查软件目录是否存在,如果不存在则创建该目录
      */
     private void checkAppDir() throws IOException {
-        File dir = new File(APP_DIR + File.separator + "Music");
+        File dir = new File(APP_DIR + File.separator + "Cache");
         if (!dir.exists()) {
             if(!dir.mkdirs())
                 throw new IOException("App dir can't make");

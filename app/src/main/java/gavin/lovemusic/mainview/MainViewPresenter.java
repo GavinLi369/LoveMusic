@@ -92,15 +92,16 @@ public class MainViewPresenter implements MainViewContract.Presenter {
             @Override
             public void onNext(Bitmap bitmap) {
                 Palette.from(bitmap)
-                        .maximumColorCount(32)
+                        .maximumColorCount(24)
                         .generate(palette -> {
-                            Palette.Swatch swatch = palette.getDarkVibrantSwatch();
+                            Palette.Swatch swatch = palette.getDominantSwatch();
                             if(swatch != null) {
                                 mMainView.changeDragViewColor(swatch);
                             } else {
                                 mMainView.changeDragViewColorDefault();
                             }
                         });
+                bitmap.recycle();
             }
         });
     }
