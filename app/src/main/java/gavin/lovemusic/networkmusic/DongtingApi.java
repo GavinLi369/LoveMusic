@@ -18,7 +18,7 @@ import okhttp3.Response;
  * Created by GavinLi
  * on 16-9-25.
  */
-public class DongtingApi implements NetworkMusicContract.Model {
+public class DongtingApi {
     private Matcher mMatcher;
 
     /*
@@ -27,8 +27,7 @@ public class DongtingApi implements NetworkMusicContract.Model {
         {1}=查询的页码数
         {2}=当前页的返回数量
     */
-    @Override
-    public ArrayList<Music> findMusicByName(String name, int size) throws IOException{
+    private ArrayList<Music> findMusicByName(String name, int size) throws IOException{
         String url = "http://search.dongting.com/song/search?q=" + name + "&page=1&size=" + size;
 
         OkHttpClient okHttpClient = new OkHttpClient();
@@ -42,6 +41,7 @@ public class DongtingApi implements NetworkMusicContract.Model {
             for(int i = 0; i < musics.length(); i++) {
                 JSONObject musicJson = musics.getJSONObject(i);
                 Music music = new Music();
+                music.setId(musicJson.getLong("songId"));
                 music.setTitle(musicJson.getString("name"));
                 music.setArtist(musicJson.getJSONArray("singers").getJSONObject(0).getString("singerName"));
                 music.setAlbum(musicJson.getString("albumName"));
@@ -63,7 +63,6 @@ public class DongtingApi implements NetworkMusicContract.Model {
         <h2 class="chart-row__song">Perfect Illusion</h2>
         <a class="chart-row__artist" href="http://www.billboard.com/artist/306341/lady-gaga" data-tracklabel="Artist Name">Lady Gaga</a>
      */
-    @Override
     public ArrayList<Music> getBillboardHot(int size, int offset) throws IOException{
         if(offset == 0) getBillboardHotMatcher();
         ArrayList<Music> hotMusic = new ArrayList<>();
@@ -72,11 +71,13 @@ public class DongtingApi implements NetworkMusicContract.Model {
                 String title = mMatcher.group(1);
                 String artist = mMatcher.group(2);
                 ArrayList<Music> musics = findMusicByName(title, 5);
-                for(Music music : musics) {
-                    if(artist.contains(music.getArtist())) {
-                        hotMusic.add(music);
-                        i++;
-                        break;
+                if(musics != null) {
+                    for (Music music : musics) {
+                        if (artist.contains(music.getArtist())) {
+                            hotMusic.add(music);
+                            i++;
+                            break;
+                        }
                     }
                 }
             }

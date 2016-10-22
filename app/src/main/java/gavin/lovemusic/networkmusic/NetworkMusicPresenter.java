@@ -1,5 +1,7 @@
 package gavin.lovemusic.networkmusic;
 
+import android.content.Context;
+
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -17,11 +19,14 @@ public class NetworkMusicPresenter implements NetworkMusicContract.Presenter {
     private NetworkMusicContract.View mNetworkMusicView;
     private NetworkMusicContract.Model mNetworkMusicModel;
 
+    private Context mContext;
+
     private int mIndex = 0;
 
-    public NetworkMusicPresenter(NetworkMusicContract.View networkMusicView) {
+    public NetworkMusicPresenter(NetworkMusicContract.View networkMusicView, Context context) {
         this.mNetworkMusicView = networkMusicView;
-        mNetworkMusicModel = new DongtingApi();
+        this.mContext = context;
+        mNetworkMusicModel = new NetworkMusicModel();
         mNetworkMusicView.setPresenter(this);
     }
 
@@ -33,7 +38,7 @@ public class NetworkMusicPresenter implements NetworkMusicContract.Presenter {
                 ArrayList<Music> musics = new ArrayList<>();
                 mIndex = 0;
                 try {
-                    musics.addAll(mNetworkMusicModel.getBillboardHot(10, mIndex++));
+                    musics.addAll(mNetworkMusicModel.getBillboardHot(mContext, 10, mIndex++));
                     subscriber.onNext(musics);
                     subscriber.onCompleted();
                 } catch (IOException e) {
@@ -69,7 +74,7 @@ public class NetworkMusicPresenter implements NetworkMusicContract.Presenter {
             public void call(Subscriber<? super ArrayList<Music>> subscriber) {
                 ArrayList<Music> musics = new ArrayList<>();
                 try {
-                    musics.addAll(mNetworkMusicModel.getBillboardHot(10, mIndex++));
+                    musics.addAll(mNetworkMusicModel.getBillboardHot(mContext, 10, mIndex++));
                     subscriber.onNext(musics);
                     subscriber.onCompleted();
                 } catch (IOException e) {

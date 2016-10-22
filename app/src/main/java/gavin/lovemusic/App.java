@@ -5,16 +5,24 @@ import android.os.Environment;
 
 import com.orhanobut.logger.Logger;
 
+import org.greenrobot.greendao.database.Database;
+
 import java.io.File;
 import java.io.IOException;
+
+import gavin.lovemusic.entity.DaoMaster;
+import gavin.lovemusic.entity.DaoMaster.DevOpenHelper;
+import gavin.lovemusic.entity.DaoSession;
 
 /**
  * Created by GavinLi on 16-9-10.
  *
  */
 public class App extends Application {
-    private static String mExternalStorage = Environment.getExternalStorageDirectory().getPath();
-    public static final String APP_DIR = mExternalStorage + File.separator + "LoveMusic";
+    private static String sExternalStorage = Environment.getExternalStorageDirectory().getPath();
+    public static final String APP_DIR = sExternalStorage + File.separator + "LoveMusic";
+
+    private DaoSession mDaoSession;
 
     @Override
     public void onCreate() {
@@ -25,6 +33,14 @@ public class App extends Application {
             e.printStackTrace();
         }
         Logger.init();
+
+        DevOpenHelper helper = new DevOpenHelper(this, "music-db");
+        Database db = helper.getWritableDb();
+        mDaoSession = new DaoMaster(db).newSession();
+    }
+
+    public DaoSession getDaoSession() {
+        return mDaoSession;
     }
 
     /**
