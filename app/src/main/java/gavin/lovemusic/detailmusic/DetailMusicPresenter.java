@@ -147,7 +147,7 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
                 Palette.from(bitmap)
                         .maximumColorCount(24)
                         .generate(palette -> {
-                            Palette.Swatch swatch = palette.getDominantSwatch();
+                            Palette.Swatch swatch = palette.getMutedSwatch();
                             if(swatch != null) {
                                 mDetailMusicView.changeViewColor(swatch);
                             } else {

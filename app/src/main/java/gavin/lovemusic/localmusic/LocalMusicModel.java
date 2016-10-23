@@ -22,8 +22,8 @@ import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 
 import gavin.lovemusic.App;
+import gavin.lovemusic.entity.MusicDao;
 import gavin.lovemusic.service.MusicListUpdateEvent;
-import gavin.lovemusic.database.DBOperation;
 import gavin.lovemusic.entity.Music;
 
 /**
@@ -32,14 +32,16 @@ import gavin.lovemusic.entity.Music;
  */
 public class LocalMusicModel implements LocalMusicContract.Model {
     private Context mContext;
+    private MusicDao mMusicDao;
 
     public LocalMusicModel(Context context) {
         this.mContext = context;
+        mMusicDao = ((App) mContext.getApplicationContext()).getMusicSession().getMusicDao();
     }
 
     @Override
     public ArrayList<Music> getMusicList() {
-        return getMusicByDataBase(mContext);
+        return getMusicByDataBase();
     }
 
     @Override
@@ -53,14 +55,9 @@ public class LocalMusicModel implements LocalMusicContract.Model {
 
         ArrayList<Music> musicList = getMusicFromContentResolver(Media.EXTERNAL_CONTENT_URI);
         musicList.addAll(getMusicFromContentResolver(Media.INTERNAL_CONTENT_URI));
-        DBOperation dbOperation = new DBOperation(mContext);
-        dbOperation.openOrCreateDataBase();
-        dbOperation.cleanDataBase();
-        for (int i = 0; i < musicList.size(); i++) {
-            dbOperation.insertMusicInfo(musicList.get(i));
-        }
-        dbOperation.closeDataBase();
-        EventBus.getDefault().post(new MusicListUpdateEvent(getMusicByDataBase(mContext)));
+        mMusicDao.deleteAll();
+        mMusicDao.insertInTx(musicList);
+        EventBus.getDefault().post(new MusicListUpdateEvent(getMusicByDataBase()));
     }
 
     private ArrayList<Music> getMusicFromContentResolver(Uri uri) {
@@ -97,6 +94,10 @@ public class LocalMusicModel implements LocalMusicContract.Model {
         return musics;
     }
 
+    private ArrayList<Music> getMusicByDataBase() {
+        return new ArrayList<>(mMusicDao.queryBuilder().build().list());
+    }
+
     private String writeAlbum2SDCard(byte[] ablumByte) throws IOException, InterruptedException, ExecutionException{
         if(ablumByte != null) {
             String filePath = App.APP_DIR + "/Album/" + System.currentTimeMillis();
@@ -109,27 +110,5 @@ public class LocalMusicModel implements LocalMusicContract.Model {
         } else {
             throw new InterruptedIOException();
         }
-    }
-
-    private ArrayList<Music> getMusicByDataBase(Context context){
-        ArrayList<Music> musicList = new ArrayList<>();
-        DBOperation dbOperation = new DBOperation(context);
-        dbOperation.openOrCreateDataBase();
-        Cursor cursor = dbOperation.selectAll();
-        if (cursor != null && cursor.moveToFirst()) {
-            do {
-                Music music = new Music();
-                music.setPath(cursor.getString(cursor.getColumnIndexOrThrow(DBOperation.PATH)));
-                music.setTitle(cursor.getString(cursor.getColumnIndexOrThrow(DBOperation.NAME)));
-                music.setArtist(cursor.getString(cursor.getColumnIndexOrThrow(DBOperation.ARTIST)));
-                music.setImage(cursor.getString(cursor.getColumnIndexOrThrow(DBOperation.ALBUM)));
-                music.setAlbum(cursor.getString(cursor.getColumnIndexOrThrow(DBOperation.ALBUM_NAME)));
-                music.setDuration(cursor.getLong(cursor.getColumnIndexOrThrow(DBOperation.DURATION)));
-                musicList.add(music);
-            } while (cursor.moveToNext());
-            cursor.close();
-        }
-        dbOperation.closeDataBase();
-        return musicList;
     }
 }

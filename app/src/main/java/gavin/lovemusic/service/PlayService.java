@@ -24,7 +24,7 @@ import gavin.lovemusic.entity.Music;
  * Created by Gavin on 2015/11/3.
  * 歌曲播放服务
  */
-public class PlayService extends Service {
+public class PlayService extends Service implements MusicPlayer.OnCompletionListener {
     public static int musicState;
     public static final int PLAYING = 0;        //歌曲正在播放
     public static final int PAUSE = 1;         //歌曲暂停
@@ -42,7 +42,7 @@ public class PlayService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        mMusicPlayer = new MusicPlayer();
+        mMusicPlayer = new MusicPlayer(this);
 
         IntentFilter intentFilterPlay = new IntentFilter(NOTIFICATION_PLAY);
         registerReceiver(broadcastReceiver, intentFilterPlay);
@@ -97,7 +97,6 @@ public class PlayService extends Service {
         mMusicPlayer.start(music);
         musicState = PLAYING;
         EventBus.getDefault().post(new MusicStartedEvent(mMusicPlayer.getCurrentMusic()));
-//        EventBus.getDefault().post(new MusicPlayEvent());
         showNotification();
     }
 
@@ -141,6 +140,11 @@ public class PlayService extends Service {
                 new MusicStartedEvent(mMusicPlayer.getCurrentMusic()));
     }
 
+    @Override
+    public void onCompletion() {
+        EventBus.getDefault().post(new MusicStartedEvent(mMusicPlayer.getCurrentMusic()));
+    }
+
     public static class ChangeMusicEvent {
         public final Music music;
 
@@ -178,14 +182,11 @@ public class PlayService extends Service {
                     }
                     break;
                 case NOTIFICATION_NEXT:
-                    mMusicPlayer.next();
+                    nextMusic();
                     break;
                 case NOTIFICATION_STOP:
                     pauseMusic();
                     stopForeground(true);
-                    break;
-                default:
-                    break;
             }
         }
     };

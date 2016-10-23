@@ -15,9 +15,12 @@ public class MusicPlayer implements MediaPlayer.OnPreparedListener, MediaPlayer.
     private ArrayList<Music> mMusicPlayList = new ArrayList<>();
     private int mIndex;
 
+    private OnCompletionListener mOnCompletionListener;
+
     private MediaPlayer mMediaPlayer = new MediaPlayer();
 
-    MusicPlayer() {
+    MusicPlayer(OnCompletionListener onCompletionListener) {
+        this.mOnCompletionListener = onCompletionListener;
     }
 
     public void start(int index) {
@@ -41,6 +44,7 @@ public class MusicPlayer implements MediaPlayer.OnPreparedListener, MediaPlayer.
     @Override
     public void onCompletion(MediaPlayer mp) {
         next();
+        mOnCompletionListener.onCompletion();
     }
 
     public void start(Music music) {
@@ -110,5 +114,9 @@ public class MusicPlayer implements MediaPlayer.OnPreparedListener, MediaPlayer.
         mMediaPlayer.reset();
         mMediaPlayer.release();
         mMediaPlayer = null;
+    }
+
+    public interface OnCompletionListener {
+        void onCompletion();
     }
 }
