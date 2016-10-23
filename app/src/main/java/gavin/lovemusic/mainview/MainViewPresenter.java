@@ -101,7 +101,6 @@ public class MainViewPresenter implements MainViewContract.Presenter {
                                 mMainView.changeDragViewColorDefault();
                             }
                         });
-                bitmap.recycle();
             }
         });
     }

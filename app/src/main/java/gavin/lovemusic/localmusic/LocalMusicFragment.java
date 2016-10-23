@@ -33,7 +33,6 @@ public class LocalMusicFragment extends Fragment implements LocalMusicContract.V
         mListView.setLayoutManager(new LinearLayoutManager(getContext()));
         mSwipeRefreshLayout.setDistanceToTriggerSync(200);
         mSwipeRefreshLayout.setOnRefreshListener(this);
-        new LocalMusicPresenter(this, getContext());
         mLocalMusicPresenter.subscribe();
         return rootView;
     }

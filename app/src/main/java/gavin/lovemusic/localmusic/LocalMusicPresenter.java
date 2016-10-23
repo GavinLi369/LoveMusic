@@ -7,6 +7,8 @@ import org.greenrobot.eventbus.EventBus;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import javax.inject.Inject;
+
 import gavin.lovemusic.service.MusicListUpdateEvent;
 import gavin.lovemusic.entity.Music;
 import gavin.lovemusic.service.PlayService;
@@ -23,11 +25,12 @@ public class LocalMusicPresenter implements LocalMusicContract.Presenter {
     private LocalMusicContract.View mLocalMusicView;
     private LocalMusicContract.Model mLocalMusicModel;
 
-    public LocalMusicPresenter(LocalMusicContract.View localMusicView, Context context) {
+    @Inject
+    public LocalMusicPresenter(LocalMusicContract.View localMusicView,
+                        LocalMusicContract.Model localMusicModel) {
         this.mLocalMusicView = localMusicView;
-        mLocalMusicModel = new LocalMusicModel(context);
+        this.mLocalMusicModel = localMusicModel;
         mLocalMusicView.setPresenter(this);
-        EventBus.getDefault().post(new MusicListUpdateEvent(mLocalMusicModel.getMusicList()));
     }
 
     @Override
@@ -71,6 +74,7 @@ public class LocalMusicPresenter implements LocalMusicContract.Presenter {
 
     @Override
     public void subscribe() {
+        EventBus.getDefault().post(new MusicListUpdateEvent(mLocalMusicModel.getMusicList()));
         mLocalMusicView.setMusicListView(mLocalMusicModel.getMusicList());
     }
 

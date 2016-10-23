@@ -51,7 +51,7 @@ public class NetworkMusicFragment extends Fragment implements NetworkMusicContra
         mSwipeRefreshLayout.setDistanceToTriggerSync(200);
         mSwipeRefreshLayout.setOnRefreshListener(this);
 
-        new NetworkMusicPresenter(this, getContext());
+        new NetworkMusicPresenter(this, new NetworkMusicModel(getContext()));
         mNetworkMusicPresenter.subscribe();
         return rootView;
     }

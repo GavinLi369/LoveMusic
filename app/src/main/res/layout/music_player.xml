@@ -18,7 +18,7 @@
             android:layout_height="25dp"
             android:layout_marginTop="5dp"
             android:layout_marginStart="60dp"
-            android:singleLine="true"
+            android:maxWidth="180dp"
             android:maxLines="1"
             android:ellipsize="end"
             android:textSize="15sp"
@@ -31,11 +31,11 @@
             android:layout_height="20dp"
             android:layout_marginTop="30dp"
             android:layout_marginStart="60dp"
-            android:textColor="#777"
-            android:singleLine="true"
+            android:maxWidth="180dp"
             android:maxLines="1"
             android:ellipsize="end"
             android:textSize="12sp"
+            android:textColor="#777"
             tools:text="赵雷"/>
 
         <ImageButton

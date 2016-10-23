@@ -18,11 +18,21 @@ import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import javax.inject.Inject;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import gavin.lovemusic.constant.R;
 import gavin.lovemusic.detailmusic.DetailMusicFragment;
 import gavin.lovemusic.entity.Music;
+import gavin.lovemusic.localmusic.LocalMusicFragment;
+import gavin.lovemusic.localmusic.LocalMusicModel;
+import gavin.lovemusic.localmusic.LocalMusicPresenter;
+import gavin.lovemusic.localmusic.LocalMusicPresenterModule;
+import gavin.lovemusic.networkmusic.NetworkMusicFragment;
+import gavin.lovemusic.networkmusic.NetworkMusicModel;
+import gavin.lovemusic.networkmusic.NetworkMusicPresenter;
+import gavin.lovemusic.networkmusic.NetworkMusicPresenterModule;
 import gavin.lovemusic.service.ActivityCommand;
 import gavin.lovemusic.service.PlayService;
 import gavinli.slidinglayout.SlidingLayout;
@@ -44,6 +54,9 @@ public class MainActivity extends AppCompatActivity implements MainViewContract.
 
     private MainViewContract.Presenter mMainViewPresenter;
 
+    @Inject LocalMusicPresenter mLocalMusicPresenter;
+    @Inject NetworkMusicPresenter mNetworkMusicPresenter;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,6 +66,14 @@ public class MainActivity extends AppCompatActivity implements MainViewContract.
         ViewPager viewPager = (ViewPager) findViewById(R.id.view_pager);
         mAdapter = new SectionPagerAdapter(getSupportFragmentManager());
         viewPager.setAdapter(mAdapter);
+
+        DaggerMainViewComponent.builder()
+                .networkMusicPresenterModule(new NetworkMusicPresenterModule(
+                        (NetworkMusicFragment) mAdapter.getItem(0), new NetworkMusicModel(this)
+                ))
+                .localMusicPresenterModule(new LocalMusicPresenterModule(
+                        (LocalMusicFragment) mAdapter.getItem(1), new LocalMusicModel(this)
+        )).build().inject(this);
 
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(viewPager);
@@ -135,6 +156,8 @@ public class MainActivity extends AppCompatActivity implements MainViewContract.
             transaction.addToBackStack(null);
             transaction.commit();
             detailMusicFragment.initMusic(music);
+
+
             mMainLayout.addView(mSlidingLayout);
             mDragView = (RelativeLayout) mSlidingLayout.findViewById(R.id.view_drag);
             mPlayButton = (ImageButton) mSlidingLayout.findViewById(R.id.playButton);

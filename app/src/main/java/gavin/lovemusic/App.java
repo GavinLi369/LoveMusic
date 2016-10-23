@@ -22,7 +22,8 @@ public class App extends Application {
     private static String sExternalStorage = Environment.getExternalStorageDirectory().getPath();
     public static final String APP_DIR = sExternalStorage + File.separator + "LoveMusic";
 
-    private DaoSession mDaoSession;
+    private DaoSession mCacheSession;
+    private DaoSession mMusicSession;
 
     @Override
     public void onCreate() {
@@ -34,13 +35,22 @@ public class App extends Application {
         }
         Logger.init();
 
-        DevOpenHelper helper = new DevOpenHelper(this, "music-db");
-        Database db = helper.getWritableDb();
-        mDaoSession = new DaoMaster(db).newSession();
+        mCacheSession = createDaoSession("cache-db");
+        mMusicSession = createDaoSession("music-db");
     }
 
-    public DaoSession getDaoSession() {
-        return mDaoSession;
+    private DaoSession createDaoSession(String databaseName) {
+        DevOpenHelper cacheHelper = new DevOpenHelper(this, databaseName);
+        Database cacheDb = cacheHelper.getWritableDb();
+        return new DaoMaster(cacheDb).newSession();
+    }
+
+    public DaoSession getCacheSession() {
+        return mCacheSession;
+    }
+
+    public DaoSession getMusicSession() {
+        return mMusicSession;
     }
 
     /**

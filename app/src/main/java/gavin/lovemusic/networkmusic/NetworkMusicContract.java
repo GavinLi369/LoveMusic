@@ -1,7 +1,5 @@
 package gavin.lovemusic.networkmusic;
 
-import android.content.Context;
-
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -15,7 +13,7 @@ import gavin.lovemusic.entity.Music;
  */
 public class NetworkMusicContract {
     interface Model {
-        ArrayList<Music> getBillboardHot(Context context, int size, int offset) throws IOException;
+        ArrayList<Music> getBillboardHot(int size, int offset) throws IOException;
     }
 
     interface View extends BaseView<Presenter> {

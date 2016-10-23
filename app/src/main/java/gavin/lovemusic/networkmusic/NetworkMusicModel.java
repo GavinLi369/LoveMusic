@@ -22,12 +22,17 @@ import gavin.lovemusic.entity.MusicDao;
  * on 16-10-21.
  */
 public class NetworkMusicModel implements NetworkMusicContract.Model {
+    private Context mContext;
     private DongtingApi dongtingApi = new DongtingApi();
 
+    public NetworkMusicModel(Context context) {
+        this.mContext = context;
+    }
+
     @Override
-    public ArrayList<Music> getBillboardHot(Context context, int size, int offset) throws IOException {
+    public ArrayList<Music> getBillboardHot(int size, int offset) throws IOException {
         ArrayList<Music> musics = dongtingApi.getBillboardHot(size, offset);
-        DaoSession daoSession = ((App) context.getApplicationContext()).getDaoSession();
+        DaoSession daoSession = ((App) mContext.getApplicationContext()).getCacheSession();
         MusicDao musicDao = daoSession.getMusicDao();
         for(Music music : musics) {
             List<Music> cacheMusics = musicDao.queryBuilder()
@@ -36,7 +41,7 @@ public class NetworkMusicModel implements NetworkMusicContract.Model {
                     .list();
             if(cacheMusics.isEmpty() || !new File(cacheMusics.get(0).getImage()).exists()) {
                 try {
-                    String imagePath = saveMusicImage(context, music);
+                    String imagePath = saveMusicImage(mContext, music);
                     music.setImage(imagePath);
                     musicDao.insert(music);
                 } catch (IOException | InterruptedException | ExecutionException e) {

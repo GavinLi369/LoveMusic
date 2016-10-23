@@ -40,8 +40,8 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
 
     private UpdateViewHandler handler = new UpdateViewHandler(this);
 
-    public DetailMusicPresenter(DetailMusicContract.View playDetailView) {
-        this.mDetailMusicView = playDetailView;
+    public DetailMusicPresenter(DetailMusicContract.View DetailMusicView) {
+        this.mDetailMusicView = DetailMusicView;
         mDetailMusicView.setPresenter(this);
     }
 
@@ -154,7 +154,6 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
                                 mDetailMusicView.changeViewColorDefault();
                             }
                         });
-                bitmap.recycle();
             }
         });
     }
