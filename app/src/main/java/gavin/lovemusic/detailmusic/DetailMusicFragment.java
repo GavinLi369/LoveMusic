@@ -22,7 +22,6 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import gavin.lovemusic.constant.R;
 import gavin.lovemusic.entity.LyricRow;
-import gavin.lovemusic.entity.Music;
 import gavin.lovemusic.service.ActivityCommand;
 
 /**
@@ -57,6 +56,16 @@ public class DetailMusicFragment extends Fragment implements DetailMusicContract
     public void onDestroyView() {
         mDetailMusicPresenter.unsubscribe();
         super.onDestroyView();
+    }
+
+    @Override
+    public void showFindingLyric() {
+        mLyricView.setFindingLyric();
+    }
+
+    @Override
+    public void showNotFoundLyric() {
+        mLyricView.setNotFoundLyric();
     }
 
     @Override
@@ -142,10 +151,6 @@ public class DetailMusicFragment extends Fragment implements DetailMusicContract
     public void changeViewColorDefault() {
         //noinspection deprecation
         mPlayCoumn.setBackgroundColor(getResources().getColor(R.color.playColumnDefault));
-    }
-
-    public void initMusic(Music music) {
-        new DetailMusicPresenter(this).initMusic(music);
     }
 
     @Override

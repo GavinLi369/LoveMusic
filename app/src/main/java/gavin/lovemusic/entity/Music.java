@@ -23,9 +23,15 @@ public class Music {
     private String image;  //专辑封面路径
     private String path;
 
-    @Generated(hash = 424835903)
+    private String lyricPath;
+
+    @Generated(hash = 1263212761)
+    public Music() {
+    }
+
+    @Generated(hash = 1990994493)
     public Music(long id, @NotNull String title, @NotNull String artist, @NotNull String album,
-            long duration, @NotNull String image, String path) {
+            long duration, @NotNull String image, String path, String lyricPath) {
         this.id = id;
         this.title = title;
         this.artist = artist;
@@ -33,10 +39,7 @@ public class Music {
         this.duration = duration;
         this.image = image;
         this.path = path;
-    }
-
-    @Generated(hash = 1263212761)
-    public Music() {
+        this.lyricPath = lyricPath;
     }
 
     public long getId() {
@@ -115,5 +118,13 @@ public class Music {
         result = 31 * result + (artist != null ? artist.hashCode() : 0);
         result = 31 * result + (album != null ? album.hashCode() : 0);
         return result;
+    }
+
+    public String getLyricPath() {
+        return this.lyricPath;
+    }
+
+    public void setLyricPath(String lyricPath) {
+        this.lyricPath = lyricPath;
     }
 }

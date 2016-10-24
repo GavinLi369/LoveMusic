@@ -1,81 +1,38 @@
 package gavin.lovemusic.detailmusic;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import gavin.lovemusic.entity.LyricRow;
-import gavin.lovemusic.entity.Music;
 
 /**
  * Created by Gavin on 2015/8/24.
  * 歌词实例
  */
 public class LyricBuilder {
-    private String lyricStr = "";
+    private String mLyric = "";
     private ArrayList<LyricRow> lyricList;
-    private Music music;
 
-    public LyricBuilder(Music music) {
-        this.music = music;
+    public LyricBuilder(String lyric) {
+        this.mLyric = lyric;
     }
 
     public ArrayList<LyricRow> build() {
-        File lrcFile = getLrcOfSong(music.getPath());
-        lyricStr = parseFile2String(lrcFile);
         parseLyric();
         return lyricList;
-    }
-
-    /**
-     * 根据歌曲文件名和歌曲路径获得Lrc文件
-     */
-    private File getLrcOfSong(String path) {
-        String lrcFileName = path.replace(".mp3", ".lrc").replace("/Music", "/MusicLrc").replace(" - ", " - ");
-        return new File(lrcFileName);
-    }
-
-    /**
-     * 将文本文件转换为String
-     */
-    private String parseFile2String(File file) {
-        if (file == null) {
-            return "";
-        }
-
-        BufferedReader reader;
-        String line;
-        String buffer = "";
-        try {
-            reader = new BufferedReader
-                    (new InputStreamReader(new FileInputStream(file), "UTF-8"));
-            while ((line = reader.readLine()) != null) {
-                buffer = buffer + line + "\n";
-            }
-
-            reader.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return buffer;
     }
 
     /**
      * 将歌词文件解析，并存入map
      */
     private void parseLyric() {
-        if (lyricStr.equals("")) {
+        if (mLyric.equals("")) {
             return;
         }
         lyricList = new ArrayList<>();
         Pattern pattern = Pattern.compile("\\[(\\d{2}:\\d{2}\\.\\d{2,3})\\]([^\\n]+)");
-        Matcher matcher = pattern.matcher(lyricStr);
+        Matcher matcher = pattern.matcher(mLyric);
         while (matcher.find()) {
             LyricRow lyricRow = new LyricRow
                     (parseDateTime(matcher.group(1)), matcher.group(2));

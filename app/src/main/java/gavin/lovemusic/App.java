@@ -24,6 +24,7 @@ public class App extends Application {
 
     private DaoSession mCacheSession;
     private DaoSession mMusicSession;
+    private DaoSession mLyricSession;
 
     @Override
     public void onCreate() {
@@ -37,6 +38,7 @@ public class App extends Application {
 
         mCacheSession = createDaoSession("cache-db");
         mMusicSession = createDaoSession("music-db");
+        mLyricSession = createDaoSession("lyric-db");
     }
 
     private DaoSession createDaoSession(String databaseName) {
@@ -51,6 +53,10 @@ public class App extends Application {
 
     public DaoSession getMusicSession() {
         return mMusicSession;
+    }
+
+    public DaoSession getLyricSession() {
+        return mLyricSession;
     }
 
     /**

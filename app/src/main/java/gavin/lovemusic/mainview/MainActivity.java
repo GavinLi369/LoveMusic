@@ -24,6 +24,8 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import gavin.lovemusic.constant.R;
 import gavin.lovemusic.detailmusic.DetailMusicFragment;
+import gavin.lovemusic.detailmusic.DetailMusicModel;
+import gavin.lovemusic.detailmusic.DetailMusicPresenter;
 import gavin.lovemusic.entity.Music;
 import gavin.lovemusic.localmusic.LocalMusicFragment;
 import gavin.lovemusic.localmusic.LocalMusicModel;
@@ -155,7 +157,7 @@ public class MainActivity extends AppCompatActivity implements MainViewContract.
             transaction.replace(R.id.fragment_music_detail, detailMusicFragment);
             transaction.addToBackStack(null);
             transaction.commit();
-            detailMusicFragment.initMusic(music);
+            new DetailMusicPresenter(detailMusicFragment, new DetailMusicModel(this)).initMusic(music);
 
 
             mMainLayout.addView(mSlidingLayout);

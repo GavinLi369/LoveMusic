@@ -35,6 +35,10 @@ public class LyricView extends View {
 
     private OnLyricViewSeekListener lyricViewSeekListener;
 
+    private boolean mFindingLyric = true;
+
+    private boolean mNotFoundLyric = false;
+
     public LyricView(Context context) {
         super(context);
         init();
@@ -69,6 +73,18 @@ public class LyricView extends View {
      */
     public void setLyricList(ArrayList<LyricRow> lyricList) {
         this.lyricList = lyricList;
+        mFindingLyric = false;
+        mNotFoundLyric = false;
+        invalidate();
+    }
+
+    public void setFindingLyric() {
+        mFindingLyric = true;
+        invalidate();
+    }
+
+    public void setNotFoundLyric() {
+        mNotFoundLyric = true;
         invalidate();
     }
 
@@ -98,7 +114,13 @@ public class LyricView extends View {
         if (canvas == null) {
             return;
         }
-        if (lyricList == null) {
+
+        if(mFindingLyric) {
+            canvas.drawText("...", width / 2, height / 2, paintHL);
+            return;
+        }
+
+        if (mNotFoundLyric) {
             canvas.drawText("没有歌词赶快下载吧...", width / 2, height / 2, paintHL);
             return;
         }

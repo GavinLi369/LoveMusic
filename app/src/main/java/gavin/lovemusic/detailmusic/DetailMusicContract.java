@@ -4,6 +4,9 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.support.v7.graphics.Palette;
 
+import org.json.JSONException;
+
+import java.io.IOException;
 import java.util.ArrayList;
 
 import gavin.lovemusic.BasePresenter;
@@ -17,12 +20,20 @@ import gavin.lovemusic.service.ActivityCommand;
  * on 16-9-22.
  */
 public class DetailMusicContract {
+    interface Model {
+        ArrayList<LyricRow> getMusicLyric(Music music) throws IOException, JSONException;
+    }
+
     interface View extends BaseView<Presenter> {
         void updateBgImage(String bgImageUrl);
 
         void changeViewColor(Palette.Swatch swatch);
 
         void changeViewColorDefault();
+
+        void showFindingLyric();
+
+        void showNotFoundLyric();
 
         void changeLyricView(ArrayList<LyricRow> lyricList);
 

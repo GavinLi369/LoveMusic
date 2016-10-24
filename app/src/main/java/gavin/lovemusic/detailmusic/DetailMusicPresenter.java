@@ -11,10 +11,13 @@ import android.support.v7.graphics.Palette;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
+import org.json.JSONException;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 
+import gavin.lovemusic.entity.LyricRow;
 import gavin.lovemusic.entity.Music;
 import gavin.lovemusic.service.ActivityCommand;
 import gavin.lovemusic.service.PlayService;
@@ -32,6 +35,7 @@ import rx.schedulers.Schedulers;
  */
 public class DetailMusicPresenter implements DetailMusicContract.Presenter {
     private DetailMusicContract.View mDetailMusicView;
+    private DetailMusicContract.Model mDetailMusicModel;
 
     private Music mCurrentMusic;
 
@@ -40,8 +44,10 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
 
     private UpdateViewHandler handler = new UpdateViewHandler(this);
 
-    public DetailMusicPresenter(DetailMusicContract.View DetailMusicView) {
-        this.mDetailMusicView = DetailMusicView;
+    public DetailMusicPresenter(DetailMusicContract.View view,
+                                DetailMusicContract.Model model) {
+        this.mDetailMusicView = view;
+        this.mDetailMusicModel = model;
         mDetailMusicView.setPresenter(this);
     }
 
@@ -160,8 +166,34 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
 
     private void initLyricView() {
         if(mCurrentMusic != null) {
-            LyricBuilder lyric = new LyricBuilder(mCurrentMusic);
-            mDetailMusicView.changeLyricView(lyric.build());
+            mDetailMusicView.showFindingLyric();
+            Observable<ArrayList<LyricRow>> observable = Observable.create(new Observable.OnSubscribe<ArrayList<LyricRow>>() {
+                @Override
+                public void call(Subscriber<? super ArrayList<LyricRow>> subscriber) {
+                    try {
+                        subscriber.onNext(mDetailMusicModel.getMusicLyric(mCurrentMusic));
+                        subscriber.onCompleted();
+                    } catch (IOException | JSONException e) {
+                        subscriber.onError(e);
+                    }
+                }
+            }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+            observable.subscribe(new Subscriber<ArrayList<LyricRow>>() {
+                @Override
+                public void onCompleted() {
+                }
+
+                @Override
+                public void onError(Throwable e) {
+                    e.printStackTrace();
+                    mDetailMusicView.showNotFoundLyric();
+                }
+
+                @Override
+                public void onNext(ArrayList<LyricRow> lyricRows) {
+                    mDetailMusicView.changeLyricView(lyricRows);
+                }
+            });
         }
     }
 
