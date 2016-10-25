@@ -37,13 +37,11 @@ public class DetailMusicContract {
 
         void changeLyricView(ArrayList<LyricRow> lyricList);
 
-        void updateLyricView(int currentTime);
-
         void changePlayToPause();
 
         void changePauseToPlay();
 
-        void updateSeekBar(int duration, int progress);
+        void modifySeekBar(int duration, int progress);
     }
 
     interface Presenter extends BasePresenter {
@@ -52,5 +50,7 @@ public class DetailMusicContract {
         void onPlayButtonClick(Context context);
 
         void changeMusic(Context context, ActivityCommand command);
+
+        long getMusicDuration();
     }
 }

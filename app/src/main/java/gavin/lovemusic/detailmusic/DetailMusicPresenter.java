@@ -4,8 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.Handler;
-import android.os.Message;
 import android.support.v7.graphics.Palette;
 
 import org.greenrobot.eventbus.EventBus;
@@ -14,7 +12,6 @@ import org.greenrobot.eventbus.ThreadMode;
 import org.json.JSONException;
 
 import java.io.IOException;
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
 import gavin.lovemusic.entity.LyricRow;
@@ -39,11 +36,6 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
 
     private Music mCurrentMusic;
 
-    private int mCurrentTime = 0;
-    private boolean isPlaying = true;
-
-    private UpdateViewHandler handler = new UpdateViewHandler(this);
-
     public DetailMusicPresenter(DetailMusicContract.View view,
                                 DetailMusicContract.Model model) {
         this.mDetailMusicView = view;
@@ -51,27 +43,8 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
         mDetailMusicView.setPresenter(this);
     }
 
-    static class UpdateViewHandler extends Handler {
-        private final WeakReference<DetailMusicPresenter> presenterWeakReference;
-
-        public UpdateViewHandler(DetailMusicPresenter presenter) {
-            this.presenterWeakReference = new WeakReference<>(presenter);
-        }
-
-        @Override
-        public void handleMessage(Message msg) {
-            DetailMusicPresenter presenter = presenterWeakReference.get();
-            presenter.mCurrentTime += 500;
-            if(presenter.mCurrentMusic != null) {
-                presenter.mDetailMusicView.updateSeekBar((int) presenter.mCurrentMusic.getDuration(), presenter.mCurrentTime);
-                presenter.mDetailMusicView.updateLyricView(presenter.mCurrentTime);
-            }
-        }
-    }
-
     @Override
     public void setMusicProgress(int progress, Context context) {
-        mCurrentTime = progress;
         Intent intent = new Intent(context, PlayService.class);
         intent.putExtra("musicCommand", ActivityCommand.CHANGE_PROGRESS);
         intent.putExtra("progress", progress);
@@ -107,13 +80,19 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void startMusic(PlayService.MusicStartedEvent event) {
         mCurrentMusic = event.currentMusic;
-        mCurrentTime = 0;
         changeViewColor(event.currentMusic.getImage());
         mDetailMusicView.updateBgImage(event.currentMusic.getImage());
-        mDetailMusicView.updateSeekBar((int) event.currentMusic.getDuration(), mCurrentTime);
+        mDetailMusicView.modifySeekBar((int) event.currentMusic.getDuration(), 0);
         mDetailMusicView.changePauseToPlay();
         initLyricView();
-        isPlaying = true;
+    }
+
+    @Override
+    public long getMusicDuration() {
+        if(mCurrentMusic != null)
+            return mCurrentMusic.getDuration();
+        else
+            return 0;
     }
 
     private void changeViewColor(String bgImageUrl) {
@@ -199,32 +178,17 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void musicPause(PlayService.MusicPauseEvent event) {
-        isPlaying = false;
         mDetailMusicView.changePlayToPause();
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void musicPlay(PlayService.MusicPlayEvent event) {
-        isPlaying = true;
         mDetailMusicView.changePauseToPlay();
     }
 
     @Override
     public void subscribe() {
         EventBus.getDefault().register(this);
-        //每隔0.5秒更新一次视图
-        new Thread(() -> {
-            while(true) {
-                if(isPlaying)
-                    handler.sendEmptyMessage(0);
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                    break;
-                }
-            }
-        }).start();
         mDetailMusicView.changePauseToPlay();
         if(mCurrentMusic != null) {
             changeViewColor(mCurrentMusic.getImage());

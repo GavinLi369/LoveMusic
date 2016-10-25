@@ -116,12 +116,12 @@ public class LyricView extends View {
         }
 
         if(mFindingLyric) {
-            canvas.drawText("...", width / 2, height / 2, paintHL);
+            canvas.drawText("正在加载歌词...", width / 2, height / 2, paintHL);
             return;
         }
 
         if (mNotFoundLyric) {
-            canvas.drawText("没有歌词赶快下载吧...", width / 2, height / 2, paintHL);
+            canvas.drawText("歌词加载失败...", width / 2, height / 2, paintHL);
             return;
         }
 
@@ -180,7 +180,7 @@ public class LyricView extends View {
                 seekLyric = false;
             case MotionEvent.ACTION_UP:
                 if(seekLyric) {
-                    lyricViewSeekListener.lyricViewSeek(lyricList.get(index));
+                    lyricViewSeekListener.onLyricViewSeek(lyricList.get(index));
                     seekLyric = false;
                 }
                 mAnimationOffset = 0;

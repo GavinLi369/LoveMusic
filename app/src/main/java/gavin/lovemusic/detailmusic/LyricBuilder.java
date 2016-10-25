@@ -1,6 +1,7 @@
 package gavin.lovemusic.detailmusic;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,13 +32,20 @@ public class LyricBuilder {
             return;
         }
         lyricList = new ArrayList<>();
-        Pattern pattern = Pattern.compile("\\[(\\d{2}:\\d{2}\\.\\d{2,3})\\]([^\\n]+)");
+        Pattern pattern = Pattern.compile("\\[(\\d{2}:\\d{2}\\.\\d{2,3})\\](\\[(\\d{2}:\\d{2}\\.\\d{2,3})\\])*([^\\n]*)");
         Matcher matcher = pattern.matcher(mLyric);
         while (matcher.find()) {
-            LyricRow lyricRow = new LyricRow
-                    (parseDateTime(matcher.group(1)), matcher.group(2));
+            //歌词不能为空
+            if(matcher.group(4) == null || matcher.group(4).equals("")) continue;
+            LyricRow lyricRow = new LyricRow(parseDateTime(matcher.group(1)), matcher.group(4));
             lyricList.add(lyricRow);
+            //同一句歌词可能会有两个时间点
+            if(matcher.group(2) != null && !matcher.group(2).equals("")) {
+                lyricRow = new LyricRow(parseDateTime(matcher.group(3)), matcher.group(4));
+                lyricList.add(lyricRow);
+            }
         }
+        Collections.sort(lyricList);
     }
 
     /**

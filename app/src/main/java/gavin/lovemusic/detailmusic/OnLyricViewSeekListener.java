@@ -7,5 +7,5 @@ import gavin.lovemusic.entity.LyricRow;
  * on 16-10-15.
  */
 public interface OnLyricViewSeekListener {
-    void lyricViewSeek(LyricRow lyricRow);
+    void onLyricViewSeek(LyricRow lyricRow);
 }

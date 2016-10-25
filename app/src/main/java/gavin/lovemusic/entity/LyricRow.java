@@ -4,7 +4,7 @@ package gavin.lovemusic.entity;
  * Created by Gavin on 2015/8/26.
  * 每一句歌词
  */
-public class LyricRow {
+public class LyricRow implements Comparable<LyricRow> {
     /**
      * 歌词内容
       */
@@ -29,5 +29,13 @@ public class LyricRow {
 
     public long getLyricTime() {
         return lyricTime;
+    }
+
+    @Override
+    public int compareTo(LyricRow lyricRow) {
+        double result = this.lyricTime - lyricRow.getLyricTime();
+        if(result > 0) return 1;
+        else if(result < 0) return -1;
+        else return 0;
     }
 }
