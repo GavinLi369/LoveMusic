@@ -37,9 +37,11 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
     private Music mCurrentMusic;
 
     public DetailMusicPresenter(DetailMusicContract.View view,
-                                DetailMusicContract.Model model) {
+                                DetailMusicContract.Model model,
+                                Music currentMusic) {
         this.mDetailMusicView = view;
         this.mDetailMusicModel = model;
+        this.mCurrentMusic = currentMusic;
         mDetailMusicView.setPresenter(this);
     }
 
@@ -150,7 +152,11 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
                 @Override
                 public void call(Subscriber<? super ArrayList<LyricRow>> subscriber) {
                     try {
-                        subscriber.onNext(mDetailMusicModel.getMusicLyric(mCurrentMusic));
+                        ArrayList<LyricRow> lyricRows = mDetailMusicModel.getMusicLyric(mCurrentMusic);
+                        if(lyricRows.isEmpty())
+                            subscriber.onError(new Exception("This music doesn't have the lyric"));
+                        else
+                            subscriber.onNext(lyricRows);
                         subscriber.onCompleted();
                     } catch (IOException | JSONException e) {
                         subscriber.onError(e);
@@ -195,11 +201,6 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
             mDetailMusicView.updateBgImage(mCurrentMusic.getImage());
             initLyricView();
         }
-    }
-
-    //TODO 用于初始化View刚显示时所播放的歌曲，代码逻辑不清晰，以后优化
-    public void initMusic(Music music) {
-        mCurrentMusic = music;
     }
 
     @Override

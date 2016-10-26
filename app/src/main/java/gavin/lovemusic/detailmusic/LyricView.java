@@ -84,6 +84,7 @@ public class LyricView extends View {
     }
 
     public void setNotFoundLyric() {
+        mFindingLyric = false;
         mNotFoundLyric = true;
         invalidate();
     }

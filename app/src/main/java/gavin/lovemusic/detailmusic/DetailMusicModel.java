@@ -42,6 +42,7 @@ public class DetailMusicModel implements DetailMusicContract.Model {
         String lyric = getLyricByLocal(music);
         if(lyric.isEmpty()) {
             lyric = getLyricByNetwork(music);
+            if(lyric.isEmpty()) throw new IOException("this music doesn't have the lyric");
             String lyricPath = saveLyric(System.currentTimeMillis() + ".lrc", lyric);
             music.setLyricPath(lyricPath);
             mMusicDao.insertOrReplace(music);

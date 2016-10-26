@@ -9,7 +9,6 @@
         android:id="@+id/view_drag"
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:orientation="horizontal"
         android:background="#000">
 
         <TextView
@@ -37,14 +36,6 @@
             android:textSize="12sp"
             android:textColor="#777"
             tools:text="赵雷"/>
-
-        <ImageButton
-            android:id="@+id/playButton"
-            android:layout_width="35dp"
-            android:layout_height="35dp"
-            android:layout_marginTop="7dp"
-            android:layout_marginStart="280dp"
-            android:background="@drawable/play_prey"/>
     </RelativeLayout>
 
     <FrameLayout

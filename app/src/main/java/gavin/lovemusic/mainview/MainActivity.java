@@ -12,8 +12,10 @@ import android.support.v7.graphics.Palette;
 import android.support.v7.widget.Toolbar;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
+import android.util.TypedValue;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -37,6 +39,7 @@ import gavin.lovemusic.networkmusic.NetworkMusicPresenter;
 import gavin.lovemusic.networkmusic.NetworkMusicPresenterModule;
 import gavin.lovemusic.service.ActivityCommand;
 import gavin.lovemusic.service.PlayService;
+import gavinli.slidinglayout.OnViewStatusChangedListener;
 import gavinli.slidinglayout.SlidingLayout;
 
 /**
@@ -44,7 +47,7 @@ import gavinli.slidinglayout.SlidingLayout;
  * on 16-9-18.
  */
 public class MainActivity extends AppCompatActivity implements MainViewContract.View,
-        View.OnClickListener {
+        View.OnClickListener, OnViewStatusChangedListener {
     @BindView(R.id.layout_main) RelativeLayout mMainLayout;
     private ImageButton mPlayButton;
     private TextView mMusicName;
@@ -58,6 +61,8 @@ public class MainActivity extends AppCompatActivity implements MainViewContract.
 
     @Inject LocalMusicPresenter mLocalMusicPresenter;
     @Inject NetworkMusicPresenter mNetworkMusicPresenter;
+
+    private boolean mPlaying = true;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -124,14 +129,18 @@ public class MainActivity extends AppCompatActivity implements MainViewContract.
 
     @Override
     public void changePlaying2Pause() {
-        if(mSlidingLayout != null)
+        mPlaying = false;
+        if(mPlayButton != null) {
             mPlayButton.setBackgroundResource(R.drawable.play_prey);
+        }
     }
 
     @Override
     public void changePause2Playing() {
-        if(mSlidingLayout != null)
-        mPlayButton.setBackgroundResource(R.drawable.pause);
+        mPlaying = true;
+        if(mPlayButton != null) {
+            mPlayButton.setBackgroundResource(R.drawable.pause);
+        }
     }
 
     @Override
@@ -146,27 +155,53 @@ public class MainActivity extends AppCompatActivity implements MainViewContract.
     public void showMusicPlayView(Music music) {
         if(mSlidingLayout == null) {
             mSlidingLayout = (SlidingLayout) View.inflate(this, R.layout.music_player, null);
-            mSlidingLayout.setOnViewRemoveListener(() -> {
-                mMainViewPresenter.changeMusicStatus(MainActivity.this, ActivityCommand.PAUSE_MUSIC);
-                mSlidingLayout.removeView(findViewById(R.id.fragment_music_detail));
-                mMainLayout.removeView(mSlidingLayout);
-                mSlidingLayout = null;
-            });
+            mSlidingLayout.setOnViewStatusChangedListener(this);
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
             DetailMusicFragment detailMusicFragment = new DetailMusicFragment();
             transaction.replace(R.id.fragment_music_detail, detailMusicFragment);
             transaction.addToBackStack(null);
             transaction.commit();
-            new DetailMusicPresenter(detailMusicFragment, new DetailMusicModel(this)).initMusic(music);
-
+            new DetailMusicPresenter(detailMusicFragment, new DetailMusicModel(this), music);
 
             mMainLayout.addView(mSlidingLayout);
             mDragView = (RelativeLayout) mSlidingLayout.findViewById(R.id.view_drag);
-            mPlayButton = (ImageButton) mSlidingLayout.findViewById(R.id.playButton);
-            mPlayButton.setOnClickListener(this);
             mMusicName = (TextView) mSlidingLayout.findViewById(R.id.musicName);
             mArtist = (TextView) mSlidingLayout.findViewById(R.id.artist);
         }
+    }
+
+    @Override
+    public void onViewMaximized() {
+        ((ViewGroup) mPlayButton.getParent()).removeView(mPlayButton);
+    }
+
+    @Override
+    public void onViewMinimized() {
+        mPlayButton = new ImageButton(this);
+        int height = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 35, getResources().getDisplayMetrics());
+        int width = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 35, getResources().getDisplayMetrics());
+        RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(width, height);
+        int left = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 280, getResources().getDisplayMetrics());
+        int top = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 7, getResources().getDisplayMetrics());
+        layoutParams.setMargins(left, top, 0, 0);
+        mPlayButton.setLayoutParams(layoutParams);
+        if(mPlaying) {
+            //noinspection deprecation
+            mPlayButton.setBackground(getResources().getDrawable(R.drawable.pause));
+        } else {
+            //noinspection deprecation
+            mPlayButton.setBackground(getResources().getDrawable(R.drawable.play_prey));
+        }
+        mPlayButton.setOnClickListener(this);
+        mDragView.addView(mPlayButton);
+    }
+
+    @Override
+    public void onViewRemoved() {
+        mMainViewPresenter.changeMusicStatus(MainActivity.this, ActivityCommand.PAUSE_MUSIC);
+        mSlidingLayout.removeView(findViewById(R.id.fragment_music_detail));
+        mMainLayout.removeView(mSlidingLayout);
+        mSlidingLayout = null;
     }
 
     /**
