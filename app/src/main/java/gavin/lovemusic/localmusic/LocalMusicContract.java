@@ -4,10 +4,11 @@ import android.content.Context;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import gavin.lovemusic.BasePresenter;
 import gavin.lovemusic.BaseView;
-import gavin.lovemusic.entity.Music;
+import gavin.lovemusic.service.Music;
 
 /**
  * Created by GavinLi
@@ -21,7 +22,7 @@ public class LocalMusicContract {
     }
 
     interface View extends BaseView<Presenter> {
-        void setMusicListView(ArrayList<Music> musicList);
+        void setMusicListView(List<Music> musicList);
 
         void hideRefreshing();
     }

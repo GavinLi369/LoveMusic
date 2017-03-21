@@ -10,9 +10,8 @@ import org.greenrobot.greendao.database.Database;
 import java.io.File;
 import java.io.IOException;
 
-import gavin.lovemusic.entity.DaoMaster;
-import gavin.lovemusic.entity.DaoMaster.DevOpenHelper;
-import gavin.lovemusic.entity.DaoSession;
+import gavin.lovemusic.service.DaoMaster;
+import gavin.lovemusic.service.DaoSession;
 
 /**
  * Created by GavinLi on 16-9-10.
@@ -42,7 +41,7 @@ public class App extends Application {
     }
 
     private DaoSession createDaoSession(String databaseName) {
-        DevOpenHelper cacheHelper = new DevOpenHelper(this, databaseName);
+        DaoMaster.DevOpenHelper cacheHelper = new DaoMaster.DevOpenHelper(this, databaseName);
         Database cacheDb = cacheHelper.getWritableDb();
         return new DaoMaster(cacheDb).newSession();
     }

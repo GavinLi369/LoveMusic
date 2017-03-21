@@ -4,8 +4,7 @@ import android.media.MediaPlayer;
 
 import java.io.IOException;
 import java.util.ArrayList;
-
-import gavin.lovemusic.entity.Music;
+import java.util.List;
 
 /**
  * Created by GavinLi
@@ -92,7 +91,7 @@ public class MusicPlayer implements MediaPlayer.OnPreparedListener, MediaPlayer.
         return mMusicPlayList.get(mIndex);
     }
 
-    public void resetMusicPlayer(ArrayList<Music> musics) {
+    public void resetMusicPlayer(List<Music> musics) {
         mIndex = 0;
         mMediaPlayer.reset();
         mMusicPlayList.clear();

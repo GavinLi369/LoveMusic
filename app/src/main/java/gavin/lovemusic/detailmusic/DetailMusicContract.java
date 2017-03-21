@@ -1,7 +1,6 @@
 package gavin.lovemusic.detailmusic;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.support.v7.graphics.Palette;
 
 import org.json.JSONException;
@@ -11,8 +10,7 @@ import java.util.ArrayList;
 
 import gavin.lovemusic.BasePresenter;
 import gavin.lovemusic.BaseView;
-import gavin.lovemusic.entity.LyricRow;
-import gavin.lovemusic.entity.Music;
+import gavin.lovemusic.service.Music;
 import gavin.lovemusic.service.ActivityCommand;
 
 /**

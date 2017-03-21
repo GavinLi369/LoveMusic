@@ -5,8 +5,6 @@ import java.util.Collections;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import gavin.lovemusic.entity.LyricRow;
-
 /**
  * Created by Gavin on 2015/8/24.
  * 歌词实例

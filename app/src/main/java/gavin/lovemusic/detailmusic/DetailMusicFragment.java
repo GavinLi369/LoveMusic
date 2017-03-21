@@ -20,28 +20,22 @@ import com.bumptech.glide.Glide;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.OnClick;
 import gavin.lovemusic.constant.R;
-import gavin.lovemusic.entity.LyricRow;
 import gavin.lovemusic.service.ActivityCommand;
-
-import static gavin.lovemusic.constant.R.id.currentTime;
 
 /**
  * Created by GavinLi
  * on 16-9-20.
  */
 public class DetailMusicFragment extends Fragment implements DetailMusicContract.View,
-        OnLyricViewSeekListener{
-    @BindView(R.id.bgImageView) ImageView mBgImageView;
-    @BindView(R.id.playColumn) RelativeLayout mPlayCoumn;
-    @BindView(R.id.playButton) ImageButton mPlayButton;
-    @BindView(currentTime) TextView mCurrentTimeTv;
-    @BindView(R.id.duration) TextView mDuration;
-    @BindView(R.id.lyricView) LyricView mLyricView;
-    @BindView(R.id.lyricSeekBar) SeekBar mLyricSeekBar;
+        OnLyricViewSeekListener, View.OnClickListener{
+    private ImageView mBgImageView;
+    private RelativeLayout mPlayCoumn;
+    private ImageButton mPlayButton;
+    private TextView mCurrentTimeTv;
+    private TextView mDuration;
+    private LyricView mLyricView;
+    private SeekBar mLyricSeekBar;
 
     private DetailMusicContract.Presenter mDetailMusicPresenter;
 
@@ -54,7 +48,18 @@ public class DetailMusicFragment extends Fragment implements DetailMusicContract
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_music_detail, container, false);
-        ButterKnife.bind(this, view);
+        mBgImageView = (ImageView) view.findViewById(R.id.bgImageView);
+        mPlayCoumn = (RelativeLayout) view.findViewById(R.id.playColumn);
+        mPlayButton = (ImageButton) view.findViewById(R.id.playButton);
+        mCurrentTimeTv = (TextView) view.findViewById(R.id.currentTime);
+        mDuration = (TextView) view.findViewById(R.id.duration);
+        mLyricView = (LyricView) view.findViewById(R.id.lyricView);
+        mLyricSeekBar = (SeekBar) view.findViewById(R.id.lyricSeekBar);
+        ImageButton previousButton = (ImageButton) view.findViewById(R.id.previousButton);
+        ImageButton NextButton = (ImageButton) view.findViewById(R.id.nextButton);
+        mPlayButton.setOnClickListener(this);
+        previousButton.setOnClickListener(this);
+        NextButton.setOnClickListener(this);
         mLyricSeekBar.setOnSeekBarChangeListener(new MusicSeekBarListener());
         mLyricView.setOnLyricViewSeekListener(this);
         mDetailMusicPresenter.subscribe();
@@ -148,9 +153,9 @@ public class DetailMusicFragment extends Fragment implements DetailMusicContract
         }
     }
 
-    @OnClick({R.id.previousButton, R.id.playButton, R.id.nextButton})
-    void onButtonClick(android.view.View v) {
-        switch (v.getId()) {
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()) {
             case R.id.previousButton:
                 mDetailMusicPresenter.changeMusic(getActivity(), ActivityCommand.PREVIOUS_MUSIC);
                 break;

@@ -5,7 +5,7 @@ import java.util.ArrayList;
 
 import gavin.lovemusic.BasePresenter;
 import gavin.lovemusic.BaseView;
-import gavin.lovemusic.entity.Music;
+import gavin.lovemusic.service.Music;
 
 /**
  * Created by GavinLi
@@ -30,5 +30,7 @@ public class NetworkMusicContract {
         void refreshMusicList();
 
         void loadMoreMusic();
+
+        void startNewMusic(Music music);
     }
 }

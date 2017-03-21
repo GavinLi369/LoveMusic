@@ -13,9 +13,9 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import gavin.lovemusic.App;
-import gavin.lovemusic.entity.DaoSession;
-import gavin.lovemusic.entity.Music;
-import gavin.lovemusic.entity.MusicDao;
+import gavin.lovemusic.service.DaoSession;
+import gavin.lovemusic.service.Music;
+import gavin.lovemusic.service.MusicDao;
 
 /**
  * Created by GavinLi

@@ -11,8 +11,6 @@ import android.view.View;
 
 import java.util.ArrayList;
 
-import gavin.lovemusic.entity.LyricRow;
-
 /**
  * Created by Gavin on 2015/8/24.
  * 歌词View

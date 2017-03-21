@@ -11,15 +11,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import org.greenrobot.eventbus.EventBus;
-
 import java.util.ArrayList;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
 import gavin.lovemusic.constant.R;
-import gavin.lovemusic.entity.Music;
-import gavin.lovemusic.service.PlayService;
+import gavin.lovemusic.service.Music;
 
 /**
  * Created by GavinLi
@@ -27,32 +22,31 @@ import gavin.lovemusic.service.PlayService;
  */
 public class NetworkMusicFragment extends Fragment implements NetworkMusicContract.View,
         NetworkRecyclerAdapter.OnItemClickListener, SwipeRefreshLayout.OnRefreshListener{
-    @BindView(R.id.musicList) RecyclerView mRecyclerView;
-    @BindView(R.id.swipeRefreshLayout) SwipeRefreshLayout mSwipeRefreshLayout;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
 
     private GridLayoutManager mLayoutManager;
     private NetworkRecyclerAdapter mAdapter;
 
-    private NetworkMusicContract.Presenter mNetworkMusicPresenter;
+    private NetworkMusicContract.Presenter mPresenter;
 
     @Nullable
     @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_music_network, container, false);
-        ButterKnife.bind(this, rootView);
+        RecyclerView recyclerView = (RecyclerView) rootView.findViewById(R.id.musicList);
+        mSwipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeRefreshLayout);
         mLayoutManager = new GridLayoutManager(getContext(), 2);
-        mRecyclerView.setLayoutManager(mLayoutManager);
-        mRecyclerView.addOnScrollListener(new ScrollRefreshListener());
+        recyclerView.setLayoutManager(mLayoutManager);
+        recyclerView.addOnScrollListener(new ScrollRefreshListener());
         mAdapter = new NetworkRecyclerAdapter();
         mAdapter.setOnItemClickListener(this);
-        mRecyclerView.setAdapter(mAdapter);
+        recyclerView.setAdapter(mAdapter);
 
         mSwipeRefreshLayout.setDistanceToTriggerSync(200);
         mSwipeRefreshLayout.setOnRefreshListener(this);
 
-        new NetworkMusicPresenter(this, new NetworkMusicModel(getContext()));
-        mNetworkMusicPresenter.subscribe();
+//        new NetworkMusicPresenter(this, new NetworkMusicModel(getContext()));
         return rootView;
     }
 
@@ -64,7 +58,7 @@ public class NetworkMusicFragment extends Fragment implements NetworkMusicContra
             super.onScrollStateChanged(recyclerView, newState);
             if(newState == RecyclerView.SCROLL_STATE_IDLE &&
                     lastVisibleItem + 1 == mAdapter.getItemCount())
-                mNetworkMusicPresenter.loadMoreMusic();
+                mPresenter.loadMoreMusic();
         }
 
         @Override
@@ -96,24 +90,25 @@ public class NetworkMusicFragment extends Fragment implements NetworkMusicContra
 
     @Override
     public void onItemClick(int position) {
-        EventBus.getDefault().post(new PlayService.ChangeMusicEvent(mAdapter.getMusicList().get(position)));
+        mPresenter.startNewMusic(mAdapter.getMusicList().get(position));
     }
 
     @Override
     public void onRefresh() {
-        mNetworkMusicPresenter.refreshMusicList();
+        mPresenter.refreshMusicList();
     }
 
 
 
     @Override
     public void onDestroyView() {
-        mNetworkMusicPresenter.unsubscribe();
+        mPresenter.unsubscribe();
         super.onDestroyView();
     }
 
     @Override
     public void setPresenter(NetworkMusicContract.Presenter presenter) {
-        this.mNetworkMusicPresenter = presenter;
+        this.mPresenter = presenter;
+        mPresenter.subscribe();
     }
 }

@@ -3,9 +3,8 @@ package gavin.lovemusic.networkmusic;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import javax.inject.Inject;
-
-import gavin.lovemusic.entity.Music;
+import gavin.lovemusic.service.Music;
+import gavin.lovemusic.service.PlayService;
 import rx.Observable;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
@@ -16,33 +15,32 @@ import rx.schedulers.Schedulers;
  * on 16-9-24.
  */
 public class NetworkMusicPresenter implements NetworkMusicContract.Presenter {
-    private NetworkMusicContract.View mNetworkMusicView;
-    private NetworkMusicContract.Model mNetworkMusicModel;
+    private NetworkMusicContract.View mView;
+    private NetworkMusicContract.Model mModel;
+    private PlayService mPlayService;
 
     private int mIndex = 0;
 
-    @Inject
     public NetworkMusicPresenter(NetworkMusicContract.View view,
-                                 NetworkMusicContract.Model model) {
-        this.mNetworkMusicView = view;
-        mNetworkMusicModel = model;
-        mNetworkMusicView.setPresenter(this);
+                                 NetworkMusicContract.Model model,
+                                 PlayService playService) {
+        mView = view;
+        mModel = model;
+        mPlayService = playService;
+        mView.setPresenter(this);
     }
 
     @Override
     public void refreshMusicList() {
-        Observable<ArrayList<Music>> observable = Observable.create(new Observable.OnSubscribe<ArrayList<Music>>() {
-            @Override
-            public void call(Subscriber<? super ArrayList<Music>> subscriber) {
-                ArrayList<Music> musics = new ArrayList<>();
-                mIndex = 0;
-                try {
-                    musics.addAll(mNetworkMusicModel.getBillboardHot(10, mIndex++));
-                    subscriber.onNext(musics);
-                    subscriber.onCompleted();
-                } catch (IOException e) {
-                    subscriber.onError(e);
-                }
+        Observable<ArrayList<Music>> observable = Observable.create((Observable.OnSubscribe<ArrayList<Music>>) subscriber -> {
+            ArrayList<Music> musics = new ArrayList<>();
+            mIndex = 0;
+            try {
+                musics.addAll(mModel.getBillboardHot(10, mIndex++));
+                subscriber.onNext(musics);
+                subscriber.onCompleted();
+            } catch (IOException e) {
+                subscriber.onError(e);
             }
         }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
 
@@ -54,31 +52,28 @@ public class NetworkMusicPresenter implements NetworkMusicContract.Presenter {
             @Override
             public void onError(Throwable e) {
                 e.printStackTrace();
-                mNetworkMusicView.showNetworkConnetionError();
-                mNetworkMusicView.hideRefreshView();
+                mView.showNetworkConnetionError();
+                mView.hideRefreshView();
             }
 
             @Override
             public void onNext(ArrayList<Music> musics) {
-                mNetworkMusicView.showMoreMusics(musics);
-                mNetworkMusicView.hideRefreshView();
+                mView.showMoreMusics(musics);
+                mView.hideRefreshView();
             }
         });
     }
 
     @Override
     public void loadMoreMusic() {
-        Observable<ArrayList<Music>> observable = Observable.create(new Observable.OnSubscribe<ArrayList<Music>>() {
-            @Override
-            public void call(Subscriber<? super ArrayList<Music>> subscriber) {
-                ArrayList<Music> musics = new ArrayList<>();
-                try {
-                    musics.addAll(mNetworkMusicModel.getBillboardHot(10, mIndex++));
-                    subscriber.onNext(musics);
-                    subscriber.onCompleted();
-                } catch (IOException e) {
-                    subscriber.onError(e);
-                }
+        Observable<ArrayList<Music>> observable = Observable.create((Observable.OnSubscribe<ArrayList<Music>>) subscriber -> {
+            ArrayList<Music> musics = new ArrayList<>();
+            try {
+                musics.addAll(mModel.getBillboardHot(10, mIndex++));
+                subscriber.onNext(musics);
+                subscriber.onCompleted();
+            } catch (IOException e) {
+                subscriber.onError(e);
             }
         }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
 
@@ -90,19 +85,24 @@ public class NetworkMusicPresenter implements NetworkMusicContract.Presenter {
             @Override
             public void onError(Throwable e) {
                 e.printStackTrace();
-                mNetworkMusicView.showNetworkConnetionError();
+                mView.showNetworkConnetionError();
             }
 
             @Override
             public void onNext(ArrayList<Music> musics) {
-                mNetworkMusicView.showMoreMusics(musics);
+                mView.showMoreMusics(musics);
             }
         });
     }
 
     @Override
+    public void startNewMusic(Music music) {
+        mPlayService.changeMusic(music);
+    }
+
+    @Override
     public void subscribe() {
-        mNetworkMusicView.showRefreshView();
+        mView.showRefreshView();
         refreshMusicList();
     }
 

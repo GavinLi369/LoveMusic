@@ -1,4 +1,4 @@
-package gavin.lovemusic.entity;
+package gavin.lovemusic.detailmusic;
 
 /**
  * Created by Gavin on 2015/8/26.

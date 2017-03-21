@@ -12,8 +12,6 @@ import com.mpatric.mp3agic.InvalidDataException;
 import com.mpatric.mp3agic.Mp3File;
 import com.mpatric.mp3agic.UnsupportedTagException;
 
-import org.greenrobot.eventbus.EventBus;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -22,9 +20,8 @@ import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 
 import gavin.lovemusic.App;
-import gavin.lovemusic.entity.MusicDao;
-import gavin.lovemusic.service.MusicListUpdateEvent;
-import gavin.lovemusic.entity.Music;
+import gavin.lovemusic.service.Music;
+import gavin.lovemusic.service.MusicDao;
 
 /**
  * Created by GavinLi
@@ -57,7 +54,6 @@ public class LocalMusicModel implements LocalMusicContract.Model {
         musicList.addAll(getMusicFromContentResolver(Media.INTERNAL_CONTENT_URI));
         mMusicDao.deleteAll();
         mMusicDao.insertInTx(musicList);
-        EventBus.getDefault().post(new MusicListUpdateEvent(getMusicByDataBase()));
     }
 
     private ArrayList<Music> getMusicFromContentResolver(Uri uri) {

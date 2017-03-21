@@ -1,21 +1,16 @@
 package gavin.lovemusic.detailmusic;
 
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.support.v7.graphics.Palette;
 
-import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
-import org.greenrobot.eventbus.ThreadMode;
 import org.json.JSONException;
 
 import java.io.IOException;
 import java.util.ArrayList;
 
-import gavin.lovemusic.entity.LyricRow;
-import gavin.lovemusic.entity.Music;
+import gavin.lovemusic.service.Music;
 import gavin.lovemusic.service.ActivityCommand;
 import gavin.lovemusic.service.PlayService;
 import okhttp3.OkHttpClient;
@@ -33,60 +28,68 @@ import rx.schedulers.Schedulers;
 public class DetailMusicPresenter implements DetailMusicContract.Presenter {
     private DetailMusicContract.View mDetailMusicView;
     private DetailMusicContract.Model mDetailMusicModel;
+    private PlayService mPlayService;
 
     private Music mCurrentMusic;
 
     public DetailMusicPresenter(DetailMusicContract.View view,
                                 DetailMusicContract.Model model,
-                                Music currentMusic) {
-        this.mDetailMusicView = view;
-        this.mDetailMusicModel = model;
-        this.mCurrentMusic = currentMusic;
+                                Music currentMusic,
+                                PlayService playService) {
+        mDetailMusicView = view;
+        mDetailMusicModel = model;
+        mCurrentMusic = currentMusic;
+        mPlayService = playService;
         mDetailMusicView.setPresenter(this);
     }
 
+    private PlayService.OnMusicStatListener mListener = new PlayService.OnMusicStatListener() {
+        @Override
+        public void onStarted(Music music) {
+            mCurrentMusic = music;
+            changeViewColor(music.getImage());
+            mDetailMusicView.updateBgImage(music.getImage());
+            mDetailMusicView.modifySeekBar((int) music.getDuration(), 0);
+            mDetailMusicView.changePauseToPlay();
+            initLyricView();
+        }
+
+        @Override
+        public void onPause() {
+            mDetailMusicView.changePlayToPause();
+        }
+
+        @Override
+        public void onResume() {
+            mDetailMusicView.changePauseToPlay();
+        }
+    };
+
     @Override
     public void setMusicProgress(int progress, Context context) {
-        Intent intent = new Intent(context, PlayService.class);
-        intent.putExtra("musicCommand", ActivityCommand.CHANGE_PROGRESS);
-        intent.putExtra("progress", progress);
-        context.startService(intent);
+        mPlayService.setProgress(progress);
     }
 
     @Override
     public void onPlayButtonClick(Context context) {
-        Intent intent;
         switch (PlayService.musicState) {
             case PlayService.PLAYING:
                 //暂停正在播放的歌曲
-                intent = new Intent(context, PlayService.class);
-                intent.putExtra("musicCommand", ActivityCommand.PAUSE_MUSIC);
-                context.startService(intent);
+                mPlayService.pauseMusic();
                 break;
             case PlayService.PAUSE:
                 //暂停后开始播放歌曲
-                intent = new Intent(context, PlayService.class);
-                intent.putExtra("musicCommand", ActivityCommand.RESUME_MUSIC);
-                context.startService(intent);
+                mPlayService.resumeMusic();
                 break;
         }
     }
 
     @Override
     public void changeMusic(Context context, ActivityCommand command) {
-        Intent intent = new Intent(context, PlayService.class);
-        intent.putExtra("musicCommand", command);
-        context.startService(intent);
-    }
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void startMusic(PlayService.MusicStartedEvent event) {
-        mCurrentMusic = event.currentMusic;
-        changeViewColor(event.currentMusic.getImage());
-        mDetailMusicView.updateBgImage(event.currentMusic.getImage());
-        mDetailMusicView.modifySeekBar((int) event.currentMusic.getDuration(), 0);
-        mDetailMusicView.changePauseToPlay();
-        initLyricView();
+        switch (command) {
+            case PREVIOUS_MUSIC: mPlayService.previousMusic(); break;
+            case NEXT_MUSIC: mPlayService.nextMusic(); break;
+        }
     }
 
     @Override
@@ -98,25 +101,22 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
     }
 
     private void changeViewColor(String bgImageUrl) {
-        Observable<Bitmap> observable = Observable.create(new Observable.OnSubscribe<Bitmap>() {
-            @Override
-            public void call(Subscriber<? super Bitmap> subscriber) {
-                if (bgImageUrl.startsWith("http")) {
-                    OkHttpClient okHttpClient = new OkHttpClient();
-                    Request request = new Request.Builder()
-                            .url(bgImageUrl)
-                            .build();
-                    try {
-                        Response response = okHttpClient.newCall(request).execute();
-                        subscriber.onNext(BitmapFactory.decodeStream(response.body().byteStream()));
-                    } catch (IOException e) {
-                        subscriber.onError(e);
-                    }
-                } else {
-                    subscriber.onNext(BitmapFactory.decodeFile(bgImageUrl));
+        Observable<Bitmap> observable = Observable.create((Observable.OnSubscribe<Bitmap>) subscriber -> {
+            if (bgImageUrl.startsWith("http")) {
+                OkHttpClient okHttpClient = new OkHttpClient();
+                Request request = new Request.Builder()
+                        .url(bgImageUrl)
+                        .build();
+                try {
+                    Response response = okHttpClient.newCall(request).execute();
+                    subscriber.onNext(BitmapFactory.decodeStream(response.body().byteStream()));
+                } catch (IOException e) {
+                    subscriber.onError(e);
                 }
-                subscriber.onCompleted();
+            } else {
+                subscriber.onNext(BitmapFactory.decodeFile(bgImageUrl));
             }
+            subscriber.onCompleted();
         }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
         observable.subscribe(new Subscriber<Bitmap>() {
             @Override
@@ -148,19 +148,16 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
     private void initLyricView() {
         if(mCurrentMusic != null) {
             mDetailMusicView.showFindingLyric();
-            Observable<ArrayList<LyricRow>> observable = Observable.create(new Observable.OnSubscribe<ArrayList<LyricRow>>() {
-                @Override
-                public void call(Subscriber<? super ArrayList<LyricRow>> subscriber) {
-                    try {
-                        ArrayList<LyricRow> lyricRows = mDetailMusicModel.getMusicLyric(mCurrentMusic);
-                        if(lyricRows.isEmpty())
-                            subscriber.onError(new Exception("This music doesn't have the lyric"));
-                        else
-                            subscriber.onNext(lyricRows);
-                        subscriber.onCompleted();
-                    } catch (IOException | JSONException e) {
-                        subscriber.onError(e);
-                    }
+            Observable<ArrayList<LyricRow>> observable = Observable.create((Observable.OnSubscribe<ArrayList<LyricRow>>) subscriber -> {
+                try {
+                    ArrayList<LyricRow> lyricRows = mDetailMusicModel.getMusicLyric(mCurrentMusic);
+                    if(lyricRows.isEmpty())
+                        subscriber.onError(new Exception("This music doesn't have the lyric"));
+                    else
+                        subscriber.onNext(lyricRows);
+                    subscriber.onCompleted();
+                } catch (IOException | JSONException e) {
+                    subscriber.onError(e);
                 }
             }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
             observable.subscribe(new Subscriber<ArrayList<LyricRow>>() {
@@ -182,19 +179,9 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
         }
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void musicPause(PlayService.MusicPauseEvent event) {
-        mDetailMusicView.changePlayToPause();
-    }
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void musicPlay(PlayService.MusicPlayEvent event) {
-        mDetailMusicView.changePauseToPlay();
-    }
-
     @Override
     public void subscribe() {
-        EventBus.getDefault().register(this);
+        mPlayService.registerListener(mListener);
         mDetailMusicView.changePauseToPlay();
         if(mCurrentMusic != null) {
             changeViewColor(mCurrentMusic.getImage());
@@ -205,6 +192,6 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
 
     @Override
     public void unsubscribe() {
-        EventBus.getDefault().unregister(this);
+        mPlayService.unregisterListener(mListener);
     }
 }

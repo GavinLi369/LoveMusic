@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import gavin.lovemusic.entity.Music;
+import gavin.lovemusic.service.Music;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;

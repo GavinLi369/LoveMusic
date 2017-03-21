@@ -9,16 +9,15 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.widget.RemoteViews;
 
-import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
-import org.greenrobot.eventbus.ThreadMode;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import gavin.lovemusic.constant.R;
-import gavin.lovemusic.entity.Music;
 
 /**
  * Created by Gavin on 2015/11/3.
@@ -30,14 +29,18 @@ public class PlayService extends Service implements MusicPlayer.OnCompletionList
     public static final int PAUSE = 1;         //歌曲暂停
 
     private Notification notification;
-    public static final int NOTIFICATION_ID = 1;
+    private static final int NOTIFICATION_ID = 1;
 
-    public static final String NOTIFICATION_PLAY = "gavin.notification.play";
-    public static final String NOTIFICATION_NEXT = "gavin.notification.next";
-    public static final String NOTIFICATION_STOP = "gavin.notification.stop";
+    private static final String NOTIFICATION_PLAY = "gavin.notification.play";
+    private static final String NOTIFICATION_NEXT = "gavin.notification.next";
+    private static final String NOTIFICATION_STOP = "gavin.notification.stop";
 
     private RemoteViews contentView;
     private MusicPlayer mMusicPlayer;
+
+    private IBinder mBinder = new PlayServiceBinder();
+
+    private List<OnMusicStatListener> mListeners = new CopyOnWriteArrayList<>();
 
     @Override
     public void onCreate() {
@@ -50,121 +53,75 @@ public class PlayService extends Service implements MusicPlayer.OnCompletionList
         registerReceiver(broadcastReceiver, intentFilterNext);
         IntentFilter intentFilterStop = new IntentFilter(NOTIFICATION_STOP);
         registerReceiver(broadcastReceiver, intentFilterStop);
-
-        EventBus.getDefault().register(this);
     }
 
     //当PlayService被销毁时，解除广播接收器的注册
     @Override
     public void onDestroy() {
+        super.onDestroy();
         mMusicPlayer.release();
         unregisterReceiver(broadcastReceiver);
-        EventBus.getDefault().unregister(this);
-        super.onDestroy();
     }
 
-    /**
-     * 对从Activity发来的请求进行处理
-     */
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        if (intent != null) {
-            ActivityCommand activityCommand = (ActivityCommand)intent.getSerializableExtra("musicCommand");
-            if(activityCommand != null) {
-                switch (activityCommand) {
-                    case PLAY_MUSIC: startMusic(mMusicPlayer.getCurrentMusic()); break;
-                    case PAUSE_MUSIC: pauseMusic(); break;
-                    case RESUME_MUSIC: resumeMusic(); break;
-                    case PREVIOUS_MUSIC: previousMusic(); break;
-                    case NEXT_MUSIC: nextMusic(); break;
-                    case CHANGE_PROGRESS:
-                        mMusicPlayer.setProgress(intent.getExtras().getInt("progress"));
-                        break;
-                }
-            }
-        }
-        return super.onStartCommand(intent, flags, startId);
-    }
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void initMusic(MusicListUpdateEvent event){
-        mMusicPlayer.resetMusicPlayer(event.musicList);
+    public synchronized void initMusic(List<Music> musics) {
+        mMusicPlayer.resetMusicPlayer(musics);
         musicState = PAUSE;
-        EventBus.getDefault().post(new MusicPauseEvent());
+        for(OnMusicStatListener listener : mListeners)
+            listener.onPause();
     }
 
-    private void startMusic(Music music) {
+    public synchronized void changeMusic(Music music) {
         mMusicPlayer.start(music);
         musicState = PLAYING;
-        EventBus.getDefault().post(new MusicStartedEvent(mMusicPlayer.getCurrentMusic()));
+        for(OnMusicStatListener listener : mListeners)
+            listener.onStarted(music);
+
         showNotification();
     }
 
-    private void pauseMusic() {
+    public synchronized void pauseMusic() {
         mMusicPlayer.pause();
         musicState = PAUSE;
-        EventBus.getDefault().post(new MusicPauseEvent());
+        for(OnMusicStatListener listener : mListeners)
+            listener.onPause();
 
         contentView.setImageViewResource
                 (R.id.playButton, R.drawable.play_prey);
         startForeground(NOTIFICATION_ID, notification);
     }
 
-    private void resumeMusic() {
+    public synchronized void resumeMusic() {
         mMusicPlayer.resume();
         musicState = PLAYING;
-        EventBus.getDefault().post(new MusicPlayEvent());
+        for(OnMusicStatListener listener : mListeners)
+            listener.onResume();
 
         contentView.setImageViewResource(R.id.playButton, R.drawable.pause);
         startForeground(NOTIFICATION_ID, notification);
     }
 
-    private void previousMusic() {
+    public synchronized void setProgress(int progress) {
+        mMusicPlayer.setProgress(progress);
+    }
+
+    public synchronized void previousMusic() {
         mMusicPlayer.previous();
         musicState = PLAYING;
-        EventBus.getDefault().post(
-                new MusicStartedEvent(mMusicPlayer.getCurrentMusic()));
+        for (OnMusicStatListener listener : mListeners)
+            listener.onStarted(mMusicPlayer.getCurrentMusic());
     }
 
-    private void nextMusic() {
+    public synchronized void nextMusic() {
         mMusicPlayer.next();
         musicState = PLAYING;
-        EventBus.getDefault().post(
-                new MusicStartedEvent(mMusicPlayer.getCurrentMusic()));
-    }
-
-    @Subscribe(threadMode = ThreadMode.BACKGROUND)
-    public void changeMusic(ChangeMusicEvent event) {
-        startMusic(event.music);
-        EventBus.getDefault().post(
-                new MusicStartedEvent(mMusicPlayer.getCurrentMusic()));
+        for (OnMusicStatListener listener : mListeners)
+            listener.onStarted(mMusicPlayer.getCurrentMusic());
     }
 
     @Override
     public void onCompletion() {
-        EventBus.getDefault().post(new MusicStartedEvent(mMusicPlayer.getCurrentMusic()));
-    }
-
-    public static class ChangeMusicEvent {
-        public final Music music;
-
-        public ChangeMusicEvent(Music music) {
-            this.music = music;
-        }
-    }
-
-    public static class MusicStartedEvent {
-        public final Music currentMusic;
-
-        public MusicStartedEvent(Music currentMusic) {
-            this.currentMusic = currentMusic;
-        }
-    }
-
-    public static class MusicPauseEvent {
-    }
-
-    public static class MusicPlayEvent {
+        for (OnMusicStatListener listener : mListeners)
+            listener.onStarted(mMusicPlayer.getCurrentMusic());
     }
 
     /**
@@ -230,9 +187,47 @@ public class PlayService extends Service implements MusicPlayer.OnCompletionList
         startForeground(NOTIFICATION_ID, notification);
     }
 
+    public class PlayServiceBinder extends Binder {
+        public PlayService getService() {
+            return PlayService.this;
+        }
+    }
+
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        return null;
+        return mBinder;
+    }
+
+    public interface OnMusicStatListener {
+        /**
+         * 歌曲开始播放
+         * @param music 当前歌曲
+         */
+        void onStarted(Music music);
+
+        /**
+         * 歌曲暂停
+         */
+        void onPause();
+
+        /**
+         * 歌曲继续
+         */
+        void onResume();
+    }
+
+    public void registerListener(OnMusicStatListener listener) {
+        if(!mListeners.contains(listener))
+            mListeners.add(listener);
+        else
+            throw new RuntimeException("This listener has been registered");
+    }
+
+    public void unregisterListener(OnMusicStatListener listener) {
+        if(mListeners.contains(listener))
+            mListeners.remove(listener);
+        else
+            throw new RuntimeException("Didn't find this listener");
     }
 }

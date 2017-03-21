@@ -13,7 +13,7 @@ import com.bumptech.glide.Glide;
 import java.util.ArrayList;
 
 import gavin.lovemusic.constant.R;
-import gavin.lovemusic.entity.Music;
+import gavin.lovemusic.service.Music;
 
 /**
  * Created by GavinLi

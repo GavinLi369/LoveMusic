@@ -10,17 +10,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import java.util.ArrayList;
+import java.util.List;
 
-import butterknife.ButterKnife;
-import butterknife.BindView;
 import gavin.lovemusic.constant.R;
-import gavin.lovemusic.entity.Music;
+import gavin.lovemusic.service.Music;
 
 public class LocalMusicFragment extends Fragment implements LocalMusicContract.View,
         RecyclerViewAdapter.OnItemClickListener, SwipeRefreshLayout.OnRefreshListener{
-    @BindView(R.id.musicList) RecyclerView mListView;
-    @BindView(R.id.swipeRefreshLayout) SwipeRefreshLayout mSwipeRefreshLayout;
+    private RecyclerView mListView;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
 
     private LocalMusicContract.Presenter mLocalMusicPresenter;
 
@@ -29,11 +27,11 @@ public class LocalMusicFragment extends Fragment implements LocalMusicContract.V
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_music_local, container, false);
-        ButterKnife.bind(this, rootView);
+        mListView = (RecyclerView) rootView.findViewById(R.id.musicList);
+        mSwipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeRefreshLayout);
         mListView.setLayoutManager(new LinearLayoutManager(getContext()));
         mSwipeRefreshLayout.setDistanceToTriggerSync(200);
         mSwipeRefreshLayout.setOnRefreshListener(this);
-        mLocalMusicPresenter.subscribe();
         return rootView;
     }
 
@@ -45,7 +43,7 @@ public class LocalMusicFragment extends Fragment implements LocalMusicContract.V
 
     //初始化ListView视图
     @Override
-    public void setMusicListView(ArrayList<Music> musicList) {
+    public void setMusicListView(List<Music> musicList) {
         RecyclerViewAdapter adapter = new RecyclerViewAdapter(musicList);
         adapter.setOnItemClickListener(this);
         mListView.setAdapter(adapter);
@@ -70,5 +68,6 @@ public class LocalMusicFragment extends Fragment implements LocalMusicContract.V
     @Override
     public void setPresenter(LocalMusicContract.Presenter presenter) {
         mLocalMusicPresenter = presenter;
+        mLocalMusicPresenter.subscribe();
     }
 }

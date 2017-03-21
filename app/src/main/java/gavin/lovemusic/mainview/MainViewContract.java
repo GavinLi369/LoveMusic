@@ -3,12 +3,9 @@ package gavin.lovemusic.mainview;
 import android.content.Context;
 import android.support.v7.graphics.Palette;
 
-import java.io.IOException;
-import java.util.ArrayList;
-
 import gavin.lovemusic.BasePresenter;
 import gavin.lovemusic.BaseView;
-import gavin.lovemusic.entity.Music;
+import gavin.lovemusic.service.Music;
 import gavin.lovemusic.service.ActivityCommand;
 
 /**

@@ -1,8 +1,11 @@
 package gavin.lovemusic.mainview;
 
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.FragmentTransaction;
@@ -20,23 +23,17 @@ import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import javax.inject.Inject;
-
-import butterknife.BindView;
-import butterknife.ButterKnife;
 import gavin.lovemusic.constant.R;
 import gavin.lovemusic.detailmusic.DetailMusicFragment;
 import gavin.lovemusic.detailmusic.DetailMusicModel;
 import gavin.lovemusic.detailmusic.DetailMusicPresenter;
-import gavin.lovemusic.entity.Music;
+import gavin.lovemusic.service.Music;
 import gavin.lovemusic.localmusic.LocalMusicFragment;
 import gavin.lovemusic.localmusic.LocalMusicModel;
 import gavin.lovemusic.localmusic.LocalMusicPresenter;
-import gavin.lovemusic.localmusic.LocalMusicPresenterModule;
 import gavin.lovemusic.networkmusic.NetworkMusicFragment;
 import gavin.lovemusic.networkmusic.NetworkMusicModel;
 import gavin.lovemusic.networkmusic.NetworkMusicPresenter;
-import gavin.lovemusic.networkmusic.NetworkMusicPresenterModule;
 import gavin.lovemusic.service.ActivityCommand;
 import gavin.lovemusic.service.PlayService;
 import gavinli.slidinglayout.OnViewStatusChangedListener;
@@ -46,21 +43,20 @@ import gavinli.slidinglayout.SlidingLayout;
  * Created by GavinLi
  * on 16-9-18.
  */
+@SuppressWarnings("deprecation")
 public class MainActivity extends AppCompatActivity implements MainViewContract.View,
         View.OnClickListener, OnViewStatusChangedListener {
-    @BindView(R.id.layout_main) RelativeLayout mMainLayout;
+    private RelativeLayout mMainLayout;
     private ImageButton mPlayButton;
     private TextView mMusicName;
     private TextView mArtist;
     private SlidingLayout mSlidingLayout;
     private RelativeLayout mDragView;
 
-    SectionPagerAdapter mAdapter;
+    private SectionPagerAdapter mAdapter;
 
     private MainViewContract.Presenter mMainViewPresenter;
-
-    @Inject LocalMusicPresenter mLocalMusicPresenter;
-    @Inject NetworkMusicPresenter mNetworkMusicPresenter;
+    private PlayService mPlayService;
 
     private boolean mPlaying = true;
 
@@ -74,33 +70,41 @@ public class MainActivity extends AppCompatActivity implements MainViewContract.
         mAdapter = new SectionPagerAdapter(getSupportFragmentManager());
         viewPager.setAdapter(mAdapter);
 
-        DaggerMainViewComponent.builder()
-                .networkMusicPresenterModule(new NetworkMusicPresenterModule(
-                        (NetworkMusicFragment) mAdapter.getItem(0), new NetworkMusicModel(this)
-                ))
-                .localMusicPresenterModule(new LocalMusicPresenterModule(
-                        (LocalMusicFragment) mAdapter.getItem(1), new LocalMusicModel(this)
-        )).build().inject(this);
-
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(viewPager);
-        ButterKnife.bind(this);
+        mMainLayout = (RelativeLayout) findViewById(R.id.layout_main);
 
         TelephonyManager tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         tm.listen(new exPhoneCallListener(), PhoneStateListener.LISTEN_CALL_STATE);
 
         Intent intent = new Intent(this, PlayService.class);
-        startService(intent);
-
-        new MainViewPresenter(this);
-        mMainViewPresenter.subscribe();
+        bindService(intent, mConnection, BIND_AUTO_CREATE);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         mMainViewPresenter.unsubscribe();
+        unbindService(mConnection);
     }
+
+    private ServiceConnection mConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+            mPlayService = ((PlayService.PlayServiceBinder) iBinder).getService();
+            new MainViewPresenter(MainActivity.this, mPlayService);
+            new NetworkMusicPresenter((NetworkMusicFragment) mAdapter.getItem(0),
+                    new NetworkMusicModel(MainActivity.this),
+                    mPlayService);
+            new LocalMusicPresenter((LocalMusicFragment) mAdapter.getItem(1),
+                    new LocalMusicModel(MainActivity.this),
+                    mPlayService);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+        }
+    };
 
     @Override
     public void onClick(View v) {
@@ -117,7 +121,6 @@ public class MainActivity extends AppCompatActivity implements MainViewContract.
         }
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     public void changeDragViewColorDefault() {
         if(mSlidingLayout != null) {
@@ -161,7 +164,7 @@ public class MainActivity extends AppCompatActivity implements MainViewContract.
             transaction.replace(R.id.fragment_music_detail, detailMusicFragment);
             transaction.addToBackStack(null);
             transaction.commit();
-            new DetailMusicPresenter(detailMusicFragment, new DetailMusicModel(this), music);
+            new DetailMusicPresenter(detailMusicFragment, new DetailMusicModel(this), music, mPlayService);
 
             mMainLayout.addView(mSlidingLayout);
             mDragView = (RelativeLayout) mSlidingLayout.findViewById(R.id.view_drag);
@@ -186,10 +189,8 @@ public class MainActivity extends AppCompatActivity implements MainViewContract.
         layoutParams.setMargins(left, top, 0, 0);
         mPlayButton.setLayoutParams(layoutParams);
         if(mPlaying) {
-            //noinspection deprecation
             mPlayButton.setBackground(getResources().getDrawable(R.drawable.pause));
         } else {
-            //noinspection deprecation
             mPlayButton.setBackground(getResources().getDrawable(R.drawable.play_prey));
         }
         mPlayButton.setOnClickListener(this);
@@ -233,6 +234,7 @@ public class MainActivity extends AppCompatActivity implements MainViewContract.
     @Override
     public void setPresenter(MainViewContract.Presenter musicListPresenter) {
         this.mMainViewPresenter = musicListPresenter;
+        mMainViewPresenter.subscribe();
     }
 
     //用户点击返回键后不会销毁Activity
