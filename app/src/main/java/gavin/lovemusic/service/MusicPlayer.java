@@ -26,10 +26,12 @@ public class MusicPlayer implements MediaPlayer.OnPreparedListener, MediaPlayer.
         mIndex = index;
         mMediaPlayer.reset();
         try {
-            mMediaPlayer.setDataSource(mMusicPlayList.get(index).getPath());
+            Music music = mMusicPlayList.get(index);
+            mMediaPlayer.setDataSource(music.getPath());
             mMediaPlayer.setOnPreparedListener(this);
             mMediaPlayer.setOnCompletionListener(this);
             mMediaPlayer.prepare();
+            music.setDuration(mMediaPlayer.getDuration());
         } catch (IOException e) {
             e.printStackTrace();
         }

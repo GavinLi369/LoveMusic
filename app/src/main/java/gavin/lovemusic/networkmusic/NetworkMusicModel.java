@@ -16,6 +16,7 @@ import gavin.lovemusic.App;
 import gavin.lovemusic.service.DaoSession;
 import gavin.lovemusic.service.Music;
 import gavin.lovemusic.service.MusicDao;
+import gavin.lovemusic.util.QqMusicUtil;
 
 /**
  * Created by GavinLi
@@ -23,7 +24,7 @@ import gavin.lovemusic.service.MusicDao;
  */
 public class NetworkMusicModel implements NetworkMusicContract.Model {
     private Context mContext;
-    private DongtingApi dongtingApi = new DongtingApi();
+    private QqMusicUtil mMusicUtil = new QqMusicUtil();
 
     public NetworkMusicModel(Context context) {
         this.mContext = context;
@@ -31,7 +32,7 @@ public class NetworkMusicModel implements NetworkMusicContract.Model {
 
     @Override
     public ArrayList<Music> getBillboardHot(int size, int offset) throws IOException {
-        ArrayList<Music> musics = dongtingApi.getBillboardHot(size, offset);
+        ArrayList<Music> musics = mMusicUtil.getBillboardHot(size, offset);
         DaoSession daoSession = ((App) mContext.getApplicationContext()).getCacheSession();
         MusicDao musicDao = daoSession.getMusicDao();
         for(Music music : musics) {

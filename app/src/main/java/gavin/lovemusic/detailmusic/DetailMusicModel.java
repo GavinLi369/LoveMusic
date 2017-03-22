@@ -3,7 +3,6 @@ package gavin.lovemusic.detailmusic;
 import android.content.Context;
 
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -19,9 +18,7 @@ import java.util.List;
 import gavin.lovemusic.App;
 import gavin.lovemusic.service.Music;
 import gavin.lovemusic.service.MusicDao;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
+import gavin.lovemusic.util.QqMusicUtil;
 
 /**
  * Created by GavinLi
@@ -63,18 +60,8 @@ public class DetailMusicModel implements DetailMusicContract.Model {
         }
     }
 
-    /*
-        http://lp.music.ttpod.com//lrc/down?artist={}&title={}
-     */
     private String getLyricByNetwork(Music music) throws IOException, JSONException {
-        String lyricUrl = "http://lp.music.ttpod.com//lrc/down?artist="
-                + music.getArtist() + "&title=" + music.getTitle();
-        OkHttpClient client = new OkHttpClient();
-        Request request = new Request.Builder()
-                .url(lyricUrl)
-                .build();
-        Response response = client.newCall(request).execute();
-        return new JSONObject(response.body().string()).getJSONObject("data").getString("lrc");
+        return new QqMusicUtil().getLyric(music.getTitle(), music.getArtist());
     }
 
     private String saveLyric(String name, String lyric) {
