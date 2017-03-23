@@ -2,6 +2,7 @@ package gavin.lovemusic.networkmusic;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import gavin.lovemusic.service.Music;
 import gavin.lovemusic.service.PlayService;
@@ -96,8 +97,10 @@ public class NetworkMusicPresenter implements NetworkMusicContract.Presenter {
     }
 
     @Override
-    public void startNewMusic(Music music) {
-        mPlayService.changeMusic(music);
+    public void startNewMusic(List<Music> musics, int postion) {
+        if(!mPlayService.containsMusic(musics.get(postion)))
+            mPlayService.initMusic(musics);
+        mPlayService.changeMusic(musics.get(postion));
     }
 
     @Override

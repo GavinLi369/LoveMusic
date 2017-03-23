@@ -11,7 +11,7 @@ import java.util.List;
  * on 16-9-25.
  */
 public class MusicPlayer implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener {
-    private ArrayList<Music> mMusicPlayList = new ArrayList<>();
+    private List<Music> mMusicPlayList = new ArrayList<>();
     private int mIndex;
 
     private OnCompletionListener mOnCompletionListener;
@@ -106,6 +106,10 @@ public class MusicPlayer implements MediaPlayer.OnPreparedListener, MediaPlayer.
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public boolean contains(Music music) {
+        return mMusicPlayList.contains(music);
     }
 
     public void release() {

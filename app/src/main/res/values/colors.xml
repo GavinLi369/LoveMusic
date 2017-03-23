@@ -7,4 +7,6 @@
     <color name="playColumnDefault">#455A46</color>
     <color name="titleTextColorDefault">#FFFFFF</color>
     <color name="bodyTextColorDefault">#BDBDBD</color>
+
+    <color name="colorLyricText">#404040</color>
 </resources>

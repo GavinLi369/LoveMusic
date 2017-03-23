@@ -31,9 +31,10 @@ public class LocalMusicPresenter implements LocalMusicContract.Presenter {
     }
 
     @Override
-    public void playNewMusic(int postion) {
-        Music music = mLocalMusicModel.getMusicList().get(postion);
-        mPlayService.changeMusic(music);
+    public void startNewMusic(List<Music> musics, int postion) {
+        if(!mPlayService.containsMusic(musics.get(postion)))
+            mPlayService.initMusic(musics);
+        mPlayService.changeMusic(musics.get(postion));
     }
 
     @Override

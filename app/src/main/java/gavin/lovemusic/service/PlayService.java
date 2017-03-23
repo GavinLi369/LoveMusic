@@ -70,6 +70,10 @@ public class PlayService extends Service implements MusicPlayer.OnCompletionList
             listener.onPause();
     }
 
+    public boolean containsMusic(Music music) {
+        return mMusicPlayer.contains(music);
+    }
+
     public synchronized void changeMusic(Music music) {
         mMusicPlayer.start(music);
         musicState = PLAYING;

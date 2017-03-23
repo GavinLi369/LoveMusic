@@ -16,11 +16,12 @@ import gavin.lovemusic.constant.R;
 import gavin.lovemusic.service.Music;
 
 public class LocalMusicFragment extends Fragment implements LocalMusicContract.View,
-        RecyclerViewAdapter.OnItemClickListener, SwipeRefreshLayout.OnRefreshListener{
+        LocalRecyclerAdapter.OnItemClickListener, SwipeRefreshLayout.OnRefreshListener{
     private RecyclerView mListView;
     private SwipeRefreshLayout mSwipeRefreshLayout;
 
     private LocalMusicContract.Presenter mLocalMusicPresenter;
+    private LocalRecyclerAdapter mAdapter;
 
     @Nullable
     @Override
@@ -44,9 +45,9 @@ public class LocalMusicFragment extends Fragment implements LocalMusicContract.V
     //初始化ListView视图
     @Override
     public void setMusicListView(List<Music> musicList) {
-        RecyclerViewAdapter adapter = new RecyclerViewAdapter(musicList);
-        adapter.setOnItemClickListener(this);
-        mListView.setAdapter(adapter);
+        mAdapter = new LocalRecyclerAdapter(musicList);
+        mAdapter.setOnItemClickListener(this);
+        mListView.setAdapter(mAdapter);
     }
 
     @Override
@@ -62,7 +63,7 @@ public class LocalMusicFragment extends Fragment implements LocalMusicContract.V
 
     @Override
     public void onItemClick(int position) {
-        mLocalMusicPresenter.playNewMusic(position);
+        mLocalMusicPresenter.startNewMusic(mAdapter.getMusicList(), position);
     }
 
     @Override

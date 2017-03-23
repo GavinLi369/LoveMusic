@@ -11,6 +11,8 @@ import android.view.View;
 
 import java.util.ArrayList;
 
+import gavin.lovemusic.constant.R;
+
 /**
  * Created by Gavin on 2015/8/24.
  * 歌词View
@@ -61,7 +63,7 @@ public class LyricView extends View {
         paintHL.setAntiAlias(true);      //消除锯齿
         paintHL.setTextAlign(Paint.Align.CENTER);   //设置文本对齐方式
 
-        paint.setColor(Color.GRAY);
+        paint.setColor(getResources().getColor(R.color.colorLyricText));
         paint.setTextSize(25);
         paint.setAntiAlias(true);
         paint.setTextAlign(Paint.Align.CENTER);
@@ -93,9 +95,12 @@ public class LyricView extends View {
             if(this.index != index) {
                 ValueAnimator animator = ValueAnimator.ofFloat(TEXT_SIZE + INTERVAL, 0.0f);
                 animator.setDuration(600);
-                animator.addUpdateListener(animation -> {
-                    mAnimationOffset = (float) animation.getAnimatedValue();
-                    invalidate();
+                animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                    @Override
+                    public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                        mAnimationOffset = (float) valueAnimator.getAnimatedValue();
+                        invalidate();
+                    }
                 });
                 animator.start();
                 this.index = index;

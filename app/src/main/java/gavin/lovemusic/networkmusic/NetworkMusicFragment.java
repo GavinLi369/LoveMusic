@@ -45,8 +45,6 @@ public class NetworkMusicFragment extends Fragment implements NetworkMusicContra
 
         mSwipeRefreshLayout.setDistanceToTriggerSync(200);
         mSwipeRefreshLayout.setOnRefreshListener(this);
-
-//        new NetworkMusicPresenter(this, new NetworkMusicModel(getContext()));
         return rootView;
     }
 
@@ -90,7 +88,7 @@ public class NetworkMusicFragment extends Fragment implements NetworkMusicContra
 
     @Override
     public void onItemClick(int position) {
-        mPresenter.startNewMusic(mAdapter.getMusicList().get(position));
+        mPresenter.startNewMusic(mAdapter.getMusicList(), position);
     }
 
     @Override

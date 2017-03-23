@@ -2,6 +2,7 @@ package gavin.lovemusic.networkmusic;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import gavin.lovemusic.BasePresenter;
 import gavin.lovemusic.BaseView;
@@ -31,6 +32,6 @@ public class NetworkMusicContract {
 
         void loadMoreMusic();
 
-        void startNewMusic(Music music);
+        void startNewMusic(List<Music> musics, int postion);
     }
 }

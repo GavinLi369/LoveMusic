@@ -19,12 +19,12 @@ import gavin.lovemusic.service.Music;
  * Created by GavinLi
  * on 16-9-23.
  */
-public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> {
+public class LocalRecyclerAdapter extends RecyclerView.Adapter<LocalRecyclerAdapter.ViewHolder> {
     private List<Music> mMusicList;
     private OnItemClickListener mOnItemClickListener;
     private Context context;
 
-    public RecyclerViewAdapter(List<Music> musicList) {
+    public LocalRecyclerAdapter(List<Music> musicList) {
         this.mMusicList = musicList;
     }
 
@@ -48,6 +48,10 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     @Override
     public int getItemCount() {
         return mMusicList.size();
+    }
+
+    public List<Music> getMusicList() {
+        return mMusicList;
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {

@@ -22,6 +22,7 @@ import java.util.ArrayList;
 
 import gavin.lovemusic.constant.R;
 import gavin.lovemusic.service.ActivityCommand;
+import jp.wasabeef.glide.transformations.BlurTransformation;
 
 /**
  * Created by GavinLi
@@ -184,6 +185,7 @@ public class DetailMusicFragment extends Fragment implements DetailMusicContract
     public void updateBgImage(String bgImageUrl) {
         Glide.with(this)
                 .load(bgImageUrl)
+                .bitmapTransform(new BlurTransformation(getContext(), 25, 8))
                 .into(mBgImageView);
     }
 

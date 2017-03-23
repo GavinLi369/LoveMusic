@@ -28,7 +28,7 @@ public class LocalMusicContract {
     }
 
     interface Presenter extends BasePresenter {
-        void playNewMusic(int postion);
+        void startNewMusic(List<Music> musics, int postion);
 
         void refreshMusicList(Context context);
     }
