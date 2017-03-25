@@ -10,6 +10,7 @@ import org.json.JSONException;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import gavin.lovemusic.detailmusic.view.LyricRow;
 import gavin.lovemusic.service.Music;
 import gavin.lovemusic.service.ActivityCommand;
 import gavin.lovemusic.service.PlayService;

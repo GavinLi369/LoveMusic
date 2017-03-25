@@ -1,9 +1,11 @@
-package gavin.lovemusic.detailmusic;
+package gavin.lovemusic.util;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import gavin.lovemusic.detailmusic.view.LyricRow;
 
 /**
  * Created by Gavin on 2015/8/24.

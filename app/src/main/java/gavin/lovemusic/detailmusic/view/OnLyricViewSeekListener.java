@@ -1,4 +1,6 @@
-package gavin.lovemusic.detailmusic;
+package gavin.lovemusic.detailmusic.view;
+
+import gavin.lovemusic.detailmusic.view.LyricRow;
 
 /**
  * Created by GavinLi

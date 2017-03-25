@@ -10,6 +10,7 @@ import java.util.ArrayList;
 
 import gavin.lovemusic.BasePresenter;
 import gavin.lovemusic.BaseView;
+import gavin.lovemusic.detailmusic.view.LyricRow;
 import gavin.lovemusic.service.Music;
 import gavin.lovemusic.service.ActivityCommand;
 

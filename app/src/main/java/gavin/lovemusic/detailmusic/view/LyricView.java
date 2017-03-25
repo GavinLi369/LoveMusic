@@ -1,4 +1,4 @@
-package gavin.lovemusic.detailmusic;
+package gavin.lovemusic.detailmusic.view;
 
 import android.animation.ValueAnimator;
 import android.content.Context;

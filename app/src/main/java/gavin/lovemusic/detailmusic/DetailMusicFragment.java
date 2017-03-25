@@ -21,6 +21,9 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
 import gavin.lovemusic.constant.R;
+import gavin.lovemusic.detailmusic.view.LyricRow;
+import gavin.lovemusic.detailmusic.view.LyricView;
+import gavin.lovemusic.detailmusic.view.OnLyricViewSeekListener;
 import gavin.lovemusic.service.ActivityCommand;
 import jp.wasabeef.glide.transformations.BlurTransformation;
 
