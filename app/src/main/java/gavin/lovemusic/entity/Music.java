@@ -1,4 +1,4 @@
-package gavin.lovemusic.service;
+package gavin.lovemusic.entity;
 
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Generated;

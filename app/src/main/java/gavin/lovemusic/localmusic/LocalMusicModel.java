@@ -1,27 +1,20 @@
 package gavin.lovemusic.localmusic;
 
 import android.content.Context;
-import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.net.Uri;
-import android.provider.MediaStore.Audio.Media;
-
-import com.bumptech.glide.Glide;
-import com.mpatric.mp3agic.ID3v2;
-import com.mpatric.mp3agic.InvalidDataException;
-import com.mpatric.mp3agic.Mp3File;
-import com.mpatric.mp3agic.UnsupportedTagException;
+import android.os.Environment;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InterruptedIOException;
 import java.util.ArrayList;
-import java.util.concurrent.ExecutionException;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 
 import gavin.lovemusic.App;
-import gavin.lovemusic.service.Music;
+import gavin.lovemusic.entity.Music;
 import gavin.lovemusic.service.MusicDao;
+import gavin.lovemusic.entity.MusicFactory;
 
 /**
  * Created by GavinLi
@@ -30,6 +23,8 @@ import gavin.lovemusic.service.MusicDao;
 public class LocalMusicModel implements LocalMusicContract.Model {
     private Context mContext;
     private MusicDao mMusicDao;
+    private FileScannerLinsenter mLinsenter;
+    private boolean isCancalScanning = false;
 
     public LocalMusicModel(Context context) {
         this.mContext = context;
@@ -50,42 +45,37 @@ public class LocalMusicModel implements LocalMusicContract.Model {
                 throw new IOException("can't clean album bitmap");
         }
 
-        ArrayList<Music> musicList = getMusicFromContentResolver(Media.EXTERNAL_CONTENT_URI);
-        musicList.addAll(getMusicFromContentResolver(Media.INTERNAL_CONTENT_URI));
+        List<Music> musicList = getMusicFromSdcard();
         mMusicDao.deleteAll();
         mMusicDao.insertInTx(musicList);
+        isCancalScanning = false;
     }
 
-    private ArrayList<Music> getMusicFromContentResolver(Uri uri) {
-        ArrayList<Music> musics = new ArrayList<>();
-        Cursor cursor = mContext.getContentResolver().query(uri,
-                new String[] {Media.DATA}, Media.IS_MUSIC + " = 1", null, Media._ID);
-        if(cursor != null) {
-            if(cursor.moveToFirst()) {
-                do {
-                    File file = new File(cursor.getString(cursor.getColumnIndex(Media.DATA)));
-                    if (file.getName().endsWith(".mp3")) {
-                        try {
-                            Mp3File mp3File = new Mp3File(file.getAbsoluteFile());
-                            if (mp3File.hasId3v2Tag()) {
-                                Music music = new Music();
-                                ID3v2 id3v2 = mp3File.getId3v2Tag();
-                                music.setPath(file.getPath());
-                                music.setTitle(id3v2.getTitle());
-                                music.setArtist(id3v2.getArtist());
-                                music.setAlbum(id3v2.getAlbum());
-                                music.setDuration(mp3File.getLengthInMilliseconds());
-                                music.setImage(writeAlbum2SDCard(id3v2.getAlbumImage()));
-                                musics.add(music);
-                            }
-                        } catch (IOException | UnsupportedTagException | InvalidDataException
-                                | InterruptedException | ExecutionException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                } while (cursor.moveToNext());
+    @Override
+    public void cancalScanning() {
+        isCancalScanning = true;
+    }
+
+    private List<Music> getMusicFromSdcard() {
+        List<Music> musics = new ArrayList<>();
+        String path = Environment.getExternalStorageDirectory().getPath();
+        File rootFile = new File(path);
+        Queue<File> files = new LinkedList<>();
+        files.add(rootFile);
+        while(!files.isEmpty()) {
+            if(isCancalScanning) return musics;
+            File file = files.remove();
+            if(mLinsenter != null) mLinsenter.onScanning(file.getPath());
+            if(file.isDirectory()) {
+                Collections.addAll(files, file.listFiles());
+            } else if(file.getName().endsWith(".mp3")) {
+                try {
+                    Music music = MusicFactory.create(mContext, file.getPath());
+                    if(music != null) musics.add(music);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
-            cursor.close();
         }
         return musics;
     }
@@ -94,17 +84,11 @@ public class LocalMusicModel implements LocalMusicContract.Model {
         return new ArrayList<>(mMusicDao.queryBuilder().build().list());
     }
 
-    private String writeAlbum2SDCard(byte[] ablumByte) throws IOException, InterruptedException, ExecutionException{
-        if(ablumByte != null) {
-            String filePath = App.APP_DIR + "/Album/" + System.currentTimeMillis();
-            Bitmap ablum = Glide.with(mContext).load(ablumByte).asBitmap().into(-1, -1).get();
-            FileOutputStream out = new FileOutputStream(filePath);
-            ablum.compress(Bitmap.CompressFormat.JPEG, 80, out);
-            ablum.recycle();
-            out.close();
-            return filePath;
-        } else {
-            throw new InterruptedIOException();
-        }
+    public void setFileScannerLinsenter(FileScannerLinsenter fileScannerLinsenter) {
+        mLinsenter = fileScannerLinsenter;
+    }
+
+    public interface FileScannerLinsenter {
+        void onScanning(String path);
     }
 }

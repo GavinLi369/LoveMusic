@@ -18,6 +18,10 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import gavin.lovemusic.constant.R;
+import gavin.lovemusic.entity.Music;
+import gavin.lovemusic.mainview.MainActivity;
+
+import static android.os.Build.VERSION.SDK_INT;
 
 /**
  * Created by Gavin on 2015/11/3.
@@ -156,12 +160,19 @@ public class PlayService extends Service implements MusicPlayer.OnCompletionList
      * 显示Notification
      */
     private void showNotification() {
-        notification = new Notification.Builder(this)
-                .setSmallIcon(R.mipmap.ic_launcher)
-                .build();
+        Notification.Builder builder = new Notification.Builder(this);
+        if(SDK_INT >= 19) {
+            builder.setSmallIcon(R.drawable.ic_launcher_alpha);
+        } else {
+            builder.setSmallIcon(R.mipmap.ic_launcher);
+        }
+        builder.setContentIntent(PendingIntent.getActivity(
+                this, 0,
+                new Intent(this, MainActivity.class)
+                        .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK), 0));
+        notification = builder.build();
         contentView = new RemoteViews
                 (getPackageName(), R.layout.music_play_notification_small);
-        //noinspection deprecation
         notification.contentView = contentView;
         notification.flags = Notification.FLAG_ONGOING_EVENT;
 

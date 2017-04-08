@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import gavin.lovemusic.entity.Music;
+
 /**
  * Created by GavinLi
  * on 16-9-25.

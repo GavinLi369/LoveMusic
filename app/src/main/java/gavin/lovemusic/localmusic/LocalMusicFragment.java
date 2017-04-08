@@ -9,17 +9,19 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 
 import java.util.List;
 
 import gavin.lovemusic.constant.R;
-import gavin.lovemusic.service.Music;
+import gavin.lovemusic.entity.Music;
 
 public class LocalMusicFragment extends Fragment implements LocalMusicContract.View,
         LocalRecyclerAdapter.OnItemClickListener, SwipeRefreshLayout.OnRefreshListener{
-    private RecyclerView mListView;
+    private RecyclerView mMusicRecycler;
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private LinearLayoutManager mLayoutManager;
+    private FileScannerDialog mDialog;
 
     private LocalMusicContract.Presenter mPresenter;
     private LocalRecyclerAdapter mAdapter;
@@ -29,30 +31,28 @@ public class LocalMusicFragment extends Fragment implements LocalMusicContract.V
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_music_local, container, false);
-        mListView = (RecyclerView) rootView.findViewById(R.id.musicList);
+        mMusicRecycler = (RecyclerView) rootView.findViewById(R.id.musicList);
         mSwipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeRefreshLayout);
         mLayoutManager = new LinearLayoutManager(getContext());
-        mListView.setLayoutManager(mLayoutManager);
+        mMusicRecycler.setLayoutManager(mLayoutManager);
         mSwipeRefreshLayout.setDistanceToTriggerSync(200);
         mSwipeRefreshLayout.setOnRefreshListener(this);
-        mListView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+        mMusicRecycler.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-                if(newState == RecyclerView.SCROLL_STATE_IDLE &&
-                        mLayoutManager.findFirstCompletelyVisibleItemPosition() == 0) {
-                    mSwipeRefreshLayout.setEnabled(true);
-                } else {
-                    mSwipeRefreshLayout.setEnabled(false);
+                if(mAdapter.getItemCount() != 0) {
+                    if (newState == RecyclerView.SCROLL_STATE_IDLE &&
+                            mLayoutManager.findFirstCompletelyVisibleItemPosition() == 0) {
+                        mSwipeRefreshLayout.setEnabled(true);
+                    } else {
+                        mSwipeRefreshLayout.setEnabled(false);
+                    }
                 }
             }
         });
-        return rootView;
-    }
 
-    @Override
-    public void onResume() {
-        super.onResume();
         mPresenter.loadMusicList();
+        return rootView;
     }
 
     //初始化ListView视图
@@ -60,7 +60,7 @@ public class LocalMusicFragment extends Fragment implements LocalMusicContract.V
     public void setMusicListView(List<Music> musicList) {
         mAdapter = new LocalRecyclerAdapter(musicList);
         mAdapter.setOnItemClickListener(this);
-        mListView.setAdapter(mAdapter);
+        mMusicRecycler.setAdapter(mAdapter);
     }
 
     @Override
@@ -72,6 +72,26 @@ public class LocalMusicFragment extends Fragment implements LocalMusicContract.V
     public void hideRefreshing() {
         if(mSwipeRefreshLayout.isRefreshing())
             mSwipeRefreshLayout.setRefreshing(false);
+    }
+
+    @Override
+    public void showScanningFile() {
+        mDialog = new FileScannerDialog(getContext());
+        mDialog.setCancelable(false);
+        mDialog.show();
+        Button cancalButton = (Button) mDialog.findViewById(R.id.btn_cancal);
+        if(cancalButton != null)
+            cancalButton.setOnClickListener(view -> mPresenter.cancalScanning());
+    }
+
+    @Override
+    public void updateScanningFile(String path) {
+        mDialog.updateFilePath(path);
+    }
+
+    @Override
+    public void removeScanningFile() {
+        mDialog.cancel();
     }
 
     @Override

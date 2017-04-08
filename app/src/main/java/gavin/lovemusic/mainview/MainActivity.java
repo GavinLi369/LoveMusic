@@ -27,7 +27,7 @@ import gavin.lovemusic.constant.R;
 import gavin.lovemusic.detailmusic.DetailMusicFragment;
 import gavin.lovemusic.detailmusic.DetailMusicModel;
 import gavin.lovemusic.detailmusic.DetailMusicPresenter;
-import gavin.lovemusic.service.Music;
+import gavin.lovemusic.entity.Music;
 import gavin.lovemusic.service.ActivityCommand;
 import gavin.lovemusic.service.PlayService;
 import gavinli.slidinglayout.OnViewStatusChangedListener;

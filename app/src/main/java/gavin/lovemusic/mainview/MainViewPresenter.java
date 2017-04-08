@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.util.NoSuchElementException;
 
 import gavin.lovemusic.service.ActivityCommand;
-import gavin.lovemusic.service.Music;
+import gavin.lovemusic.entity.Music;
 import gavin.lovemusic.service.PlayService;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -19,7 +19,6 @@ import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
-import static android.os.Build.VERSION_CODES.M;
 import static gavin.lovemusic.service.ActivityCommand.PAUSE_MUSIC;
 import static gavin.lovemusic.service.ActivityCommand.RESUME_MUSIC;
 

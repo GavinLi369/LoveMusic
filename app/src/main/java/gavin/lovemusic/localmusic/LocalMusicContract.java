@@ -8,7 +8,7 @@ import java.util.List;
 
 import gavin.lovemusic.BasePresenter;
 import gavin.lovemusic.BaseView;
-import gavin.lovemusic.service.Music;
+import gavin.lovemusic.entity.Music;
 
 /**
  * Created by GavinLi
@@ -19,12 +19,22 @@ public class LocalMusicContract {
         ArrayList<Music> getMusicList();
 
         void refreshMusicList() throws IOException;
+
+        void cancalScanning();
+
+        void setFileScannerLinsenter(LocalMusicModel.FileScannerLinsenter fileScannerLinsenter);
     }
 
     interface View extends BaseView<Presenter> {
         void setMusicListView(List<Music> musicList);
 
         void hideRefreshing();
+
+        void showScanningFile();
+
+        void updateScanningFile(String path);
+
+        void removeScanningFile();
     }
 
     interface Presenter extends BasePresenter {
@@ -33,5 +43,7 @@ public class LocalMusicContract {
         void loadMusicList();
 
         void refreshMusicList(Context context);
+
+        void cancalScanning();
     }
 }

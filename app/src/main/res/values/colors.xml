@@ -14,4 +14,7 @@
     <color name="colorTitle">#FFFFFF</color>
     <color name="colorSubTitle">#BBBBBB</color>
     <color name="colorWebViewLoadingBg">#FFFFFF</color>
+
+    <!--Scanner-->
+    <color name="colorScanningPath">#404040</color>
 </resources>

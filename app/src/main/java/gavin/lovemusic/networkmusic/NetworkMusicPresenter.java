@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import gavin.lovemusic.service.Music;
+import gavin.lovemusic.entity.Music;
 import gavin.lovemusic.service.PlayService;
 import rx.Observable;
 import rx.Subscriber;

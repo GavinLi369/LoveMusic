@@ -5,7 +5,7 @@ import android.support.v7.graphics.Palette;
 
 import gavin.lovemusic.BasePresenter;
 import gavin.lovemusic.BaseView;
-import gavin.lovemusic.service.Music;
+import gavin.lovemusic.entity.Music;
 import gavin.lovemusic.service.ActivityCommand;
 
 /**

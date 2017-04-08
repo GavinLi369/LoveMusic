@@ -14,7 +14,7 @@ import android.widget.Toast;
 import java.util.ArrayList;
 
 import gavin.lovemusic.constant.R;
-import gavin.lovemusic.service.Music;
+import gavin.lovemusic.entity.Music;
 
 /**
  * Created by GavinLi

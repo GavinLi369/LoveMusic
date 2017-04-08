@@ -6,7 +6,7 @@ import java.util.List;
 
 import gavin.lovemusic.BasePresenter;
 import gavin.lovemusic.BaseView;
-import gavin.lovemusic.service.Music;
+import gavin.lovemusic.entity.Music;
 
 /**
  * Created by GavinLi
