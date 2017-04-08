@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:orientation="horizontal"
+              android:padding="10dp"
+              android:id="@+id/layout_news"
+              android:layout_width="match_parent"
+              android:layout_height="120dp">
+
+    <ImageView
+        android:id="@+id/img_image"
+        android:layout_width="140dp"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        tools:src="@drawable/defalut_album"/>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_marginStart="20dp"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent">
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:typeface="sans"
+            android:textSize="16sp"
+            android:maxLines="2"
+            android:ellipsize="end"
+            android:textColor="@color/colorTitle"
+            tools:text="这档刷爆朋友圈的央视综艺节目，竟藏着这么多美妙的歌曲！"/>
+
+        <TextView
+            android:id="@+id/tv_sub_title"
+            android:layout_marginTop="8dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/colorSubTitle"
+            android:maxLines="2"
+            android:ellipsize="end"
+            tools:text="不管现实社会多么嘈杂，总有一些故事和一首歌能走进我们的心扉，让我们放下铠甲，面对柔软的自己。"/>
+    </LinearLayout>
+
+</LinearLayout>

@@ -38,6 +38,13 @@ public class LocalMusicPresenter implements LocalMusicContract.Presenter {
     }
 
     @Override
+    public void loadMusicList() {
+        List<Music> musics = mLocalMusicModel.getMusicList();
+        mPlayService.initMusic(musics);
+        mLocalMusicView.setMusicListView(musics);
+    }
+
+    @Override
     public void refreshMusicList(Context context) {
         Observable<ArrayList<Music>> observable = Observable.create((Observable.OnSubscribe<ArrayList<Music>>) subscriber -> {
             try {
@@ -66,16 +73,5 @@ public class LocalMusicPresenter implements LocalMusicContract.Presenter {
                 mPlayService.initMusic(musics);
             }
         });
-    }
-
-    @Override
-    public void subscribe() {
-        List<Music> musics = mLocalMusicModel.getMusicList();
-        mPlayService.initMusic(musics);
-        mLocalMusicView.setMusicListView(musics);
-    }
-
-    @Override
-    public void unsubscribe() {
     }
 }

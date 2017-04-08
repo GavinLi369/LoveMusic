@@ -3,13 +3,13 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/cardView"
-    android:layout_width="200dp"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:padding="10dp">
 
     <ImageView
         android:id="@+id/musicAlbum"
-        android:layout_width="160dp"
+        android:layout_width="120dp"
         android:layout_height="90dp"
         android:scaleType="centerCrop"
         android:src="@drawable/defalut_album"/>
@@ -17,7 +17,8 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="100dp"
+        android:layout_centerVertical="true"
+        android:layout_marginStart="140dp"
         android:orientation="vertical">
 
         <TextView
@@ -25,7 +26,6 @@
             android:layout_width="wrap_content"
             android:layout_height="25dp"
             android:textColor="#FFFFFF"
-            android:singleLine="true"
             android:maxLines="1"
             android:ellipsize="end"
             android:textSize="15sp"
@@ -37,7 +37,6 @@
             android:layout_height="20dp"
             android:textColor="#BFBFBF"
             android:textSize="12sp"
-            android:singleLine="true"
             android:maxLines="1"
             android:ellipsize="end"
             tools:text="后海大鲨鱼-猛犸" />

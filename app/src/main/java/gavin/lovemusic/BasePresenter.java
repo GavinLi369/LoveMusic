@@ -5,6 +5,4 @@ package gavin.lovemusic;
  * on 16-9-22.
  */
 public interface BasePresenter {
-    void subscribe();
-    void unsubscribe();
 }

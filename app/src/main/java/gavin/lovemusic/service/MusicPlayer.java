@@ -98,13 +98,15 @@ public class MusicPlayer implements MediaPlayer.OnPreparedListener, MediaPlayer.
         mMediaPlayer.reset();
         mMusicPlayList.clear();
         mMusicPlayList.addAll(musics);
-        try {
-            mMediaPlayer.setDataSource(mMusicPlayList.get(0).getPath());
-            mMediaPlayer.setOnCompletionListener(this);
-            mMediaPlayer.setOnPreparedListener(null);
-            mMediaPlayer.prepare();
-        } catch (IOException e) {
-            e.printStackTrace();
+        if(mMusicPlayList.size() != 0) {
+            try {
+                mMediaPlayer.setDataSource(mMusicPlayList.get(0).getPath());
+                mMediaPlayer.setOnCompletionListener(this);
+                mMediaPlayer.setOnPreparedListener(null);
+                mMediaPlayer.prepare();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 

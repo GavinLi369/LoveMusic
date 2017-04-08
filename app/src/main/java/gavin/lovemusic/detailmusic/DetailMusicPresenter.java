@@ -41,7 +41,18 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
         mDetailMusicModel = model;
         mCurrentMusic = currentMusic;
         mPlayService = playService;
+        mPlayService.registerListener(mListener);
         mDetailMusicView.setPresenter(this);
+    }
+
+    @Override
+    public void initMusicDetail() {
+        mDetailMusicView.changePauseToPlay();
+        if(mCurrentMusic != null) {
+            changeViewColor(mCurrentMusic.getImage());
+            mDetailMusicView.updateBgImage(mCurrentMusic.getImage());
+            initLyricView();
+        }
     }
 
     private PlayService.OnMusicStatListener mListener = new PlayService.OnMusicStatListener() {
@@ -181,18 +192,7 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
     }
 
     @Override
-    public void subscribe() {
-        mPlayService.registerListener(mListener);
-        mDetailMusicView.changePauseToPlay();
-        if(mCurrentMusic != null) {
-            changeViewColor(mCurrentMusic.getImage());
-            mDetailMusicView.updateBgImage(mCurrentMusic.getImage());
-            initLyricView();
-        }
-    }
-
-    @Override
-    public void unsubscribe() {
+    public void release() {
         mPlayService.unregisterListener(mListener);
     }
 }

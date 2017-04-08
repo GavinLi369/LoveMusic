@@ -41,7 +41,7 @@ public class DetailMusicFragment extends Fragment implements DetailMusicContract
     private LyricView mLyricView;
     private SeekBar mLyricSeekBar;
 
-    private DetailMusicContract.Presenter mDetailMusicPresenter;
+    private DetailMusicContract.Presenter mPresenter;
 
     private UpdateViewHandler handler = new UpdateViewHandler(this);
     private boolean mPlaying = true;
@@ -66,7 +66,7 @@ public class DetailMusicFragment extends Fragment implements DetailMusicContract
         NextButton.setOnClickListener(this);
         mLyricSeekBar.setOnSeekBarChangeListener(new MusicSeekBarListener());
         mLyricView.setOnLyricViewSeekListener(this);
-        mDetailMusicPresenter.subscribe();
+        mPresenter.initMusicDetail();
 
         //每隔0.5秒更新一次视图
         new Thread(() -> {
@@ -86,7 +86,7 @@ public class DetailMusicFragment extends Fragment implements DetailMusicContract
 
     @Override
     public void onDestroyView() {
-        mDetailMusicPresenter.unsubscribe();
+        mPresenter.release();
         super.onDestroyView();
     }
 
@@ -102,7 +102,7 @@ public class DetailMusicFragment extends Fragment implements DetailMusicContract
             DetailMusicFragment detailMusicFragment = mFragmentWeakReference.get();
             detailMusicFragment.mCurrentTime += 500;
             detailMusicFragment.modifySeekBar(
-                    (int) detailMusicFragment.mDetailMusicPresenter.getMusicDuration(),
+                    (int) detailMusicFragment.mPresenter.getMusicDuration(),
                     detailMusicFragment.mCurrentTime);
             detailMusicFragment.mLyricView.setTime(detailMusicFragment.mCurrentTime);
         }
@@ -135,7 +135,7 @@ public class DetailMusicFragment extends Fragment implements DetailMusicContract
     @Override
     public void onLyricViewSeek(LyricRow lyricRow) {
         mCurrentTime = (int) lyricRow.getLyricTime();
-        mDetailMusicPresenter.setMusicProgress((int) lyricRow.getLyricTime(), getContext());
+        mPresenter.setMusicProgress((int) lyricRow.getLyricTime(), getContext());
     }
 
     /**
@@ -153,7 +153,7 @@ public class DetailMusicFragment extends Fragment implements DetailMusicContract
         @Override
         public void onStopTrackingTouch(SeekBar seekBar) {
             mCurrentTime = seekBar.getProgress();
-            mDetailMusicPresenter.setMusicProgress(seekBar.getProgress(), getActivity());
+            mPresenter.setMusicProgress(seekBar.getProgress(), getActivity());
         }
     }
 
@@ -161,13 +161,13 @@ public class DetailMusicFragment extends Fragment implements DetailMusicContract
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.previousButton:
-                mDetailMusicPresenter.changeMusic(getActivity(), ActivityCommand.PREVIOUS_MUSIC);
+                mPresenter.changeMusic(getActivity(), ActivityCommand.PREVIOUS_MUSIC);
                 break;
             case R.id.playButton:
-                mDetailMusicPresenter.onPlayButtonClick(getActivity());
+                mPresenter.onPlayButtonClick(getActivity());
                 break;
             case R.id.nextButton:
-                mDetailMusicPresenter.changeMusic(getActivity(), ActivityCommand.NEXT_MUSIC);
+                mPresenter.changeMusic(getActivity(), ActivityCommand.NEXT_MUSIC);
                 break;
         }
     }
@@ -188,7 +188,7 @@ public class DetailMusicFragment extends Fragment implements DetailMusicContract
     public void updateBgImage(String bgImageUrl) {
         Glide.with(this)
                 .load(bgImageUrl)
-                .bitmapTransform(new BlurTransformation(getContext(), 25, 8))
+                .bitmapTransform(new BlurTransformation(getContext(), 25, 2))
                 .into(mBgImageView);
     }
 
@@ -205,7 +205,7 @@ public class DetailMusicFragment extends Fragment implements DetailMusicContract
 
     @Override
     public void setPresenter(DetailMusicContract.Presenter presenter) {
-        mDetailMusicPresenter = presenter;
+        mPresenter = presenter;
     }
 
     //以mm:ss形式获取歌曲已播放的时间

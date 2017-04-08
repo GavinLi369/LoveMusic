@@ -28,12 +28,6 @@ import gavin.lovemusic.detailmusic.DetailMusicFragment;
 import gavin.lovemusic.detailmusic.DetailMusicModel;
 import gavin.lovemusic.detailmusic.DetailMusicPresenter;
 import gavin.lovemusic.service.Music;
-import gavin.lovemusic.localmusic.LocalMusicFragment;
-import gavin.lovemusic.localmusic.LocalMusicModel;
-import gavin.lovemusic.localmusic.LocalMusicPresenter;
-import gavin.lovemusic.networkmusic.NetworkMusicFragment;
-import gavin.lovemusic.networkmusic.NetworkMusicModel;
-import gavin.lovemusic.networkmusic.NetworkMusicPresenter;
 import gavin.lovemusic.service.ActivityCommand;
 import gavin.lovemusic.service.PlayService;
 import gavinli.slidinglayout.OnViewStatusChangedListener;
@@ -43,7 +37,6 @@ import gavinli.slidinglayout.SlidingLayout;
  * Created by GavinLi
  * on 16-9-18.
  */
-@SuppressWarnings("deprecation")
 public class MainActivity extends AppCompatActivity implements MainViewContract.View,
         View.OnClickListener, OnViewStatusChangedListener {
     private RelativeLayout mMainLayout;
@@ -53,9 +46,7 @@ public class MainActivity extends AppCompatActivity implements MainViewContract.
     private SlidingLayout mSlidingLayout;
     private RelativeLayout mDragView;
 
-    private SectionPagerAdapter mAdapter;
-
-    private MainViewContract.Presenter mMainViewPresenter;
+    private MainViewContract.Presenter mPresenter;
     private PlayService mPlayService;
 
     private boolean mPlaying = true;
@@ -66,17 +57,6 @@ public class MainActivity extends AppCompatActivity implements MainViewContract.
         setContentView(R.layout.acitivity_main);
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
 
-        ViewPager viewPager = (ViewPager) findViewById(R.id.view_pager);
-        mAdapter = new SectionPagerAdapter(getSupportFragmentManager());
-        viewPager.setAdapter(mAdapter);
-
-        TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
-        tabLayout.setupWithViewPager(viewPager);
-        mMainLayout = (RelativeLayout) findViewById(R.id.layout_main);
-
-        TelephonyManager tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-        tm.listen(new exPhoneCallListener(), PhoneStateListener.LISTEN_CALL_STATE);
-
         Intent intent = new Intent(this, PlayService.class);
         bindService(intent, mConnection, BIND_AUTO_CREATE);
     }
@@ -84,7 +64,6 @@ public class MainActivity extends AppCompatActivity implements MainViewContract.
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mMainViewPresenter.unsubscribe();
         unbindService(mConnection);
     }
 
@@ -92,24 +71,36 @@ public class MainActivity extends AppCompatActivity implements MainViewContract.
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
             mPlayService = ((PlayService.PlayServiceBinder) iBinder).getService();
+
+            TelephonyManager tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+            tm.listen(new exPhoneCallListener(), PhoneStateListener.LISTEN_CALL_STATE);
+
+            ViewPager viewPager = (ViewPager) findViewById(R.id.view_pager);
+            SectionPagerAdapter adapter = new SectionPagerAdapter(
+                    getSupportFragmentManager(),
+                    MainActivity.this, mPlayService);
+            viewPager.setAdapter(adapter);
+
+            TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
+            tabLayout.setupWithViewPager(viewPager);
+            mMainLayout = (RelativeLayout) findViewById(R.id.layout_main);
+
             new MainViewPresenter(MainActivity.this, mPlayService);
-            new NetworkMusicPresenter((NetworkMusicFragment) mAdapter.getItem(0),
-                    new NetworkMusicModel(MainActivity.this),
-                    mPlayService);
-            new LocalMusicPresenter((LocalMusicFragment) mAdapter.getItem(1),
-                    new LocalMusicModel(MainActivity.this),
-                    mPlayService);
+            mPlayService.registerListener(
+                    (PlayService.OnMusicStatListener) mPresenter);
         }
 
         @Override
         public void onServiceDisconnected(ComponentName componentName) {
+            mPlayService.unregisterListener(
+                    (PlayService.OnMusicStatListener) mPresenter);
         }
     };
 
     @Override
     public void onClick(View v) {
         if(v.getId() == mPlayButton.getId())
-            mMainViewPresenter.onPlayButtonClicked(this);
+            mPresenter.onPlayButtonClicked(this);
     }
 
     @Override
@@ -199,7 +190,7 @@ public class MainActivity extends AppCompatActivity implements MainViewContract.
 
     @Override
     public void onViewRemoved() {
-        mMainViewPresenter.changeMusicStatus(MainActivity.this, ActivityCommand.PAUSE_MUSIC);
+        mPresenter.changeMusicStatus(MainActivity.this, ActivityCommand.PAUSE_MUSIC);
         mSlidingLayout.removeView(findViewById(R.id.fragment_music_detail));
         mMainLayout.removeView(mSlidingLayout);
         mSlidingLayout = null;
@@ -216,13 +207,13 @@ public class MainActivity extends AppCompatActivity implements MainViewContract.
             switch (state) {
                 case TelephonyManager.CALL_STATE_IDLE:
                     if (musicWaitPlay) {
-                        mMainViewPresenter.changeMusicStatus(MainActivity.this, ActivityCommand.RESUME_MUSIC);
+                        mPresenter.changeMusicStatus(MainActivity.this, ActivityCommand.RESUME_MUSIC);
                         musicWaitPlay = false;
                     }
                     break;
                 case TelephonyManager.CALL_STATE_RINGING:
                     if (PlayService.musicState == PlayService.PLAYING) {
-                        mMainViewPresenter.changeMusicStatus(MainActivity.this, ActivityCommand.PAUSE_MUSIC);
+                        mPresenter.changeMusicStatus(MainActivity.this, ActivityCommand.PAUSE_MUSIC);
                         musicWaitPlay = true;
                     }
                     break;
@@ -233,8 +224,7 @@ public class MainActivity extends AppCompatActivity implements MainViewContract.
 
     @Override
     public void setPresenter(MainViewContract.Presenter musicListPresenter) {
-        this.mMainViewPresenter = musicListPresenter;
-        mMainViewPresenter.subscribe();
+        mPresenter = musicListPresenter;
     }
 
     //用户点击返回键后不会销毁Activity

@@ -45,6 +45,8 @@ public class NetworkMusicFragment extends Fragment implements NetworkMusicContra
 
         mSwipeRefreshLayout.setDistanceToTriggerSync(200);
         mSwipeRefreshLayout.setOnRefreshListener(this);
+
+        mPresenter.loadMusics();
         return rootView;
     }
 
@@ -57,6 +59,13 @@ public class NetworkMusicFragment extends Fragment implements NetworkMusicContra
             if(newState == RecyclerView.SCROLL_STATE_IDLE &&
                     lastVisibleItem + 1 == mAdapter.getItemCount())
                 mPresenter.loadMoreMusic();
+
+            if(newState == RecyclerView.SCROLL_STATE_IDLE &&
+                    mLayoutManager.findFirstCompletelyVisibleItemPosition() == 0) {
+                mSwipeRefreshLayout.setEnabled(true);
+            } else {
+                mSwipeRefreshLayout.setEnabled(false);
+            }
         }
 
         @Override
@@ -96,17 +105,8 @@ public class NetworkMusicFragment extends Fragment implements NetworkMusicContra
         mPresenter.refreshMusicList();
     }
 
-
-
-    @Override
-    public void onDestroyView() {
-        mPresenter.unsubscribe();
-        super.onDestroyView();
-    }
-
     @Override
     public void setPresenter(NetworkMusicContract.Presenter presenter) {
         this.mPresenter = presenter;
-        mPresenter.subscribe();
     }
 }

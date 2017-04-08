@@ -9,4 +9,9 @@
     <color name="bodyTextColorDefault">#BDBDBD</color>
 
     <color name="colorLyricText">#404040</color>
+
+    <!--News-->
+    <color name="colorTitle">#FFFFFF</color>
+    <color name="colorSubTitle">#BBBBBB</color>
+    <color name="colorWebViewLoadingBg">#FFFFFF</color>
 </resources>

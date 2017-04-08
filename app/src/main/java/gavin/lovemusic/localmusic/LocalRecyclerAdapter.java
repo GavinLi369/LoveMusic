@@ -32,7 +32,7 @@ public class LocalRecyclerAdapter extends RecyclerView.Adapter<LocalRecyclerAdap
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         context = parent.getContext();
         return new ViewHolder(LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.local_list_view, parent, false));
+                .inflate(R.layout.item_music_local, parent, false));
     }
 
     @Override

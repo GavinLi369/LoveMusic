@@ -32,6 +32,12 @@ public class NetworkMusicPresenter implements NetworkMusicContract.Presenter {
     }
 
     @Override
+    public void loadMusics() {
+        mView.showRefreshView();
+        refreshMusicList();
+    }
+
+    @Override
     public void refreshMusicList() {
         Observable<ArrayList<Music>> observable = Observable.create((Observable.OnSubscribe<ArrayList<Music>>) subscriber -> {
             ArrayList<Music> musics = new ArrayList<>();
@@ -101,15 +107,5 @@ public class NetworkMusicPresenter implements NetworkMusicContract.Presenter {
         if(!mPlayService.containsMusic(musics.get(postion)))
             mPlayService.initMusic(musics);
         mPlayService.changeMusic(musics.get(postion));
-    }
-
-    @Override
-    public void subscribe() {
-        mView.showRefreshView();
-        refreshMusicList();
-    }
-
-    @Override
-    public void unsubscribe() {
     }
 }

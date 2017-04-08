@@ -32,7 +32,7 @@ public class LyricBuilder {
             return;
         }
         lyricList = new ArrayList<>();
-        Pattern pattern = Pattern.compile("\\[(\\d{2}:\\d{2}\\.\\d{2,3})\\](\\[(\\d{2}:\\d{2}\\.\\d{2,3})\\])*([^\\n]*)");
+        Pattern pattern = Pattern.compile("\\[(\\d{2}:\\d{2}\\.\\d{2,3})](\\[(\\d{2}:\\d{2}\\.\\d{2,3})])*([^\\n]*)");
         Matcher matcher = pattern.matcher(mLyric);
         while (matcher.find()) {
             //歌词不能为空

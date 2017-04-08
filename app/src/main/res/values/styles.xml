@@ -1,5 +1,4 @@
 <resources>
-
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light">
         <!-- Customize your theme here. -->
@@ -7,9 +6,6 @@
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name="android:windowBackground">@color/colorBackground</item>
-    </style>
-
-    <style name="AppTheme.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
@@ -19,13 +15,11 @@
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
     <style name="Widget.SeekBar.Normal" parent="@android:style/Widget.SeekBar">
-
         <item name="android:maxHeight">4dp</item>
         <item name="android:minHeight">4dp</item>
         <item name="android:progressDrawable">@drawable/seek_bar_horizontal</item>
-        <item name="android:thumb">@drawable/thumb</item>
+        <item name="android:thumb">@drawable/seek_thumb</item>
         <item name="android:thumbOffset">0dp</item>
-
     </style>
 
 </resources>

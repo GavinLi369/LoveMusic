@@ -138,7 +138,7 @@ public class QqMusicUtil {
                     Response lyricResponse = new OkHttpClient().newCall(lyricRequest).execute();
                     if(!lyricResponse.isSuccessful())
                         throw new IOException("网络连接失败");
-                    Pattern pattern = Pattern.compile("\\[CDATA\\[([\\s\\S]+?)\\]\\]>");
+                    Pattern pattern = Pattern.compile("\\[CDATA\\[([\\s\\S]+?)]]>");
                     Matcher matcher = pattern.matcher(lyricResponse.body().string());
                     if(matcher.find()) return matcher.group(1).replace("&apos;", "'");
                 }

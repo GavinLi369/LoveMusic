@@ -32,7 +32,7 @@ public class NetworkRecyclerAdapter extends RecyclerView.Adapter<NetworkRecycler
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         context = parent.getContext();
         return new ViewHolder(LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.network_list_view, parent, false));
+                .inflate(R.layout.item_music_network, parent, false));
     }
 
     public void addMoreMusics(ArrayList<Music> musics) {

@@ -44,6 +44,8 @@ public class DetailMusicContract {
     }
 
     interface Presenter extends BasePresenter {
+        void initMusicDetail();
+
         void setMusicProgress(int progress, Context context);
 
         void onPlayButtonClick(Context context);
@@ -51,5 +53,7 @@ public class DetailMusicContract {
         void changeMusic(Context context, ActivityCommand command);
 
         long getMusicDuration();
+
+        void release();
     }
 }

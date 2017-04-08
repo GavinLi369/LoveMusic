@@ -1,5 +1,7 @@
 package gavin.lovemusic.detailmusic.view;
 
+import android.support.annotation.NonNull;
+
 /**
  * Created by Gavin on 2015/8/26.
  * 每一句歌词
@@ -32,7 +34,7 @@ public class LyricRow implements Comparable<LyricRow> {
     }
 
     @Override
-    public int compareTo(LyricRow lyricRow) {
+    public int compareTo(@NonNull LyricRow lyricRow) {
         double result = this.lyricTime - lyricRow.getLyricTime();
         if(result > 0) return 1;
         else if(result < 0) return -1;

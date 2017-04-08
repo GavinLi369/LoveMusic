@@ -28,6 +28,8 @@ public class NetworkMusicContract {
     }
 
     interface Presenter extends BasePresenter {
+        void loadMusics();
+
         void refreshMusicList();
 
         void loadMoreMusic();

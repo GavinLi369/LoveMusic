@@ -19,8 +19,9 @@ public class LocalMusicFragment extends Fragment implements LocalMusicContract.V
         LocalRecyclerAdapter.OnItemClickListener, SwipeRefreshLayout.OnRefreshListener{
     private RecyclerView mListView;
     private SwipeRefreshLayout mSwipeRefreshLayout;
+    private LinearLayoutManager mLayoutManager;
 
-    private LocalMusicContract.Presenter mLocalMusicPresenter;
+    private LocalMusicContract.Presenter mPresenter;
     private LocalRecyclerAdapter mAdapter;
 
     @Nullable
@@ -30,16 +31,28 @@ public class LocalMusicFragment extends Fragment implements LocalMusicContract.V
         View rootView = inflater.inflate(R.layout.fragment_music_local, container, false);
         mListView = (RecyclerView) rootView.findViewById(R.id.musicList);
         mSwipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeRefreshLayout);
-        mListView.setLayoutManager(new LinearLayoutManager(getContext()));
+        mLayoutManager = new LinearLayoutManager(getContext());
+        mListView.setLayoutManager(mLayoutManager);
         mSwipeRefreshLayout.setDistanceToTriggerSync(200);
         mSwipeRefreshLayout.setOnRefreshListener(this);
+        mListView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                if(newState == RecyclerView.SCROLL_STATE_IDLE &&
+                        mLayoutManager.findFirstCompletelyVisibleItemPosition() == 0) {
+                    mSwipeRefreshLayout.setEnabled(true);
+                } else {
+                    mSwipeRefreshLayout.setEnabled(false);
+                }
+            }
+        });
         return rootView;
     }
 
     @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        mLocalMusicPresenter.unsubscribe();
+    public void onResume() {
+        super.onResume();
+        mPresenter.loadMusicList();
     }
 
     //初始化ListView视图
@@ -52,7 +65,7 @@ public class LocalMusicFragment extends Fragment implements LocalMusicContract.V
 
     @Override
     public void onRefresh() {
-        mLocalMusicPresenter.refreshMusicList(getContext());
+        mPresenter.refreshMusicList(getContext());
     }
 
     @Override
@@ -63,12 +76,11 @@ public class LocalMusicFragment extends Fragment implements LocalMusicContract.V
 
     @Override
     public void onItemClick(int position) {
-        mLocalMusicPresenter.startNewMusic(mAdapter.getMusicList(), position);
+        mPresenter.startNewMusic(mAdapter.getMusicList(), position);
     }
 
     @Override
     public void setPresenter(LocalMusicContract.Presenter presenter) {
-        mLocalMusicPresenter = presenter;
-        mLocalMusicPresenter.subscribe();
+        mPresenter = presenter;
     }
 }
