@@ -1,4 +1,4 @@
-package gavin.lovemusic.detailmusic;
+package gavin.lovemusic.musicdetail;
 
 import android.content.Context;
 import android.support.v7.graphics.Palette;
@@ -10,7 +10,7 @@ import java.util.ArrayList;
 
 import gavin.lovemusic.BasePresenter;
 import gavin.lovemusic.BaseView;
-import gavin.lovemusic.detailmusic.view.LyricRow;
+import gavin.lovemusic.musicdetail.view.LyricRow;
 import gavin.lovemusic.entity.Music;
 import gavin.lovemusic.service.ActivityCommand;
 

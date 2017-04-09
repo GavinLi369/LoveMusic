@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import gavin.lovemusic.detailmusic.view.LyricRow;
+import gavin.lovemusic.musicdetail.view.LyricRow;
 
 /**
  * Created by Gavin on 2015/8/24.

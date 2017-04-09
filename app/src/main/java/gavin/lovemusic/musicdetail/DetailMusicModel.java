@@ -1,4 +1,4 @@
-package gavin.lovemusic.detailmusic;
+package gavin.lovemusic.musicdetail;
 
 import android.content.Context;
 
@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import gavin.lovemusic.App;
-import gavin.lovemusic.detailmusic.view.LyricRow;
+import gavin.lovemusic.musicdetail.view.LyricRow;
 import gavin.lovemusic.entity.Music;
 import gavin.lovemusic.service.MusicDao;
 import gavin.lovemusic.util.LyricBuilder;

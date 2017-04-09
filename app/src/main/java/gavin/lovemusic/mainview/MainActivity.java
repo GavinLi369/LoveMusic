@@ -24,9 +24,9 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import gavin.lovemusic.constant.R;
-import gavin.lovemusic.detailmusic.DetailMusicFragment;
-import gavin.lovemusic.detailmusic.DetailMusicModel;
-import gavin.lovemusic.detailmusic.DetailMusicPresenter;
+import gavin.lovemusic.musicdetail.DetailMusicFragment;
+import gavin.lovemusic.musicdetail.DetailMusicModel;
+import gavin.lovemusic.musicdetail.DetailMusicPresenter;
 import gavin.lovemusic.entity.Music;
 import gavin.lovemusic.service.ActivityCommand;
 import gavin.lovemusic.service.PlayService;

@@ -77,7 +77,6 @@ public class LocalMusicPresenter implements LocalMusicContract.Presenter {
 
     @Override
     public void refreshMusicList(Context context) {
-        mView.hideRefreshing();
         mView.showScanningFile();
         mModel.setFileScannerLinsenter(path -> {
             Message message = new Message();

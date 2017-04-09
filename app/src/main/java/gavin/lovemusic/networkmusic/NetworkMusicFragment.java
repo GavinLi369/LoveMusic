@@ -2,6 +2,7 @@ package gavin.lovemusic.networkmusic;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.GridLayoutManager;
@@ -9,7 +10,6 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 
@@ -23,15 +23,17 @@ import gavin.lovemusic.entity.Music;
 public class NetworkMusicFragment extends Fragment implements NetworkMusicContract.View,
         NetworkRecyclerAdapter.OnItemClickListener, SwipeRefreshLayout.OnRefreshListener{
     private SwipeRefreshLayout mSwipeRefreshLayout;
-
     private GridLayoutManager mLayoutManager;
-    private NetworkRecyclerAdapter mAdapter;
+    private NetworkRecyclerAdapter mAdapter = new NetworkRecyclerAdapter();
+
+    private boolean isLoaded = false;
+    private boolean isShown = false;
 
     private NetworkMusicContract.Presenter mPresenter;
 
     @Nullable
     @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_music_network, container, false);
         RecyclerView recyclerView = (RecyclerView) rootView.findViewById(R.id.musicList);
@@ -39,15 +41,32 @@ public class NetworkMusicFragment extends Fragment implements NetworkMusicContra
         mLayoutManager = new GridLayoutManager(getContext(), 2);
         recyclerView.setLayoutManager(mLayoutManager);
         recyclerView.addOnScrollListener(new ScrollRefreshListener());
-        mAdapter = new NetworkRecyclerAdapter();
+
         mAdapter.setOnItemClickListener(this);
         recyclerView.setAdapter(mAdapter);
 
         mSwipeRefreshLayout.setDistanceToTriggerSync(200);
         mSwipeRefreshLayout.setOnRefreshListener(this);
-
-        mPresenter.loadMusics();
+        if(!isLoaded && isShown) {
+            isLoaded = true;
+            mPresenter.loadMusics();
+        }
         return rootView;
+    }
+
+    //懒加载
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+        if(isVisibleToUser) {
+            if(getView() != null && !isLoaded) {
+                isLoaded = true;
+                mPresenter.loadMusics();
+            }
+            isShown = true;
+        } else {
+            isShown = false;
+        }
     }
 
     private class ScrollRefreshListener extends RecyclerView.OnScrollListener {
@@ -60,11 +79,13 @@ public class NetworkMusicFragment extends Fragment implements NetworkMusicContra
                     lastVisibleItem + 1 == mAdapter.getItemCount())
                 mPresenter.loadMoreMusic();
 
-            if(newState == RecyclerView.SCROLL_STATE_IDLE &&
-                    mLayoutManager.findFirstCompletelyVisibleItemPosition() == 0) {
-                mSwipeRefreshLayout.setEnabled(true);
-            } else {
-                mSwipeRefreshLayout.setEnabled(false);
+            if(mAdapter.getItemCount() != 0) {
+                if (newState == RecyclerView.SCROLL_STATE_IDLE &&
+                        mLayoutManager.findFirstCompletelyVisibleItemPosition() == 0) {
+                    mSwipeRefreshLayout.setEnabled(true);
+                } else {
+                    mSwipeRefreshLayout.setEnabled(false);
+                }
             }
         }
 
@@ -92,7 +113,10 @@ public class NetworkMusicFragment extends Fragment implements NetworkMusicContra
 
     @Override
     public void showNetworkConnetionError() {
-        Toast.makeText(getContext(), "网络连接失败", Toast.LENGTH_SHORT).show();
+        if(getView() != null) {
+            Snackbar.make(getView(), "网络连接失败",
+                    Snackbar.LENGTH_SHORT).show();
+        }
     }
 
     @Override

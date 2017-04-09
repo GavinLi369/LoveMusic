@@ -10,7 +10,6 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import java.util.List;
 
@@ -23,9 +22,12 @@ import gavin.lovemusic.constant.R;
 
 public class MusicNewsFragment extends Fragment implements MusicNewsContract.View {
     private View mRoot;
-    private NewsRecyclerAdapter mAdapter;
+    private NewsRecyclerAdapter mAdapter = new NewsRecyclerAdapter();
     private SwipeRefreshLayout mRefreshLayout;
     private LinearLayoutManager mLayoutManager;
+
+    private boolean isLoaded = false;
+    private boolean isShown = false;
 
     private MusicNewsContract.Presenter mPresenter;
 
@@ -36,7 +38,6 @@ public class MusicNewsFragment extends Fragment implements MusicNewsContract.Vie
         RecyclerView newsRecyclerView = (RecyclerView) mRoot.findViewById(R.id.rv_news);
         mLayoutManager = new LinearLayoutManager(getContext());
         newsRecyclerView.setLayoutManager(mLayoutManager);
-        mAdapter = new NewsRecyclerAdapter();
         newsRecyclerView.setAdapter(mAdapter);
 
         mRefreshLayout = (SwipeRefreshLayout) mRoot.findViewById(R.id.layout_refresh);
@@ -46,19 +47,39 @@ public class MusicNewsFragment extends Fragment implements MusicNewsContract.Vie
         newsRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-                if(newState == RecyclerView.SCROLL_STATE_IDLE &&
-                        mLayoutManager.findFirstCompletelyVisibleItemPosition() == 0) {
-                    mRefreshLayout.setEnabled(true);
-                } else {
-                    mRefreshLayout.setEnabled(false);
+                if(mAdapter.getItemCount() != 0) {
+                    if (newState == RecyclerView.SCROLL_STATE_IDLE &&
+                            mLayoutManager.findFirstCompletelyVisibleItemPosition() == 0) {
+                        mRefreshLayout.setEnabled(true);
+                    } else {
+                        mRefreshLayout.setEnabled(false);
+                    }
                 }
             }
         });
 
-
-        mRefreshLayout.setRefreshing(true);
-        mPresenter.loadNews();
+        if(isShown && !isLoaded) {
+            mRefreshLayout.setRefreshing(true);
+            isLoaded = true;
+            mPresenter.loadNews();
+        }
         return mRoot;
+    }
+
+    //懒加载
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+        if(isVisibleToUser) {
+            if(getView() != null && !isLoaded) {
+                isLoaded = true;
+                mRefreshLayout.setRefreshing(true);
+                mPresenter.loadNews();
+            }
+            isShown = true;
+        } else {
+            isShown = false;
+        }
     }
 
     @Override
@@ -66,12 +87,13 @@ public class MusicNewsFragment extends Fragment implements MusicNewsContract.Vie
         if(mRefreshLayout.isRefreshing()) mRefreshLayout.setRefreshing(false);
         mAdapter.setNewsEntries(newsEntries);
         mAdapter.notifyDataSetChanged();
+        isLoaded = true;
     }
 
     @Override
     public void showNetworkError() {
         if(mRefreshLayout.isRefreshing()) mRefreshLayout.setRefreshing(false);
-        Snackbar.make(mRoot, "网络连接出错", Toast.LENGTH_SHORT).show();
+        Snackbar.make(mRoot, "网络连接出错", Snackbar.LENGTH_SHORT).show();
     }
 
     @Override
