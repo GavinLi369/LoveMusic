@@ -1,5 +1,7 @@
 package gavin.lovemusic.networkmusic;
 
+import com.orhanobut.logger.Logger;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -7,7 +9,6 @@ import java.util.List;
 import gavin.lovemusic.entity.Music;
 import gavin.lovemusic.service.PlayService;
 import rx.Observable;
-import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
@@ -39,67 +40,52 @@ public class NetworkMusicPresenter implements NetworkMusicContract.Presenter {
 
     @Override
     public void refreshMusicList() {
-        Observable<ArrayList<Music>> observable = Observable.create((Observable.OnSubscribe<ArrayList<Music>>) subscriber -> {
-            ArrayList<Music> musics = new ArrayList<>();
-            mIndex = 0;
-            try {
-                musics.addAll(mModel.getBillboardHot(10, mIndex++));
-                subscriber.onNext(musics);
-                subscriber.onCompleted();
-            } catch (IOException e) {
-                subscriber.onError(e);
-            }
-        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
-
-        observable.subscribe(new Subscriber<ArrayList<Music>>() {
-            @Override
-            public void onCompleted() {
-            }
-
-            @Override
-            public void onError(Throwable e) {
-                e.printStackTrace();
-                mView.showNetworkConnetionError();
-                mView.hideRefreshView();
-            }
-
-            @Override
-            public void onNext(ArrayList<Music> musics) {
-                mView.showMoreMusics(musics);
-                mView.hideRefreshView();
-            }
-        });
+        Observable
+                .create((Observable.OnSubscribe<List<Music>>) subscriber -> {
+                    List<Music> musics = new ArrayList<>();
+                    try {
+                        musics.addAll(mModel.getHotMusic(10, 0));
+                        subscriber.onNext(musics);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        subscriber.onError(e);
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(musics -> {
+                    mView.showMoreMusics(musics);
+                    mView.hideRefreshView();
+                }, throwable -> {
+                    if(throwable instanceof IOException) {
+                        mView.showNetworkConnetionError();
+                        mView.hideRefreshView();
+                    }
+                });
     }
 
     @Override
     public void loadMoreMusic() {
-        Observable<ArrayList<Music>> observable = Observable.create((Observable.OnSubscribe<ArrayList<Music>>) subscriber -> {
-            ArrayList<Music> musics = new ArrayList<>();
-            try {
-                musics.addAll(mModel.getBillboardHot(10, mIndex++));
-                subscriber.onNext(musics);
-                subscriber.onCompleted();
-            } catch (IOException e) {
-                subscriber.onError(e);
-            }
-        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
-
-        observable.subscribe(new Subscriber<ArrayList<Music>>() {
-            @Override
-            public void onCompleted() {
-            }
-
-            @Override
-            public void onError(Throwable e) {
-                e.printStackTrace();
-                mView.showNetworkConnetionError();
-            }
-
-            @Override
-            public void onNext(ArrayList<Music> musics) {
-                mView.showMoreMusics(musics);
-            }
-        });
+        Observable
+                .create((Observable.OnSubscribe<List<Music>>) subscriber -> {
+                    List<Music> musics = new ArrayList<>();
+                    try {
+                        musics.addAll(mModel.getHotMusic(10, mIndex));
+                        subscriber.onNext(musics);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        subscriber.onError(e);
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(musics -> {
+                    mView.showMoreMusics(musics);
+                }, throwable -> {
+                    if(throwable instanceof IOException)
+                        mView.showNetworkConnetionError();
+                });
+        mIndex += 10;
     }
 
     @Override

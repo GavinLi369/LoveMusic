@@ -11,6 +11,7 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import gavin.lovemusic.constant.R;
 import gavin.lovemusic.entity.Music;
@@ -20,7 +21,7 @@ import gavin.lovemusic.entity.Music;
  * on 16-9-24.
  */
 public class NetworkRecyclerAdapter extends RecyclerView.Adapter<NetworkRecyclerAdapter.ViewHolder> {
-    private ArrayList<Music> mMusicList;
+    private List<Music> mMusicList;
     private OnItemClickListener mOnItemClickListener;
     private Context context;
 
@@ -35,15 +36,22 @@ public class NetworkRecyclerAdapter extends RecyclerView.Adapter<NetworkRecycler
                 .inflate(R.layout.item_music_network, parent, false));
     }
 
-    public void addMoreMusics(ArrayList<Music> musics) {
+    public void addMusics(List<Music> musics) {
         mMusicList.addAll(musics);
-        notifyDataSetChanged();
+    }
+
+    public void setMusics(List<Music> musics) {
+        mMusicList = musics;
     }
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         holder.musicName.setText(mMusicList.get(position).getTitle());
-        String musicInfo = mMusicList.get(position).getArtist() + " - " + mMusicList.get(position).getAlbum();
+        StringBuilder musicInfo = new StringBuilder();
+        musicInfo.append(mMusicList.get(position).getArtist());
+        String album = mMusicList.get(position).getAlbum();
+        if(!album.isEmpty())
+            musicInfo.append(" - ").append(album);
         holder.musicInfo.setText(musicInfo);
         Glide.with(context)
                 .load(mMusicList.get(position).getImage())
@@ -55,7 +63,7 @@ public class NetworkRecyclerAdapter extends RecyclerView.Adapter<NetworkRecycler
         return mMusicList.size();
     }
 
-    public ArrayList<Music> getMusicList() {
+    public List<Music> getMusicList() {
         return mMusicList;
     }
 

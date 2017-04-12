@@ -10,8 +10,9 @@ import org.greenrobot.greendao.database.Database;
 import java.io.File;
 import java.io.IOException;
 
-import gavin.lovemusic.service.DaoMaster;
-import gavin.lovemusic.service.DaoSession;
+import gavin.lovemusic.entity.DaoMaster;
+import gavin.lovemusic.entity.DaoSession;
+
 
 /**
  * Created by GavinLi on 16-9-10.

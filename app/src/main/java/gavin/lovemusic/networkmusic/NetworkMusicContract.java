@@ -14,11 +14,13 @@ import gavin.lovemusic.entity.Music;
  */
 public class NetworkMusicContract {
     interface Model {
-        ArrayList<Music> getBillboardHot(int size, int offset) throws IOException;
+        List<Music> getHotMusic(int size, int offset) throws IOException;
     }
 
     interface View extends BaseView<Presenter> {
-        void showMoreMusics(ArrayList<Music> musics);
+        void showMoreMusics(List<Music> musics);
+
+        void resetMusics(List<Music> musics);
 
         void showRefreshView();
 

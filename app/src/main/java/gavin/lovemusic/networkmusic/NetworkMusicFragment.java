@@ -11,7 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import gavin.lovemusic.constant.R;
 import gavin.lovemusic.entity.Music;
@@ -97,8 +97,15 @@ public class NetworkMusicFragment extends Fragment implements NetworkMusicContra
     }
 
     @Override
-    public void showMoreMusics(ArrayList<Music> musics) {
-        mAdapter.addMoreMusics(musics);
+    public void showMoreMusics(List<Music> musics) {
+        mAdapter.addMusics(musics);
+        mAdapter.notifyItemRangeInserted(mAdapter.getItemCount(), musics.size());
+    }
+
+    @Override
+    public void resetMusics(List<Music> musics) {
+        mAdapter.setMusics(musics);
+        mAdapter.notifyDataSetChanged();
     }
 
     @Override
@@ -126,6 +133,7 @@ public class NetworkMusicFragment extends Fragment implements NetworkMusicContra
 
     @Override
     public void onRefresh() {
+        mSwipeRefreshLayout.setRefreshing(true);
         mPresenter.refreshMusicList();
     }
 

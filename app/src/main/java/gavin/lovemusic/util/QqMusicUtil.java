@@ -22,7 +22,6 @@ import okhttp3.Response;
 
 public class QqMusicUtil {
     private static final int LYRIC_FIND_NUM = 5;
-    private Matcher mMatcher;
 
     /*
         搜索歌曲API：http://s.music.qq.com/fcgi-bin/music_search_new_platform?t=0&n=${num}&aggr=1&cr=1&loginUin=0&format=json&inCharset=GB2312&outCharset=utf-8&notice=0&platform=jqminiframe.json&needNewCode=0&p=1&catZhida=0&remoteplace=sizer.newclient.next_song&w=${name}
@@ -39,8 +38,8 @@ public class QqMusicUtil {
         歌词API：http://music.qq.com/miniportal/static/lyric/${id%100}/${id}.xml
         {id}=歌词ID
     */
-    private List<Music> findMusicByName(String name, int size) throws IOException{
-        String url = "http://s.music.qq.com/fcgi-bin/music_search_new_platform?t=0&n=" + size
+    public List<Music> findMusic(String name) throws IOException {
+        String url = "http://s.music.qq.com/fcgi-bin/music_search_new_platform?t=0&n=5"
                 + "&aggr=1&cr=1&loginUin=0&format=json&inCharset=GB2312&outCharset=utf-8&notice=0&platform=jqminiframe.json&needNewCode=0&p=1&catZhida=0&remoteplace=sizer.newclient.next_song&w=" + name;
         Request request = new Request.Builder()
                 .url(url)
@@ -75,40 +74,6 @@ public class QqMusicUtil {
             e.printStackTrace();
             throw new IOException("网页返回数据异常");
         }
-    }
-
-    public ArrayList<Music> getBillboardHot(int size, int offset) throws IOException {
-        if(offset == 0) getBillboardHotMatcher();
-        ArrayList<Music> hotMusic = new ArrayList<>();
-        for(int i = 0; i < size;) {
-            if (mMatcher.find()) {
-                String title = mMatcher.group(1);
-                String artist = mMatcher.group(2);
-                List<Music> musics = findMusicByName(title, 5);
-                if(musics != null) {
-                    for (Music music : musics) {
-                        if (artist.contains(music.getArtist())) {
-                            hotMusic.add(music);
-                            i++;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-        return hotMusic;
-    }
-
-    private void getBillboardHotMatcher() throws IOException {
-        OkHttpClient okHttpClient = new OkHttpClient();
-        Request request = new Request.Builder()
-                .url("http://www.billboard.com/charts/hot-100")
-                .build();
-        Response response = okHttpClient.newCall(request).execute();
-        String html = response.body().string();
-        String regex = "row__song\">([\\s\\S]+?)<[\\s\\S]+?Artist Name\">([\\s\\S]+?)<";
-        Pattern pattern = Pattern.compile(regex);
-        mMatcher = pattern.matcher(html);
     }
 
     public String getLyric(String name, String artist) throws IOException {

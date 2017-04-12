@@ -16,9 +16,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import gavin.lovemusic.App;
+import gavin.lovemusic.entity.MusicDao;
 import gavin.lovemusic.musicdetail.view.LyricRow;
 import gavin.lovemusic.entity.Music;
-import gavin.lovemusic.service.MusicDao;
 import gavin.lovemusic.util.LyricBuilder;
 import gavin.lovemusic.util.QqMusicUtil;
 

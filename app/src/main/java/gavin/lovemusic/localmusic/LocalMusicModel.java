@@ -13,7 +13,7 @@ import java.util.Queue;
 
 import gavin.lovemusic.App;
 import gavin.lovemusic.entity.Music;
-import gavin.lovemusic.service.MusicDao;
+import gavin.lovemusic.entity.MusicDao;
 import gavin.lovemusic.entity.MusicFactory;
 
 /**
