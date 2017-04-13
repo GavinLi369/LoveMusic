@@ -9,10 +9,13 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.widget.RemoteViews;
+
+import com.orhanobut.logger.Logger;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -27,7 +30,8 @@ import static android.os.Build.VERSION.SDK_INT;
  * Created by Gavin on 2015/11/3.
  * 歌曲播放服务
  */
-public class PlayService extends Service implements MusicPlayer.OnCompletionListener {
+public class PlayService extends Service implements MusicPlayer.OnCompletionListener,
+        MediaPlayer.OnBufferingUpdateListener, MusicPlayer.OnStartedListener{
     public static int musicState;
     public static final int PLAYING = 0;        //歌曲正在播放
     public static final int PAUSE = 1;         //歌曲暂停
@@ -44,12 +48,12 @@ public class PlayService extends Service implements MusicPlayer.OnCompletionList
 
     private IBinder mBinder = new PlayServiceBinder();
 
-    private List<OnMusicStatListener> mListeners = new CopyOnWriteArrayList<>();
+    private List<MusicStatusChangedListener> mListeners = new CopyOnWriteArrayList<>();
 
     @Override
     public void onCreate() {
         super.onCreate();
-        mMusicPlayer = new MusicPlayer(this);
+        mMusicPlayer = new MusicPlayer(this, this, this);
 
         IntentFilter intentFilterPlay = new IntentFilter(NOTIFICATION_PLAY);
         registerReceiver(broadcastReceiver, intentFilterPlay);
@@ -70,7 +74,7 @@ public class PlayService extends Service implements MusicPlayer.OnCompletionList
     public synchronized void initMusic(List<Music> musics) {
         mMusicPlayer.resetMusicPlayer(musics);
         musicState = PAUSE;
-        for(OnMusicStatListener listener : mListeners)
+        for(MusicStatusChangedListener listener : mListeners)
             listener.onPause();
     }
 
@@ -79,10 +83,16 @@ public class PlayService extends Service implements MusicPlayer.OnCompletionList
     }
 
     public synchronized void changeMusic(Music music) {
+        for(MusicStatusChangedListener listener : mListeners)
+            listener.onPreparing(music);
         mMusicPlayer.start(music);
+    }
+
+    @Override
+    public void onStarted() {
         musicState = PLAYING;
-        for(OnMusicStatListener listener : mListeners)
-            listener.onStarted(music);
+        for(MusicStatusChangedListener listener : mListeners)
+            listener.onStarted(mMusicPlayer.getCurrentMusic());
 
         showNotification();
     }
@@ -90,7 +100,7 @@ public class PlayService extends Service implements MusicPlayer.OnCompletionList
     public synchronized void pauseMusic() {
         mMusicPlayer.pause();
         musicState = PAUSE;
-        for(OnMusicStatListener listener : mListeners)
+        for(MusicStatusChangedListener listener : mListeners)
             listener.onPause();
 
         contentView.setImageViewResource
@@ -101,7 +111,7 @@ public class PlayService extends Service implements MusicPlayer.OnCompletionList
     public synchronized void resumeMusic() {
         mMusicPlayer.resume();
         musicState = PLAYING;
-        for(OnMusicStatListener listener : mListeners)
+        for(MusicStatusChangedListener listener : mListeners)
             listener.onResume();
 
         contentView.setImageViewResource(R.id.playButton, R.drawable.pause);
@@ -115,21 +125,28 @@ public class PlayService extends Service implements MusicPlayer.OnCompletionList
     public synchronized void previousMusic() {
         mMusicPlayer.previous();
         musicState = PLAYING;
-        for (OnMusicStatListener listener : mListeners)
-            listener.onStarted(mMusicPlayer.getCurrentMusic());
+        for (MusicStatusChangedListener listener : mListeners)
+            listener.onPreparing(mMusicPlayer.getCurrentMusic());
     }
 
     public synchronized void nextMusic() {
         mMusicPlayer.next();
         musicState = PLAYING;
-        for (OnMusicStatListener listener : mListeners)
-            listener.onStarted(mMusicPlayer.getCurrentMusic());
+        for (MusicStatusChangedListener listener : mListeners)
+            listener.onPreparing(mMusicPlayer.getCurrentMusic());
+    }
+
+    @Override
+    public void onBufferingUpdate(MediaPlayer mediaPlayer, int i) {
+        //缓存进度为百分比
+        for(MusicStatusChangedListener listener : mListeners)
+            listener.onBufferingUpdate((int) (i / 100.0 * mMusicPlayer.getCurrentMusic().getDuration()));
     }
 
     @Override
     public void onCompletion() {
-        for (OnMusicStatListener listener : mListeners)
-            listener.onStarted(mMusicPlayer.getCurrentMusic());
+        for (MusicStatusChangedListener listener : mListeners)
+            listener.onPreparing(mMusicPlayer.getCurrentMusic());
     }
 
     /**
@@ -214,12 +231,24 @@ public class PlayService extends Service implements MusicPlayer.OnCompletionList
         return mBinder;
     }
 
-    public interface OnMusicStatListener {
+    public interface MusicStatusChangedListener {
+        /**
+         * 网络歌曲正在准备
+         * @param music 网络歌曲
+         */
+        void onPreparing(Music music);
+
         /**
          * 歌曲开始播放
          * @param music 当前歌曲
          */
         void onStarted(Music music);
+
+        /**
+         * 缓存加载
+         * @param progress 缓存加载进度
+         */
+        void onBufferingUpdate(int progress);
 
         /**
          * 歌曲暂停
@@ -232,14 +261,14 @@ public class PlayService extends Service implements MusicPlayer.OnCompletionList
         void onResume();
     }
 
-    public void registerListener(OnMusicStatListener listener) {
+    public void registerListener(MusicStatusChangedListener listener) {
         if(!mListeners.contains(listener))
             mListeners.add(listener);
         else
             throw new RuntimeException("This listener has been registered");
     }
 
-    public void unregisterListener(OnMusicStatListener listener) {
+    public void unregisterListener(MusicStatusChangedListener listener) {
         if(mListeners.contains(listener))
             mListeners.remove(listener);
         else

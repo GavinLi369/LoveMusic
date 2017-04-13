@@ -1,32 +1,23 @@
 package gavin.lovemusic.mainview;
 
-import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.support.v7.graphics.Palette;
 
-import java.io.IOException;
-import java.util.NoSuchElementException;
+import com.bumptech.glide.Glide;
 
-import gavin.lovemusic.service.ActivityCommand;
+import java.util.concurrent.ExecutionException;
+
 import gavin.lovemusic.entity.Music;
 import gavin.lovemusic.service.PlayService;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 import rx.Observable;
-import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
-
-import static gavin.lovemusic.service.ActivityCommand.PAUSE_MUSIC;
-import static gavin.lovemusic.service.ActivityCommand.RESUME_MUSIC;
 
 /**
  * Created by GavinLi on 16-9-10.
  * MainViewPresenter
  */
-public class MainViewPresenter implements MainViewContract.Presenter, PlayService.OnMusicStatListener {
+public class MainViewPresenter implements MainViewContract.Presenter, PlayService.MusicStatusChangedListener {
     private MainViewContract.View mView;
     private PlayService mPlayService;
 
@@ -38,52 +29,44 @@ public class MainViewPresenter implements MainViewContract.Presenter, PlayServic
     }
 
     @Override
-    public void onStarted(Music music) {
+    public void onPreparing(Music music) {
         mView.showMusicPlayView(music);
         mView.changeMusicInfoes(music);
         mView.changePause2Playing();
-        Observable<Bitmap> observable = Observable.create((Observable.OnSubscribe<Bitmap>) subscriber -> {
-            if (music.getImage().startsWith("http")) {
-                OkHttpClient okHttpClient = new OkHttpClient();
-                Request request = new Request.Builder()
-                        .url(music.getImage())
-                        .build();
-                try {
-                    Response response = okHttpClient.newCall(request).execute();
-                    subscriber.onNext(BitmapFactory.decodeStream(response.body().byteStream()));
-                } catch (IOException e) {
-                    subscriber.onError(e);
-                }
-            } else {
-                subscriber.onNext(BitmapFactory.decodeFile(music.getImage()));
-            }
-            subscriber.onCompleted();
-        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
-        observable.subscribe(new Subscriber<Bitmap>() {
-            @Override
-            public void onCompleted() {
-            }
+        Observable
+                .create((Observable.OnSubscribe<Palette.Swatch>) subscriber -> {
+                    try {
+                        Bitmap bitmap = Glide.with(mPlayService)
+                                .load(music.getImage())
+                                .asBitmap()
+                                .into(-1, -1)
+                                .get();
+                        Palette.from(bitmap)
+                                .maximumColorCount(24)
+                                .generate(palette -> {
+                                    Palette.Swatch swatch = palette.getMutedSwatch();
+                                    subscriber.onNext(swatch);
+                                });
+                    } catch (InterruptedException | ExecutionException e) {
+                        e.printStackTrace();
+                        subscriber.onError(e);
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(swatch -> {
+                    if(swatch != null) {
+                        mView.changeDragViewColor(swatch);
+                    } else {
+                        mView.changeDragViewColorDefault();
+                    }
+                }, throwable -> {
+                    mView.changeDragViewColorDefault();
+                });
+    }
 
-            @Override
-            public void onError(Throwable e) {
-                e.printStackTrace();
-                mView.changeDragViewColorDefault();
-            }
-
-            @Override
-            public void onNext(Bitmap bitmap) {
-                Palette.from(bitmap)
-                        .maximumColorCount(24)
-                        .generate(palette -> {
-                            Palette.Swatch swatch = palette.getMutedSwatch();
-                            if(swatch != null) {
-                                mView.changeDragViewColor(swatch);
-                            } else {
-                                mView.changeDragViewColorDefault();
-                            }
-                        });
-            }
-        });
+    @Override
+    public void onStarted(Music music) {
     }
 
     @Override
@@ -97,22 +80,24 @@ public class MainViewPresenter implements MainViewContract.Presenter, PlayServic
     }
 
     @Override
-    public void onPlayButtonClicked(Context context) {
+    public void onBufferingUpdate(int progress) {
+    }
+
+    @Override
+    public void onPlayButtonClicked() {
         switch (PlayService.musicState) {
-            case PlayService.PLAYING:
-                changeMusicStatus(context, PAUSE_MUSIC);
-                break;
-            case PlayService.PAUSE:
-                changeMusicStatus(context, RESUME_MUSIC);
+            case PlayService.PLAYING: pauseMusic(); break;
+            case PlayService.PAUSE: resumeMusic(); break;
         }
     }
 
     @Override
-    public void changeMusicStatus(Context context, ActivityCommand command) {
-        switch (command) {
-            case PAUSE_MUSIC: mPlayService.pauseMusic(); break;
-            case RESUME_MUSIC: mPlayService.resumeMusic(); break;
-            default: throw new NoSuchElementException("Not found this command");
-        }
+    public void pauseMusic() {
+        mPlayService.pauseMusic();
+    }
+
+    @Override
+    public void resumeMusic() {
+        mPlayService.resumeMusic();
     }
 }

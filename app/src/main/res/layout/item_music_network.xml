@@ -12,7 +12,7 @@
         android:layout_width="160dp"
         android:layout_height="90dp"
         android:scaleType="centerCrop"
-        android:src="@drawable/defalut_album"/>
+        tools:src="@drawable/defalut_album"/>
 
     <LinearLayout
         android:layout_width="match_parent"

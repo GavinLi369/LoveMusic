@@ -2,6 +2,7 @@ package gavin.lovemusic.entity;
 
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Generated;
+import org.greenrobot.greendao.annotation.Id;
 import org.greenrobot.greendao.annotation.NotNull;
 
 /**
@@ -10,6 +11,7 @@ import org.greenrobot.greendao.annotation.NotNull;
  */
 @Entity
 public class Music {
+    @Id
     private long id;
     @NotNull
     private String title;   //歌曲名称

@@ -1,7 +1,5 @@
 package gavin.lovemusic.util;
 
-import com.orhanobut.logger.Logger;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -43,6 +41,7 @@ public class MusicPleerUtil {
                 .build();
         Response response = new OkHttpClient().newCall(request).execute();
         String resultJson = response.body().string();
+        response.body().close();
 
         if(resultJson.isEmpty()) return musics;
 
@@ -55,9 +54,9 @@ public class MusicPleerUtil {
                 music.setArtist(result.getString("artist"));
                 music.setAlbum(result.getString("album"));
                 music.setImage(result.getString("albumart"));
-                music.setDuration(Long.parseLong(result.getString("time")));
                 music.setPath(getMusicLink(result.getString("url")));
-                music.setId(Math.abs(result.getString("url").hashCode()) % 100);
+                //根据歌曲名获取歌曲ID
+                music.setId(music.getTitle().hashCode() & 0xFF);
                 musics.add(music);
             }
         } catch (JSONException e) {
@@ -79,6 +78,8 @@ public class MusicPleerUtil {
         } catch (JSONException e) {
             e.printStackTrace();
             throw new IOException("网络数据出现异常");
+        } finally {
+            response.body().close();
         }
     }
 

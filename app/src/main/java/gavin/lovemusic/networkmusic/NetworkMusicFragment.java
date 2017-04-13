@@ -2,7 +2,6 @@ package gavin.lovemusic.networkmusic;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.GridLayoutManager;
@@ -10,6 +9,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import java.util.List;
 
@@ -120,10 +120,7 @@ public class NetworkMusicFragment extends Fragment implements NetworkMusicContra
 
     @Override
     public void showNetworkConnetionError() {
-        if(getView() != null) {
-            Snackbar.make(getView(), "网络连接失败",
-                    Snackbar.LENGTH_SHORT).show();
-        }
+        Toast.makeText(getContext(), "网络连接失败", Toast.LENGTH_SHORT).show();
     }
 
     @Override

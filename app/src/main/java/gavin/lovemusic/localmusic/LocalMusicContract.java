@@ -16,9 +16,9 @@ import gavin.lovemusic.entity.Music;
  */
 public class LocalMusicContract {
     interface Model {
-        ArrayList<Music> getMusicList();
+        List<Music> getMusicList();
 
-        void refreshMusicList() throws IOException;
+        void refreshMusicList();
 
         void cancalScanning();
 

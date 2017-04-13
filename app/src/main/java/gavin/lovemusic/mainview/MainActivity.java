@@ -28,7 +28,6 @@ import gavin.lovemusic.musicdetail.DetailMusicFragment;
 import gavin.lovemusic.musicdetail.DetailMusicModel;
 import gavin.lovemusic.musicdetail.DetailMusicPresenter;
 import gavin.lovemusic.entity.Music;
-import gavin.lovemusic.service.ActivityCommand;
 import gavin.lovemusic.service.PlayService;
 import gavinli.slidinglayout.OnViewStatusChangedListener;
 import gavinli.slidinglayout.SlidingLayout;
@@ -54,7 +53,7 @@ public class MainActivity extends AppCompatActivity implements MainViewContract.
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.acitivity_main);
+        setContentView(R.layout.activity_main);
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
 
         Intent intent = new Intent(this, PlayService.class);
@@ -87,20 +86,20 @@ public class MainActivity extends AppCompatActivity implements MainViewContract.
 
             new MainViewPresenter(MainActivity.this, mPlayService);
             mPlayService.registerListener(
-                    (PlayService.OnMusicStatListener) mPresenter);
+                    (PlayService.MusicStatusChangedListener) mPresenter);
         }
 
         @Override
         public void onServiceDisconnected(ComponentName componentName) {
             mPlayService.unregisterListener(
-                    (PlayService.OnMusicStatListener) mPresenter);
+                    (PlayService.MusicStatusChangedListener) mPresenter);
         }
     };
 
     @Override
     public void onClick(View v) {
         if(v.getId() == mPlayButton.getId())
-            mPresenter.onPlayButtonClicked(this);
+            mPresenter.onPlayButtonClicked();
     }
 
     @Override
@@ -190,7 +189,7 @@ public class MainActivity extends AppCompatActivity implements MainViewContract.
 
     @Override
     public void onViewRemoved() {
-        mPresenter.changeMusicStatus(MainActivity.this, ActivityCommand.PAUSE_MUSIC);
+        mPresenter.pauseMusic();
         mSlidingLayout.removeView(findViewById(R.id.fragment_music_detail));
         mMainLayout.removeView(mSlidingLayout);
         mSlidingLayout = null;
@@ -207,13 +206,13 @@ public class MainActivity extends AppCompatActivity implements MainViewContract.
             switch (state) {
                 case TelephonyManager.CALL_STATE_IDLE:
                     if (musicWaitPlay) {
-                        mPresenter.changeMusicStatus(MainActivity.this, ActivityCommand.RESUME_MUSIC);
+                        mPresenter.resumeMusic();
                         musicWaitPlay = false;
                     }
                     break;
                 case TelephonyManager.CALL_STATE_RINGING:
                     if (PlayService.musicState == PlayService.PLAYING) {
-                        mPresenter.changeMusicStatus(MainActivity.this, ActivityCommand.PAUSE_MUSIC);
+                        mPresenter.pauseMusic();
                         musicWaitPlay = true;
                     }
                     break;

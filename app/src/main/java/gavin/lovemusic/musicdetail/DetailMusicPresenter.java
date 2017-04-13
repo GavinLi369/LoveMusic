@@ -2,23 +2,24 @@ package gavin.lovemusic.musicdetail;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.graphics.Palette;
+
+import com.bumptech.glide.Glide;
 
 import org.json.JSONException;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.lang.ref.WeakReference;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import gavin.lovemusic.musicdetail.view.LyricRow;
 import gavin.lovemusic.entity.Music;
-import gavin.lovemusic.service.ActivityCommand;
 import gavin.lovemusic.service.PlayService;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 import rx.Observable;
-import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
@@ -27,63 +28,120 @@ import rx.schedulers.Schedulers;
  * DetailMusicPresenter
  */
 public class DetailMusicPresenter implements DetailMusicContract.Presenter {
-    private DetailMusicContract.View mDetailMusicView;
-    private DetailMusicContract.Model mDetailMusicModel;
+    private DetailMusicContract.View mView;
+    private DetailMusicContract.Model mModel;
     private PlayService mPlayService;
+    private final UpdateSeekBarHandler mHandler;
 
     private Music mCurrentMusic;
+    private int mCurrentTime = 0;
+    private boolean mIsPlaying = false;
 
     public DetailMusicPresenter(DetailMusicContract.View view,
                                 DetailMusicContract.Model model,
                                 Music currentMusic,
                                 PlayService playService) {
-        mDetailMusicView = view;
-        mDetailMusicModel = model;
+        mView = view;
+        mModel = model;
         mCurrentMusic = currentMusic;
         mPlayService = playService;
         mPlayService.registerListener(mListener);
-        mDetailMusicView.setPresenter(this);
+        mHandler = new UpdateSeekBarHandler(mView);
+        mView.setPresenter(this);
     }
 
     @Override
     public void initMusicDetail() {
-        mDetailMusicView.changePauseToPlay();
+        mView.changePauseToPlay();
+        //每隔0.5秒更新一次视图
+        new Thread(() -> {
+            while(true) {
+                if (mIsPlaying) {
+                    Message message = new Message();
+                    Bundle bundle = new Bundle();
+                    bundle.putInt("duration", (int) mCurrentMusic.getDuration());
+                    bundle.putInt("progress", mCurrentTime);
+                    message.setData(bundle);
+                    mHandler.sendMessage(message);
+                    mCurrentTime += 500;
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                        break;
+                    }
+                }
+            }
+        }).start();
+
         if(mCurrentMusic != null) {
+            mView.modifySeekBar((int) mCurrentMusic.getDuration(), 0);
             changeViewColor(mCurrentMusic.getImage());
-            mDetailMusicView.updateBgImage(mCurrentMusic.getImage());
+            mView.updateBgImage(mCurrentMusic.getImage());
             initLyricView();
         }
     }
 
-    private PlayService.OnMusicStatListener mListener = new PlayService.OnMusicStatListener() {
+    private PlayService.MusicStatusChangedListener mListener = new PlayService.MusicStatusChangedListener() {
+        @Override
+        public void onPreparing(Music music) {
+            mIsPlaying = false;
+            mCurrentMusic = music;
+            mView.modifySeekBar((int) music.getDuration(), 0);
+            mView.modifySeekBarBuffer(0);
+            changeViewColor(music.getImage());
+            mView.updateBgImage(music.getImage());
+            mView.changePauseToPlay();
+            initLyricView();
+        }
+
         @Override
         public void onStarted(Music music) {
-            mCurrentMusic = music;
-            changeViewColor(music.getImage());
-            mDetailMusicView.updateBgImage(music.getImage());
-            mDetailMusicView.modifySeekBar((int) music.getDuration(), 0);
-            mDetailMusicView.changePauseToPlay();
-            initLyricView();
+            mCurrentTime = 0;
+            mIsPlaying = true;
+        }
+
+        @Override
+        public void onBufferingUpdate(int progress) {
+            mView.modifySeekBarBuffer(progress);
         }
 
         @Override
         public void onPause() {
-            mDetailMusicView.changePlayToPause();
+            mIsPlaying = false;
+            mView.changePlayToPause();
         }
 
         @Override
         public void onResume() {
-            mDetailMusicView.changePauseToPlay();
+            mIsPlaying = true;
+            mView.changePauseToPlay();
         }
     };
 
+    private static class UpdateSeekBarHandler extends Handler {
+        private final WeakReference<DetailMusicContract.View> mViewWeakReference;
+
+        public UpdateSeekBarHandler(DetailMusicContract.View view) {
+            mViewWeakReference = new WeakReference<>(view);
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            mViewWeakReference.get().modifySeekBar(
+                    msg.getData().getInt("duration"),
+                    msg.getData().getInt("progress"));
+        }
+    }
+
     @Override
     public void setMusicProgress(int progress, Context context) {
+        mCurrentTime = progress;
         mPlayService.setProgress(progress);
     }
 
     @Override
-    public void onPlayButtonClick(Context context) {
+    public void onPlayButtonClick() {
         switch (PlayService.musicState) {
             case PlayService.PLAYING:
                 //暂停正在播放的歌曲
@@ -97,97 +155,74 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
     }
 
     @Override
-    public void changeMusic(Context context, ActivityCommand command) {
-        switch (command) {
-            case PREVIOUS_MUSIC: mPlayService.previousMusic(); break;
-            case NEXT_MUSIC: mPlayService.nextMusic(); break;
-        }
+    public void previousMusic(Context context) {
+        mPlayService.previousMusic();
     }
 
     @Override
-    public long getMusicDuration() {
-        if(mCurrentMusic != null)
-            return mCurrentMusic.getDuration();
-        else
-            return 0;
+    public void nextMusic(Context context) {
+        mPlayService.nextMusic();
     }
 
     private void changeViewColor(String bgImageUrl) {
-        Observable<Bitmap> observable = Observable.create((Observable.OnSubscribe<Bitmap>) subscriber -> {
-            if (bgImageUrl.startsWith("http")) {
-                OkHttpClient okHttpClient = new OkHttpClient();
-                Request request = new Request.Builder()
-                        .url(bgImageUrl)
-                        .build();
-                try {
-                    Response response = okHttpClient.newCall(request).execute();
-                    subscriber.onNext(BitmapFactory.decodeStream(response.body().byteStream()));
-                } catch (IOException e) {
-                    subscriber.onError(e);
-                }
-            } else {
-                subscriber.onNext(BitmapFactory.decodeFile(bgImageUrl));
-            }
-            subscriber.onCompleted();
-        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
-        observable.subscribe(new Subscriber<Bitmap>() {
-            @Override
-            public void onCompleted() {
-            }
-
-            @Override
-            public void onError(Throwable e) {
-                e.printStackTrace();
-                mDetailMusicView.changeViewColorDefault();
-            }
-
-            @Override
-            public void onNext(Bitmap bitmap) {
-                Palette.from(bitmap)
-                        .maximumColorCount(24)
-                        .generate(palette -> {
-                            Palette.Swatch swatch = palette.getMutedSwatch();
-                            if(swatch != null) {
-                                mDetailMusicView.changeViewColor(swatch);
-                            } else {
-                                mDetailMusicView.changeViewColorDefault();
-                            }
-                        });
-            }
-        });
+        Observable
+                .create((Observable.OnSubscribe<Palette.Swatch>) subscriber -> {
+                    try {
+                        Bitmap bitmap = Glide.with(mPlayService)
+                                .load(bgImageUrl)
+                                .asBitmap()
+                                .into(-1, -1)
+                                .get();
+                        Palette.from(bitmap)
+                                .maximumColorCount(24)
+                                .generate(palette -> {
+                                    Palette.Swatch swatch = palette.getMutedSwatch();
+                                    subscriber.onNext(swatch);
+                                });
+                    } catch (InterruptedException | ExecutionException e) {
+                        e.printStackTrace();
+                        subscriber.onError(e);
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(swatch -> {
+                    if(swatch != null) {
+                        mView.changeViewColor(swatch);
+                    } else {
+                        mView.changeViewColorDefault();
+                    }
+                }, throwable -> {
+                    mView.changeViewColorDefault();
+                });
     }
 
     private void initLyricView() {
         if(mCurrentMusic != null) {
-            mDetailMusicView.showFindingLyric();
-            Observable<ArrayList<LyricRow>> observable = Observable.create((Observable.OnSubscribe<ArrayList<LyricRow>>) subscriber -> {
-                try {
-                    ArrayList<LyricRow> lyricRows = mDetailMusicModel.getMusicLyric(mCurrentMusic);
-                    if(lyricRows.isEmpty())
-                        subscriber.onError(new Exception("This music doesn't have the lyric"));
-                    else
-                        subscriber.onNext(lyricRows);
-                    subscriber.onCompleted();
-                } catch (IOException | JSONException e) {
-                    subscriber.onError(e);
-                }
-            }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
-            observable.subscribe(new Subscriber<ArrayList<LyricRow>>() {
-                @Override
-                public void onCompleted() {
-                }
-
-                @Override
-                public void onError(Throwable e) {
-                    e.printStackTrace();
-                    mDetailMusicView.showNotFoundLyric();
-                }
-
-                @Override
-                public void onNext(ArrayList<LyricRow> lyricRows) {
-                    mDetailMusicView.changeLyricView(lyricRows);
-                }
-            });
+            mView.showFindingLyric();
+            Observable
+                    .create((Observable.OnSubscribe<List<LyricRow>>) subscriber -> {
+                        try {
+                            List<LyricRow> lyricRows = mModel.getMusicLyric(mCurrentMusic);
+                            if(lyricRows.isEmpty()) {
+                                throw new IOException("This music doesn't have the lyric");
+                            } else {
+                                subscriber.onNext(lyricRows);
+                            }
+                        } catch (IOException | JSONException e) {
+                            e.printStackTrace();
+                            subscriber.onError(e);
+                        }
+                    })
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(lyricRows -> {
+                        mView.changeLyricView(lyricRows);
+                    }, throwable -> {
+                        if(throwable instanceof IOException) {
+                            mView.showNotFoundLyric();
+                        }
+                    });
         }
     }
 

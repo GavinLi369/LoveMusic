@@ -9,7 +9,7 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import gavin.lovemusic.constant.R;
 
@@ -26,7 +26,7 @@ public class LyricView extends View {
 
     private int index;
 
-    private ArrayList<LyricRow> lyricList;
+    private List<LyricRow> mLyricRows;
 
     private static final int TEXT_SIZE = 25;   //歌词文字大小值
     private static final int INTERVAL = 40;    //歌词每行的间隔
@@ -71,8 +71,8 @@ public class LyricView extends View {
     /**
      * 初始化歌词列表
      */
-    public void setLyricList(ArrayList<LyricRow> lyricList) {
-        this.lyricList = lyricList;
+    public void setLyricRows(List<LyricRow> lyricRows) {
+        mLyricRows = lyricRows;
         mFindingLyric = false;
         mNotFoundLyric = false;
         invalidate();
@@ -91,16 +91,13 @@ public class LyricView extends View {
 
     public void setTime(long time) {
         if(!seekLyric) {
-            int index = getLyricIndex(lyricList, time);
+            int index = getLyricIndex(mLyricRows, time);
             if(this.index != index) {
                 ValueAnimator animator = ValueAnimator.ofFloat(TEXT_SIZE + INTERVAL, 0.0f);
                 animator.setDuration(600);
-                animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                    @Override
-                    public void onAnimationUpdate(ValueAnimator valueAnimator) {
-                        mAnimationOffset = (float) valueAnimator.getAnimatedValue();
-                        invalidate();
-                    }
+                animator.addUpdateListener(valueAnimator -> {
+                    mAnimationOffset = (float) valueAnimator.getAnimatedValue();
+                    invalidate();
                 });
                 animator.start();
                 this.index = index;
@@ -130,7 +127,7 @@ public class LyricView extends View {
         }
 
         float centerY = height / 2f + mAnimationOffset;
-        String lyric = lyricList.get(index).getLyricStr();
+        String lyric = mLyricRows.get(index).getLyricStr();
         canvas.drawText(lyric, width / 2, centerY, paintHL);
 
         for (int i = index - 1; i >= 0; i--) {
@@ -138,16 +135,16 @@ public class LyricView extends View {
             if (tempY < 0) {
                 break;
             }
-            String temp = lyricList.get(i).getLyricStr();
+            String temp = mLyricRows.get(i).getLyricStr();
             canvas.drawText(temp, width / 2, tempY, paint);
         }
 
-        for (int i = index + 1; i < lyricList.size(); i++) {
+        for (int i = index + 1; i < mLyricRows.size(); i++) {
             float tempY = centerY + (TEXT_SIZE + INTERVAL) * (i - index);
             if (tempY > height) {
                 break;
             }
-            String temp = lyricList.get(i).getLyricStr();
+            String temp = mLyricRows.get(i).getLyricStr();
             canvas.drawText(temp, width / 2, tempY, paint);
         }
     }
@@ -158,7 +155,7 @@ public class LyricView extends View {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        if(lyricList == null) {
+        if(mLyricRows == null) {
             return super.onTouchEvent(event);
         }
         switch (event.getAction()) {
@@ -173,7 +170,7 @@ public class LyricView extends View {
                     index -= rowOffset;
                     //防止index越界
                     index = Math.max(0, index);
-                    index = Math.min(index, lyricList.size() - 1);
+                    index = Math.min(index, mLyricRows.size() - 1);
                     mLastTouchPostion = event.getY();
                     mAnimationOffset = 0;
                     seekLyric = true;
@@ -184,7 +181,7 @@ public class LyricView extends View {
                 seekLyric = false;
             case MotionEvent.ACTION_UP:
                 if(seekLyric) {
-                    lyricViewSeekListener.onLyricViewSeek(lyricList.get(index));
+                    lyricViewSeekListener.onLyricViewSeek(mLyricRows.get(index));
                     seekLyric = false;
                 }
                 mAnimationOffset = 0;
@@ -201,7 +198,7 @@ public class LyricView extends View {
     }
 
     //根据当前播放时间获取歌词索引
-    private int getLyricIndex(ArrayList<LyricRow> lyricList, long currentTime) {
+    private int getLyricIndex(List<LyricRow> lyricList, long currentTime) {
         int lyricIndex = 0;
         if (lyricList != null) {
             int index = 0;

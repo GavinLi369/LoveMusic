@@ -32,17 +32,16 @@ public class LocalMusicModel implements LocalMusicContract.Model {
     }
 
     @Override
-    public ArrayList<Music> getMusicList() {
+    public List<Music> getMusicList() {
         return getMusicByDataBase();
     }
 
     @Override
-    public void refreshMusicList() throws IOException {
+    public void refreshMusicList() {
         File filePath = new File(App.APP_DIR + "/Album");
         File[] files = filePath.listFiles();
         for(File file : files) {
-            if(!file.delete())
-                throw new IOException("can't clean album bitmap");
+            if(!file.delete()) throw new RuntimeException("file can not been deleted");
         }
 
         List<Music> musicList = getMusicFromSdcard();

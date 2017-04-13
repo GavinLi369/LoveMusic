@@ -1,12 +1,10 @@
 package gavin.lovemusic.mainview;
 
-import android.content.Context;
 import android.support.v7.graphics.Palette;
 
 import gavin.lovemusic.BasePresenter;
 import gavin.lovemusic.BaseView;
 import gavin.lovemusic.entity.Music;
-import gavin.lovemusic.service.ActivityCommand;
 
 /**
  * Created by GavinLi
@@ -28,8 +26,10 @@ public class MainViewContract {
     }
 
     interface Presenter extends BasePresenter {
-        void onPlayButtonClicked(Context context);
+        void onPlayButtonClicked();
 
-        void changeMusicStatus(Context context, ActivityCommand command);
+        void pauseMusic();
+
+        void resumeMusic();
     }
 }

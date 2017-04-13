@@ -1,8 +1,6 @@
 package gavin.lovemusic.musicdetail;
 
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.graphics.Palette;
@@ -17,14 +15,12 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 
-import java.lang.ref.WeakReference;
-import java.util.ArrayList;
+import java.util.List;
 
 import gavin.lovemusic.constant.R;
 import gavin.lovemusic.musicdetail.view.LyricRow;
 import gavin.lovemusic.musicdetail.view.LyricView;
 import gavin.lovemusic.musicdetail.view.OnLyricViewSeekListener;
-import gavin.lovemusic.service.ActivityCommand;
 import jp.wasabeef.glide.transformations.BlurTransformation;
 
 /**
@@ -42,10 +38,6 @@ public class DetailMusicFragment extends Fragment implements DetailMusicContract
     private SeekBar mLyricSeekBar;
 
     private DetailMusicContract.Presenter mPresenter;
-
-    private UpdateViewHandler handler = new UpdateViewHandler(this);
-    private boolean mPlaying = true;
-    private int mCurrentTime = 0;
 
     @Nullable
     @Override
@@ -67,20 +59,6 @@ public class DetailMusicFragment extends Fragment implements DetailMusicContract
         mLyricSeekBar.setOnSeekBarChangeListener(new MusicSeekBarListener());
         mLyricView.setOnLyricViewSeekListener(this);
         mPresenter.initMusicDetail();
-
-        //每隔0.5秒更新一次视图
-        new Thread(() -> {
-            while(true) {
-                if(mPlaying)
-                    handler.sendEmptyMessage(0);
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                    break;
-                }
-            }
-        }).start();
         return view;
     }
 
@@ -88,24 +66,6 @@ public class DetailMusicFragment extends Fragment implements DetailMusicContract
     public void onDestroyView() {
         mPresenter.release();
         super.onDestroyView();
-    }
-
-    static class UpdateViewHandler extends Handler {
-        private final WeakReference<DetailMusicFragment> mFragmentWeakReference;
-
-        public UpdateViewHandler(DetailMusicFragment fragment) {
-            this.mFragmentWeakReference = new WeakReference<>(fragment);
-        }
-
-        @Override
-        public void handleMessage(Message msg) {
-            DetailMusicFragment detailMusicFragment = mFragmentWeakReference.get();
-            detailMusicFragment.mCurrentTime += 500;
-            detailMusicFragment.modifySeekBar(
-                    (int) detailMusicFragment.mPresenter.getMusicDuration(),
-                    detailMusicFragment.mCurrentTime);
-            detailMusicFragment.mLyricView.setTime(detailMusicFragment.mCurrentTime);
-        }
     }
 
     @Override
@@ -119,22 +79,26 @@ public class DetailMusicFragment extends Fragment implements DetailMusicContract
     }
 
     @Override
-    public void changeLyricView(ArrayList<LyricRow> lyricList) {
-        mLyricView.setLyricList(lyricList);
+    public void changeLyricView(List<LyricRow> lyricList) {
+        mLyricView.setLyricRows(lyricList);
     }
 
     @Override
     public void modifySeekBar(int duration, int progress) {
-        mCurrentTime = progress;
         mLyricSeekBar.setMax(duration);
         mLyricSeekBar.setProgress(progress);
         mCurrentTimeTv.setText(musicTimeFormat(progress));
         mDuration.setText(musicTimeFormat(duration));
+        mLyricView.setTime(progress);
+    }
+
+    @Override
+    public void modifySeekBarBuffer(int progress) {
+        mLyricSeekBar.setSecondaryProgress(progress);
     }
 
     @Override
     public void onLyricViewSeek(LyricRow lyricRow) {
-        mCurrentTime = (int) lyricRow.getLyricTime();
         mPresenter.setMusicProgress((int) lyricRow.getLyricTime(), getContext());
     }
 
@@ -152,7 +116,6 @@ public class DetailMusicFragment extends Fragment implements DetailMusicContract
 
         @Override
         public void onStopTrackingTouch(SeekBar seekBar) {
-            mCurrentTime = seekBar.getProgress();
             mPresenter.setMusicProgress(seekBar.getProgress(), getActivity());
         }
     }
@@ -161,26 +124,24 @@ public class DetailMusicFragment extends Fragment implements DetailMusicContract
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.previousButton:
-                mPresenter.changeMusic(getActivity(), ActivityCommand.PREVIOUS_MUSIC);
+                mPresenter.previousMusic(getContext());
                 break;
             case R.id.playButton:
-                mPresenter.onPlayButtonClick(getActivity());
+                mPresenter.onPlayButtonClick();
                 break;
             case R.id.nextButton:
-                mPresenter.changeMusic(getActivity(), ActivityCommand.NEXT_MUSIC);
+                mPresenter.nextMusic(getContext());
                 break;
         }
     }
 
     @Override
     public void changePlayToPause() {
-        mPlaying = false;
         mPlayButton.setBackgroundResource(R.drawable.play_prey);
     }
 
     @Override
     public void changePauseToPlay() {
-        mPlaying = true;
         mPlayButton.setBackgroundResource(R.drawable.pause);
     }
 
@@ -199,7 +160,6 @@ public class DetailMusicFragment extends Fragment implements DetailMusicContract
 
     @Override
     public void changeViewColorDefault() {
-        //noinspection deprecation
         mPlayCoumn.setBackgroundColor(getResources().getColor(R.color.playColumnDefault));
     }
 

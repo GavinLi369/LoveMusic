@@ -7,12 +7,12 @@ import org.json.JSONException;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import gavin.lovemusic.BasePresenter;
 import gavin.lovemusic.BaseView;
 import gavin.lovemusic.musicdetail.view.LyricRow;
 import gavin.lovemusic.entity.Music;
-import gavin.lovemusic.service.ActivityCommand;
 
 /**
  * Created by GavinLi
@@ -34,13 +34,15 @@ public class DetailMusicContract {
 
         void showNotFoundLyric();
 
-        void changeLyricView(ArrayList<LyricRow> lyricList);
+        void changeLyricView(List<LyricRow> lyricList);
 
         void changePlayToPause();
 
         void changePauseToPlay();
 
         void modifySeekBar(int duration, int progress);
+
+        void modifySeekBarBuffer(int progress);
     }
 
     interface Presenter extends BasePresenter {
@@ -48,11 +50,11 @@ public class DetailMusicContract {
 
         void setMusicProgress(int progress, Context context);
 
-        void onPlayButtonClick(Context context);
+        void onPlayButtonClick();
 
-        void changeMusic(Context context, ActivityCommand command);
+        void previousMusic(Context context);
 
-        long getMusicDuration();
+        void nextMusic(Context context);
 
         void release();
     }

@@ -30,6 +30,7 @@ public class MusicFactory {
             if (!mp3File.hasId3v2Tag()) return null;
             Music music = new Music();
             ID3v2 id3v2 = mp3File.getId3v2Tag();
+            music.setId(System.currentTimeMillis());
             music.setPath(path);
             music.setTitle(id3v2.getTitle());
             music.setArtist(id3v2.getArtist());

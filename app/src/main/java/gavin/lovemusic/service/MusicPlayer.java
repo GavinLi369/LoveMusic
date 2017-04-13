@@ -1,5 +1,6 @@
 package gavin.lovemusic.service;
 
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 
 import java.io.IOException;
@@ -12,28 +13,41 @@ import gavin.lovemusic.entity.Music;
  * Created by GavinLi
  * on 16-9-25.
  */
-public class MusicPlayer implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener {
+public class MusicPlayer implements MediaPlayer.OnPreparedListener,
+        MediaPlayer.OnCompletionListener{
     private List<Music> mMusicPlayList = new ArrayList<>();
     private int mIndex;
 
-    private OnCompletionListener mOnCompletionListener;
+    private OnCompletionListener mCompletionListener;
+    private OnStartedListener mStartedListener;
+    private MediaPlayer.OnBufferingUpdateListener mUpdateListener;
 
     private MediaPlayer mMediaPlayer = new MediaPlayer();
 
-    MusicPlayer(OnCompletionListener onCompletionListener) {
-        this.mOnCompletionListener = onCompletionListener;
+    MusicPlayer(OnCompletionListener completionListener,
+                MediaPlayer.OnBufferingUpdateListener updateListener,
+                OnStartedListener startedListener) {
+        mCompletionListener = completionListener;
+        mStartedListener = startedListener;
+        mUpdateListener = updateListener;
     }
 
     public void start(int index) {
         mIndex = index;
         mMediaPlayer.reset();
+        Music music = mMusicPlayList.get(index);
+        mMediaPlayer.setOnPreparedListener(this);
+        mMediaPlayer.setOnCompletionListener(this);
+        //网络歌曲异步加载
         try {
-            Music music = mMusicPlayList.get(index);
             mMediaPlayer.setDataSource(music.getPath());
-            mMediaPlayer.setOnPreparedListener(this);
-            mMediaPlayer.setOnCompletionListener(this);
-            mMediaPlayer.prepare();
-            music.setDuration(mMediaPlayer.getDuration());
+            if(music.getPath().startsWith("http")) {
+                mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                mMediaPlayer.setOnBufferingUpdateListener(mUpdateListener);
+                mMediaPlayer.prepareAsync();
+            } else {
+                mMediaPlayer.prepare();
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -41,13 +55,15 @@ public class MusicPlayer implements MediaPlayer.OnPreparedListener, MediaPlayer.
 
     @Override
     public void onPrepared(MediaPlayer mp) {
+        mMusicPlayList.get(mIndex).setDuration(mMediaPlayer.getDuration());
         mMediaPlayer.start();
+        mStartedListener.onStarted();
     }
 
     @Override
     public void onCompletion(MediaPlayer mp) {
         next();
-        mOnCompletionListener.onCompletion();
+        mCompletionListener.onCompletion();
     }
 
     public void start(Music music) {
@@ -100,16 +116,6 @@ public class MusicPlayer implements MediaPlayer.OnPreparedListener, MediaPlayer.
         mMediaPlayer.reset();
         mMusicPlayList.clear();
         mMusicPlayList.addAll(musics);
-        if(mMusicPlayList.size() != 0) {
-            try {
-                mMediaPlayer.setDataSource(mMusicPlayList.get(0).getPath());
-                mMediaPlayer.setOnCompletionListener(this);
-                mMediaPlayer.setOnPreparedListener(null);
-                mMediaPlayer.prepare();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     public boolean contains(Music music) {
@@ -127,5 +133,9 @@ public class MusicPlayer implements MediaPlayer.OnPreparedListener, MediaPlayer.
 
     public interface OnCompletionListener {
         void onCompletion();
+    }
+
+    public interface OnStartedListener {
+        void onStarted();
     }
 }

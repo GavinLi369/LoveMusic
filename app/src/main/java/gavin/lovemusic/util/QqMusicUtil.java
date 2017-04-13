@@ -45,8 +45,10 @@ public class QqMusicUtil {
                 .url(url)
                 .build();
         Response response = new OkHttpClient().newCall(request).execute();
-        if(!response.isSuccessful())
+        if(!response.isSuccessful()) {
+            response.body().close();
             throw new IOException("网络连接失败");
+        }
         try {
             List<Music> musics = new ArrayList<>();
             JSONArray songs = new JSONObject(response.body().string())
@@ -83,8 +85,10 @@ public class QqMusicUtil {
                 .url(url)
                 .build();
         Response response = new OkHttpClient().newCall(request).execute();
-        if(!response.isSuccessful())
+        if (!response.isSuccessful()) {
+            response.body().close();
             throw new IOException("网络连接失败");
+        }
         try {
             JSONArray songs = new JSONObject(response.body().string())
                     .getJSONObject("data")
@@ -101,17 +105,22 @@ public class QqMusicUtil {
                             .url(lyricUrl)
                             .build();
                     Response lyricResponse = new OkHttpClient().newCall(lyricRequest).execute();
-                    if(!lyricResponse.isSuccessful())
+                    if(!lyricResponse.isSuccessful()) {
+                        lyricResponse.body().close();
                         throw new IOException("网络连接失败");
+                    }
                     Pattern pattern = Pattern.compile("\\[CDATA\\[([\\s\\S]+?)]]>");
                     Matcher matcher = pattern.matcher(lyricResponse.body().string());
                     if(matcher.find()) return matcher.group(1).replace("&apos;", "'");
+                    lyricResponse.body().close();
                 }
             }
             return "";
         } catch (JSONException e) {
             e.printStackTrace();
             throw new IOException("网页返回数据异常");
+        } finally {
+            response.body().close();
         }
     }
 }

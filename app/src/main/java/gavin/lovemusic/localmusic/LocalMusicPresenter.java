@@ -5,15 +5,12 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 
-import java.io.IOException;
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
 import java.util.List;
 
 import gavin.lovemusic.entity.Music;
 import gavin.lovemusic.service.PlayService;
 import rx.Observable;
-import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
@@ -48,9 +45,7 @@ public class LocalMusicPresenter implements LocalMusicContract.Presenter {
 
     @Override
     public void loadMusicList() {
-        List<Music> musics = mModel.getMusicList();
-        mPlayService.initMusic(musics);
-        mView.setMusicListView(musics);
+        mView.setMusicListView(mModel.getMusicList());
     }
 
     private static class ScanningFileHandler extends Handler {
@@ -99,36 +94,20 @@ public class LocalMusicPresenter implements LocalMusicContract.Presenter {
         };
         mHandler.postDelayed(timer, 100);
 
-        Observable<ArrayList<Music>> observable = Observable.create((Observable.OnSubscribe<ArrayList<Music>>) subscriber -> {
-            try {
-                mModel.refreshMusicList();
-                subscriber.onNext(mModel.getMusicList());
-                subscriber.onCompleted();
-            } catch (IOException e) {
-                e.printStackTrace();
-                mHandler.removeMessages(TIMER_WHAT);
-            }
-            subscriber.onCompleted();
-        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
-
-        observable.subscribe(new Subscriber<ArrayList<Music>>() {
-            @Override
-            public void onCompleted() {
-                mHandler.removeMessages(TIMER_WHAT);
-                mView.hideRefreshing();
-                mView.removeScanningFile();
-            }
-
-            @Override
-            public void onError(Throwable e) {
-            }
-
-            @Override
-            public void onNext(ArrayList<Music> musics) {
-                mView.setMusicListView(musics);
-                mPlayService.initMusic(musics);
-            }
-        });
+        Observable
+                .create((Observable.OnSubscribe<List<Music>>) subscriber -> {
+                    mModel.refreshMusicList();
+                    subscriber.onNext(mModel.getMusicList());
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(musics -> {
+                    mView.setMusicListView(musics);
+                    mPlayService.initMusic(musics);
+                    mHandler.removeMessages(TIMER_WHAT);
+                    mView.hideRefreshing();
+                    mView.removeScanningFile();
+                });
     }
 
     @Override

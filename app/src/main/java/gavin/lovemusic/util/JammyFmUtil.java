@@ -38,6 +38,7 @@ public class JammyFmUtil {
             newsEntry.setSubTitle(matcher.group(4));
             newsEntries.add(newsEntry);
         }
+        response.body().close();
         return newsEntries;
     }
 }

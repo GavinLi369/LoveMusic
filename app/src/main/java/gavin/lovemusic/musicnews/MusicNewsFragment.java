@@ -2,7 +2,6 @@ package gavin.lovemusic.musicnews;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
@@ -10,6 +9,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import java.util.List;
 
@@ -21,7 +21,6 @@ import gavin.lovemusic.constant.R;
  */
 
 public class MusicNewsFragment extends Fragment implements MusicNewsContract.View {
-    private View mRoot;
     private NewsRecyclerAdapter mAdapter = new NewsRecyclerAdapter();
     private SwipeRefreshLayout mRefreshLayout;
     private LinearLayoutManager mLayoutManager;
@@ -34,13 +33,13 @@ public class MusicNewsFragment extends Fragment implements MusicNewsContract.Vie
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        mRoot = inflater.inflate(R.layout.fragment_music_news, container, false);
-        RecyclerView newsRecyclerView = (RecyclerView) mRoot.findViewById(R.id.rv_news);
+        View root = inflater.inflate(R.layout.fragment_music_news, container, false);
+        RecyclerView newsRecyclerView = (RecyclerView) root.findViewById(R.id.rv_news);
         mLayoutManager = new LinearLayoutManager(getContext());
         newsRecyclerView.setLayoutManager(mLayoutManager);
         newsRecyclerView.setAdapter(mAdapter);
 
-        mRefreshLayout = (SwipeRefreshLayout) mRoot.findViewById(R.id.layout_refresh);
+        mRefreshLayout = (SwipeRefreshLayout) root.findViewById(R.id.layout_refresh);
         mRefreshLayout.setOnRefreshListener(() -> mPresenter.loadNews());
         mRefreshLayout.setDistanceToTriggerSync(200);
 
@@ -63,7 +62,7 @@ public class MusicNewsFragment extends Fragment implements MusicNewsContract.Vie
             isLoaded = true;
             mPresenter.loadNews();
         }
-        return mRoot;
+        return root;
     }
 
     //懒加载
@@ -93,7 +92,7 @@ public class MusicNewsFragment extends Fragment implements MusicNewsContract.Vie
     @Override
     public void showNetworkError() {
         if(mRefreshLayout.isRefreshing()) mRefreshLayout.setRefreshing(false);
-        Snackbar.make(mRoot, "网络连接出错", Snackbar.LENGTH_SHORT).show();
+        Toast.makeText(getContext(), "网络连接出错", Toast.LENGTH_SHORT).show();
     }
 
     @Override

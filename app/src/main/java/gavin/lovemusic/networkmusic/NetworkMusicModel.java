@@ -1,23 +1,15 @@
 package gavin.lovemusic.networkmusic;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-
-import com.bumptech.glide.Glide;
-import com.orhanobut.logger.Logger;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -51,8 +43,8 @@ public class NetworkMusicModel implements NetworkMusicContract.Model {
         step 1 : 加载热门歌曲列表
         step 2 : 查找缓存
         缓存未命中 :
-        step 3 : 获取网络数据
-        step 4 : 缓存歌曲图片到本地，并将歌曲信息加入数据库
+        step 3 : 从网络获取歌曲信息
+        step 4 : 将歌曲信息加入数据库
      */
     @Override
     public List<Music> getHotMusic(int size, int offset) throws IOException {
@@ -71,8 +63,7 @@ public class NetworkMusicModel implements NetworkMusicContract.Model {
                     .where(MusicDao.Properties.Id.eq(preMusic.getId()))
                     .build()
                     .list();
-            //缓存歌曲图片
-            if(cacheMusics.isEmpty() || !new File(cacheMusics.get(0).getImage()).exists()) {
+            if(cacheMusics.isEmpty()) {
                 //使用线程池，优化网络数据加载性能
                 final int postion = i % 10;
                 mThreadPool.execute(() -> {
@@ -80,28 +71,34 @@ public class NetworkMusicModel implements NetworkMusicContract.Model {
                         List<Music> musics = mMusicFinder
                                 .findMusic(preMusic.getTitle(), preMusic.getArtist());
                         if (musics.size() > 0) {
-                            Music music = musics.get(0);
                             hotMusics[postion] = musics.get(0);
-                            String imagePath = saveMusicImage(mContext, music);
-                            music.setImage(imagePath);
-                            musicDao.insert(music);
+                            List<Music> removeMusics = musicDao.queryBuilder()
+                                    .where(MusicDao.Properties.Id.eq(musics.get(0).getId()))
+                                    .build()
+                                    .list();
+                            if(!removeMusics.isEmpty())
+                                musicDao.deleteInTx(removeMusics);
+                            musicDao.insert(musics.get(0));
                         }
-                    } catch (IOException | InterruptedException
-                            | ExecutionException e) {
+                    } catch (IOException e) {
                         e.printStackTrace();
                     }
                 });
             } else if(cacheMusics.get(0).getTitle().equals(preMusic.getTitle())) {
                 hotMusics[i] = cacheMusics.get(0);
-            } else {
-                removeMusicImage(cacheMusics.get(0).getId());
             }
         }
 
         //等待网络数据加载完成
         mThreadPool.shutdown();
         while(true) {
-            if(mThreadPool.isTerminated()) return Arrays.asList(hotMusics);
+            if(mThreadPool.isTerminated()) {
+                List<Music> musics = new ArrayList<>();
+                for(Music music : hotMusics) {
+                    if(music != null) musics.add(music);
+                }
+                return musics;
+            }
             else {
                 try {
                     Thread.sleep(100);
@@ -112,34 +109,12 @@ public class NetworkMusicModel implements NetworkMusicContract.Model {
         }
     }
 
-    private String saveMusicImage(Context context, Music music) throws IOException, InterruptedException, ExecutionException {
-        Bitmap bitmap = Glide.with(context).load(music.getImage()).asBitmap().into(-1, -1).get();
-        File file = new File(App.APP_DIR + File.separator + "Cache" + File.separator + Long.toString(music.getId()));
-        if(!file.exists()) {
-            if(!file.createNewFile())
-                throw new IOException("file can not create");
-        }
-        FileOutputStream out = new FileOutputStream(file);
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, out);
-        out.close();
-        return file.getPath();
-    }
-
-    private void removeMusicImage(long id) throws IOException {
-        File file = new File(App.APP_DIR + File.separator + "Cache" + File.separator + id);
-        if(file.exists()) {
-            if(!file.delete()) throw new IOException("file can not delete");
-        }
-    }
-
     //TODO 时间花费过长 10s左右
     private void initPreMusics(String url) throws IOException {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         try {
             DocumentBuilder builder = factory.newDocumentBuilder();
-            Logger.d("start: " + System.currentTimeMillis());
             Document document = builder.parse(url);
-            Logger.d("end: " + System.currentTimeMillis());
             Element root = document.getDocumentElement();
             NodeList items = root.getElementsByTagName("item");
             for(int i = 0; i < items.getLength(); i++) {
@@ -151,6 +126,8 @@ public class NetworkMusicModel implements NetworkMusicContract.Model {
                 String artist = element.getElementsByTagName("artist").item(0).getFirstChild()
                         .getNodeValue().replaceAll("&amp;", "&");
                 Music preMusic = new Music();
+                //根据歌曲名获取歌曲ID
+                preMusic.setId(title.hashCode() & 0xFF);
                 preMusic.setTitle(title);
                 preMusic.setArtist(artist);
                 mPreMusics.add(preMusic);
