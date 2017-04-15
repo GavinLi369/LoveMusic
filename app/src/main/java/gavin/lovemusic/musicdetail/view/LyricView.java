@@ -181,7 +181,9 @@ public class LyricView extends View {
                 seekLyric = false;
             case MotionEvent.ACTION_UP:
                 if(seekLyric) {
-                    lyricViewSeekListener.onLyricViewSeek(mLyricRows.get(index));
+                    if(!mNotFoundLyric) {
+                        lyricViewSeekListener.onLyricViewSeek(mLyricRows.get(index));
+                    }
                     seekLyric = false;
                 }
                 mAnimationOffset = 0;

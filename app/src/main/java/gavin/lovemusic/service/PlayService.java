@@ -1,49 +1,31 @@
 package gavin.lovemusic.service;
 
-import android.app.Notification;
-import android.app.PendingIntent;
 import android.app.Service;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
-import android.widget.RemoteViews;
+import android.widget.Toast;
 
-import com.orhanobut.logger.Logger;
-
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import gavin.lovemusic.constant.R;
 import gavin.lovemusic.entity.Music;
-import gavin.lovemusic.mainview.MainActivity;
-
-import static android.os.Build.VERSION.SDK_INT;
 
 /**
  * Created by Gavin on 2015/11/3.
  * 歌曲播放服务
  */
-public class PlayService extends Service implements MusicPlayer.OnCompletionListener,
-        MediaPlayer.OnBufferingUpdateListener, MusicPlayer.OnStartedListener{
+public class PlayService extends Service implements MediaPlayer.OnCompletionListener,
+        MediaPlayer.OnBufferingUpdateListener, MusicPlayer.OnStartedListener,
+        MediaPlayer.OnErrorListener{
     public static int musicState;
     public static final int PLAYING = 0;        //歌曲正在播放
     public static final int PAUSE = 1;         //歌曲暂停
 
-    private Notification notification;
-    private static final int NOTIFICATION_ID = 1;
-
-    private static final String NOTIFICATION_PLAY = "gavin.notification.play";
-    private static final String NOTIFICATION_NEXT = "gavin.notification.next";
-    private static final String NOTIFICATION_STOP = "gavin.notification.stop";
-
-    private RemoteViews contentView;
+    private NotificationManager mNotificationManager;
     private MusicPlayer mMusicPlayer;
 
     private IBinder mBinder = new PlayServiceBinder();
@@ -53,22 +35,16 @@ public class PlayService extends Service implements MusicPlayer.OnCompletionList
     @Override
     public void onCreate() {
         super.onCreate();
-        mMusicPlayer = new MusicPlayer(this, this, this);
-
-        IntentFilter intentFilterPlay = new IntentFilter(NOTIFICATION_PLAY);
-        registerReceiver(broadcastReceiver, intentFilterPlay);
-        IntentFilter intentFilterNext = new IntentFilter(NOTIFICATION_NEXT);
-        registerReceiver(broadcastReceiver, intentFilterNext);
-        IntentFilter intentFilterStop = new IntentFilter(NOTIFICATION_STOP);
-        registerReceiver(broadcastReceiver, intentFilterStop);
+        mMusicPlayer = new MusicPlayer(this,
+                this, this, this);
+        mNotificationManager = new NotificationManager(this);
     }
 
-    //当PlayService被销毁时，解除广播接收器的注册
     @Override
     public void onDestroy() {
         super.onDestroy();
         mMusicPlayer.release();
-        unregisterReceiver(broadcastReceiver);
+        mNotificationManager.release();
     }
 
     public synchronized void initMusic(List<Music> musics) {
@@ -83,9 +59,66 @@ public class PlayService extends Service implements MusicPlayer.OnCompletionList
     }
 
     public synchronized void changeMusic(Music music) {
+        isCompleted = false;
+        try {
+            mMusicPlayer.start(music);
+            for(MusicStatusChangedListener listener : mListeners)
+                listener.onPreparing(music);
+
+            mNotificationManager.showNotification(music);
+        } catch (IOException e) {
+            e.printStackTrace();
+            showMusicLoadError();
+        }
+    }
+
+    public synchronized void pauseMusic() {
+        musicState = PAUSE;
+        mMusicPlayer.pause();
+        mNotificationManager.showPause();
+
         for(MusicStatusChangedListener listener : mListeners)
-            listener.onPreparing(music);
-        mMusicPlayer.start(music);
+            listener.onPause();
+    }
+
+    public synchronized void resumeMusic() {
+        musicState = PLAYING;
+        mMusicPlayer.resume();
+        mNotificationManager.showResume();
+
+        for(MusicStatusChangedListener listener : mListeners)
+            listener.onResume();
+
+    }
+
+    public synchronized void setProgress(int progress) {
+        mMusicPlayer.setProgress(progress);
+    }
+
+    public synchronized void previousMusic() {
+        try {
+            mMusicPlayer.previous();
+            musicState = PLAYING;
+            mNotificationManager.showNotification(mMusicPlayer.getCurrentMusic());
+            for (MusicStatusChangedListener listener : mListeners)
+                listener.onPreparing(mMusicPlayer.getCurrentMusic());
+        } catch (IOException e) {
+            e.printStackTrace();
+            showMusicLoadError();
+        }
+    }
+
+    public synchronized void nextMusic() {
+        try {
+            mMusicPlayer.next();
+            musicState = PLAYING;
+            mNotificationManager.showNotification(mMusicPlayer.getCurrentMusic());
+            for (MusicStatusChangedListener listener : mListeners)
+                listener.onPreparing(mMusicPlayer.getCurrentMusic());
+        } catch (IOException e) {
+            e.printStackTrace();
+            showMusicLoadError();
+        }
     }
 
     @Override
@@ -94,129 +127,50 @@ public class PlayService extends Service implements MusicPlayer.OnCompletionList
         for(MusicStatusChangedListener listener : mListeners)
             listener.onStarted(mMusicPlayer.getCurrentMusic());
 
-        showNotification();
+        mNotificationManager.showResume();
     }
 
-    public synchronized void pauseMusic() {
-        mMusicPlayer.pause();
-        musicState = PAUSE;
-        for(MusicStatusChangedListener listener : mListeners)
-            listener.onPause();
-
-        contentView.setImageViewResource
-                (R.id.playButton, R.drawable.play_prey);
-        startForeground(NOTIFICATION_ID, notification);
-    }
-
-    public synchronized void resumeMusic() {
-        mMusicPlayer.resume();
-        musicState = PLAYING;
-        for(MusicStatusChangedListener listener : mListeners)
-            listener.onResume();
-
-        contentView.setImageViewResource(R.id.playButton, R.drawable.pause);
-        startForeground(NOTIFICATION_ID, notification);
-    }
-
-    public synchronized void setProgress(int progress) {
-        mMusicPlayer.setProgress(progress);
-    }
-
-    public synchronized void previousMusic() {
-        mMusicPlayer.previous();
-        musicState = PLAYING;
-        for (MusicStatusChangedListener listener : mListeners)
-            listener.onPreparing(mMusicPlayer.getCurrentMusic());
-    }
-
-    public synchronized void nextMusic() {
-        mMusicPlayer.next();
-        musicState = PLAYING;
-        for (MusicStatusChangedListener listener : mListeners)
-            listener.onPreparing(mMusicPlayer.getCurrentMusic());
-    }
+    //网络歌曲是否加载完成
+    private boolean isCompleted = false;
 
     @Override
     public void onBufferingUpdate(MediaPlayer mediaPlayer, int i) {
-        //缓存进度为百分比
-        for(MusicStatusChangedListener listener : mListeners)
-            listener.onBufferingUpdate((int) (i / 100.0 * mMusicPlayer.getCurrentMusic().getDuration()));
+        if(i == 100) {
+            isCompleted = true;
+            //缓存进度为百分比
+            for(MusicStatusChangedListener listener : mListeners)
+                listener.onBufferingUpdate((int) mMusicPlayer.getCurrentMusic().getDuration());
+        }
+        if(!isCompleted) {
+            //缓存进度为百分比
+            for(MusicStatusChangedListener listener : mListeners)
+                listener.onBufferingUpdate((int) (i / 100.0 * mMusicPlayer.getCurrentMusic().getDuration()));
+        }
     }
 
     @Override
-    public void onCompletion() {
-        for (MusicStatusChangedListener listener : mListeners)
-            listener.onPreparing(mMusicPlayer.getCurrentMusic());
+    public void onCompletion(MediaPlayer mp) {
+        try {
+            mMusicPlayer.next();
+            for (MusicStatusChangedListener listener : mListeners)
+                listener.onPreparing(mMusicPlayer.getCurrentMusic());
+        } catch (IOException e) {
+            e.printStackTrace();
+            showMusicLoadError();
+        }
     }
 
-    /**
-     * 对从Notification发来的广播进行处理
-     */
-    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            switch (intent.getAction()) {
-                case NOTIFICATION_PLAY:
-                    if (musicState == PLAYING) {
-                        pauseMusic();
-                    } else {
-                        resumeMusic();
-                    }
-                    break;
-                case NOTIFICATION_NEXT:
-                    nextMusic();
-                    break;
-                case NOTIFICATION_STOP:
-                    pauseMusic();
-                    stopForeground(true);
-            }
-        }
-    };
+    @Override
+    public boolean onError(MediaPlayer mp, int what, int extra) {
+        showMusicLoadError();
+        return true;
+    }
 
-    /**
-     * 显示Notification
-     */
-    private void showNotification() {
-        Notification.Builder builder = new Notification.Builder(this);
-        if(SDK_INT >= 19) {
-            builder.setSmallIcon(R.drawable.ic_launcher_alpha);
-        } else {
-            builder.setSmallIcon(R.mipmap.ic_launcher);
-        }
-        builder.setContentIntent(PendingIntent.getActivity(
-                this, 0,
-                new Intent(this, MainActivity.class)
-                        .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK), 0));
-        notification = builder.build();
-        contentView = new RemoteViews
-                (getPackageName(), R.layout.music_play_notification_small);
-        notification.contentView = contentView;
-        notification.flags = Notification.FLAG_ONGOING_EVENT;
-
-        Intent intentPlay = new Intent(NOTIFICATION_PLAY);
-        PendingIntent pIntentPlay = PendingIntent.getBroadcast(this, 0, intentPlay, 0);
-        contentView.setOnClickPendingIntent(R.id.playButton, pIntentPlay);
-
-        Intent intentNext = new Intent(NOTIFICATION_NEXT);
-        PendingIntent pIntentNext = PendingIntent.getBroadcast(this, 0, intentNext, 0);
-        contentView.setOnClickPendingIntent(R.id.nextButton, pIntentNext);
-
-        Intent intentClose = new Intent(NOTIFICATION_STOP);
-        PendingIntent pIntentClose = PendingIntent.getBroadcast(this, 0, intentClose, 0);
-        contentView.setOnClickPendingIntent(R.id.closeService, pIntentClose);
-
-        if (musicState == PLAYING) {
-            contentView.setImageViewResource(R.id.playButton, R.drawable.pause);
-        } else {
-            contentView.setImageViewResource(R.id.playButton, R.drawable.play_prey);
-        }
-
-        contentView.setTextViewText(R.id.musicName, mMusicPlayer.getCurrentMusic().getTitle());
-        contentView.setTextViewText(R.id.artist, mMusicPlayer.getCurrentMusic().getArtist());
-        Bitmap album = BitmapFactory.decodeFile(mMusicPlayer.getCurrentMusic().getImage());
-        contentView.setImageViewBitmap(R.id.musicAlbum, album);
-
-        startForeground(NOTIFICATION_ID, notification);
+    void showMusicLoadError() {
+        Toast.makeText(this, "资源加载出错", Toast.LENGTH_SHORT).show();
+        mNotificationManager.showPause();
+        for(MusicStatusChangedListener listener : mListeners)
+            listener.onPause();
     }
 
     public class PlayServiceBinder extends Binder {

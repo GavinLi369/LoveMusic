@@ -1,6 +1,7 @@
 package gavin.lovemusic.musicdetail;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 
 import org.json.JSONException;
 
@@ -20,7 +21,7 @@ import gavin.lovemusic.entity.MusicDao;
 import gavin.lovemusic.musicdetail.view.LyricRow;
 import gavin.lovemusic.entity.Music;
 import gavin.lovemusic.util.LyricBuilder;
-import gavin.lovemusic.util.QqMusicUtil;
+import gavin.lovemusic.util.NeteaseUtil;
 
 /**
  * Created by GavinLi
@@ -63,7 +64,7 @@ public class DetailMusicModel implements DetailMusicContract.Model {
     }
 
     private String getLyricByNetwork(Music music) throws IOException, JSONException {
-        return new QqMusicUtil().getLyric(music.getTitle(), music.getArtist());
+        return new NeteaseUtil().getLyric(music.getTitle(), music.getArtist());
     }
 
     private String saveLyric(String name, String lyric) {
@@ -85,16 +86,18 @@ public class DetailMusicModel implements DetailMusicContract.Model {
     /**
      * 将文本文件转换为String
      */
+    @NonNull
     private String parseFile2String(File file) {
         try {
-            String line, buffer = "";
+            String line;
+            StringBuilder buffer = new StringBuilder();
             BufferedReader reader = new BufferedReader
                     (new InputStreamReader(new FileInputStream(file), "UTF-8"));
             while ((line = reader.readLine()) != null) {
-                buffer = buffer + line + "\n";
+                buffer = buffer.append(line).append("\n");
             }
             reader.close();
-            return buffer;
+            return buffer.toString();
         } catch (IOException e) {
             e.printStackTrace();
             return "";

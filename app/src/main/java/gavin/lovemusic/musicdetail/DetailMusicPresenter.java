@@ -35,7 +35,9 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
 
     private Music mCurrentMusic;
     private int mCurrentTime = 0;
+    private int mCurrentProgress = 0;
     private boolean mIsPlaying = false;
+    private boolean mIsNetworkMusic = false;
 
     public DetailMusicPresenter(DetailMusicContract.View view,
                                 DetailMusicContract.Model model,
@@ -57,19 +59,25 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
         new Thread(() -> {
             while(true) {
                 if (mIsPlaying) {
+                    if(mIsNetworkMusic &&
+                            mCurrentProgress <= mCurrentTime) {
+                        mIsPlaying = false;
+                        continue;
+                    }
                     Message message = new Message();
                     Bundle bundle = new Bundle();
                     bundle.putInt("duration", (int) mCurrentMusic.getDuration());
                     bundle.putInt("progress", mCurrentTime);
+                    bundle.putInt("buffer", mCurrentProgress);
                     message.setData(bundle);
                     mHandler.sendMessage(message);
                     mCurrentTime += 500;
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                        break;
-                    }
+                }
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    break;
                 }
             }
         }).start();
@@ -103,7 +111,9 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
 
         @Override
         public void onBufferingUpdate(int progress) {
-            mView.modifySeekBarBuffer(progress);
+            mIsNetworkMusic = true;
+            mCurrentProgress = progress;
+            if(progress > mCurrentTime) mIsPlaying = true;
         }
 
         @Override
@@ -131,6 +141,8 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
             mViewWeakReference.get().modifySeekBar(
                     msg.getData().getInt("duration"),
                     msg.getData().getInt("progress"));
+            mViewWeakReference.get().modifySeekBarBuffer(
+                    msg.getData().getInt("buffer"));
         }
     }
 
@@ -138,6 +150,7 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
     public void setMusicProgress(int progress, Context context) {
         mCurrentTime = progress;
         mPlayService.setProgress(progress);
+        mView.modifySeekBar((int) mCurrentMusic.getDuration(), progress);
     }
 
     @Override
@@ -204,11 +217,7 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
                     .create((Observable.OnSubscribe<List<LyricRow>>) subscriber -> {
                         try {
                             List<LyricRow> lyricRows = mModel.getMusicLyric(mCurrentMusic);
-                            if(lyricRows.isEmpty()) {
-                                throw new IOException("This music doesn't have the lyric");
-                            } else {
-                                subscriber.onNext(lyricRows);
-                            }
+                            subscriber.onNext(lyricRows);
                         } catch (IOException | JSONException e) {
                             e.printStackTrace();
                             subscriber.onError(e);

@@ -13,43 +13,43 @@ import gavin.lovemusic.entity.Music;
  * Created by GavinLi
  * on 16-9-25.
  */
-public class MusicPlayer implements MediaPlayer.OnPreparedListener,
-        MediaPlayer.OnCompletionListener{
+//TODO 可能有内存泄漏
+public class MusicPlayer implements MediaPlayer.OnPreparedListener{
     private List<Music> mMusicPlayList = new ArrayList<>();
     private int mIndex;
 
-    private OnCompletionListener mCompletionListener;
-    private OnStartedListener mStartedListener;
+    private MediaPlayer.OnCompletionListener mCompletionListener;
     private MediaPlayer.OnBufferingUpdateListener mUpdateListener;
+    private MediaPlayer.OnErrorListener mErrorListener;
+    private OnStartedListener mStartedListener;
 
     private MediaPlayer mMediaPlayer = new MediaPlayer();
 
-    MusicPlayer(OnCompletionListener completionListener,
+    MusicPlayer(MediaPlayer.OnCompletionListener completionListener,
                 MediaPlayer.OnBufferingUpdateListener updateListener,
+                MediaPlayer.OnErrorListener errorListener,
                 OnStartedListener startedListener) {
         mCompletionListener = completionListener;
         mStartedListener = startedListener;
+        mErrorListener = errorListener;
         mUpdateListener = updateListener;
     }
 
-    public void start(int index) {
+    public void start(int index) throws IOException {
         mIndex = index;
         mMediaPlayer.reset();
         Music music = mMusicPlayList.get(index);
         mMediaPlayer.setOnPreparedListener(this);
-        mMediaPlayer.setOnCompletionListener(this);
+        mMediaPlayer.setOnCompletionListener(mCompletionListener);
         //网络歌曲异步加载
-        try {
-            mMediaPlayer.setDataSource(music.getPath());
-            if(music.getPath().startsWith("http")) {
-                mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-                mMediaPlayer.setOnBufferingUpdateListener(mUpdateListener);
-                mMediaPlayer.prepareAsync();
-            } else {
-                mMediaPlayer.prepare();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+        mMediaPlayer.setDataSource(music.getPath());
+        if(music.getPath().startsWith("http")) {
+            mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+            mMediaPlayer.setOnBufferingUpdateListener(mUpdateListener);
+            mMediaPlayer.setOnErrorListener(mErrorListener);
+            mMediaPlayer.prepareAsync();
+        } else {
+            mMediaPlayer.prepare();
         }
     }
 
@@ -60,13 +60,7 @@ public class MusicPlayer implements MediaPlayer.OnPreparedListener,
         mStartedListener.onStarted();
     }
 
-    @Override
-    public void onCompletion(MediaPlayer mp) {
-        next();
-        mCompletionListener.onCompletion();
-    }
-
-    public void start(Music music) {
+    public void start(Music music) throws IOException {
         if(mMusicPlayList.contains(music)) {
             start(mMusicPlayList.indexOf(music));
         } else {
@@ -83,7 +77,7 @@ public class MusicPlayer implements MediaPlayer.OnPreparedListener,
         mMediaPlayer.start();
     }
 
-    public void next() {
+    public void next() throws IOException {
         if(++mIndex != mMusicPlayList.size()) {
             start(mIndex);
         } else {
@@ -91,7 +85,7 @@ public class MusicPlayer implements MediaPlayer.OnPreparedListener,
         }
     }
 
-    public void previous() {
+    public void previous() throws IOException {
         if(--mIndex != -1) {
             start(mIndex);
         } else {
@@ -129,10 +123,6 @@ public class MusicPlayer implements MediaPlayer.OnPreparedListener,
         mMediaPlayer.reset();
         mMediaPlayer.release();
         mMediaPlayer = null;
-    }
-
-    public interface OnCompletionListener {
-        void onCompletion();
     }
 
     public interface OnStartedListener {
