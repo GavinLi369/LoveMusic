@@ -23,8 +23,6 @@ import gavin.lovemusic.constant.R;
 public class MusicNewsFragment extends Fragment implements MusicNewsContract.View {
     private NewsRecyclerAdapter mAdapter = new NewsRecyclerAdapter();
     private SwipeRefreshLayout mRefreshLayout;
-    private LinearLayoutManager mLayoutManager;
-
     private boolean isLoaded = false;
     private boolean isShown = false;
 
@@ -35,27 +33,12 @@ public class MusicNewsFragment extends Fragment implements MusicNewsContract.Vie
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_music_news, container, false);
         RecyclerView newsRecyclerView = (RecyclerView) root.findViewById(R.id.rv_news);
-        mLayoutManager = new LinearLayoutManager(getContext());
-        newsRecyclerView.setLayoutManager(mLayoutManager);
+        newsRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         newsRecyclerView.setAdapter(mAdapter);
 
         mRefreshLayout = (SwipeRefreshLayout) root.findViewById(R.id.layout_refresh);
         mRefreshLayout.setOnRefreshListener(() -> mPresenter.loadNews());
         mRefreshLayout.setDistanceToTriggerSync(200);
-
-        newsRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-                if(mAdapter.getItemCount() != 0) {
-                    if (newState == RecyclerView.SCROLL_STATE_IDLE &&
-                            mLayoutManager.findFirstCompletelyVisibleItemPosition() == 0) {
-                        mRefreshLayout.setEnabled(true);
-                    } else {
-                        mRefreshLayout.setEnabled(false);
-                    }
-                }
-            }
-        });
 
         if(isShown && !isLoaded) {
             mRefreshLayout.setRefreshing(true);

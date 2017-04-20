@@ -67,7 +67,7 @@ public class NotificationManager {
     private void buildRemoteView(Music currentMusic) {
 
         contentView = new RemoteViews
-                (mService.getPackageName(), R.layout.music_play_notification_small);
+                (mService.getPackageName(), R.layout.notification_small);
         notification.contentView = contentView;
         notification.flags = Notification.FLAG_ONGOING_EVENT;
 
@@ -84,9 +84,9 @@ public class NotificationManager {
         contentView.setOnClickPendingIntent(R.id.closeService, pIntentClose);
 
         if (PlayService.musicState == PlayService.PLAYING) {
-            contentView.setImageViewResource(R.id.playButton, R.drawable.pause);
+            contentView.setImageViewResource(R.id.playButton, R.drawable.pause_grey);
         } else {
-            contentView.setImageViewResource(R.id.playButton, R.drawable.play_prey);
+            contentView.setImageViewResource(R.id.playButton, R.drawable.play_grey);
         }
 
         contentView.setTextViewText(R.id.musicName, currentMusic.getTitle());
@@ -102,12 +102,12 @@ public class NotificationManager {
 
     public void showPause() {
         contentView.setImageViewResource
-                (R.id.playButton, R.drawable.play_prey);
+                (R.id.playButton, R.drawable.play_grey);
         mService.startForeground(NOTIFICATION_ID, notification);
     }
 
     public void showResume() {
-        contentView.setImageViewResource(R.id.playButton, R.drawable.pause);
+        contentView.setImageViewResource(R.id.playButton, R.drawable.pause_grey);
         mService.startForeground(NOTIFICATION_ID, notification);
     }
 

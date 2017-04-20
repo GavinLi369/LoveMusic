@@ -78,15 +78,6 @@ public class NetworkMusicFragment extends Fragment implements NetworkMusicContra
             if(newState == RecyclerView.SCROLL_STATE_IDLE &&
                     lastVisibleItem + 1 == mAdapter.getItemCount())
                 mPresenter.loadMoreMusic();
-
-            if(mAdapter.getItemCount() != 0) {
-                if (newState == RecyclerView.SCROLL_STATE_IDLE &&
-                        mLayoutManager.findFirstCompletelyVisibleItemPosition() == 0) {
-                    mSwipeRefreshLayout.setEnabled(true);
-                } else {
-                    mSwipeRefreshLayout.setEnabled(false);
-                }
-            }
         }
 
         @Override

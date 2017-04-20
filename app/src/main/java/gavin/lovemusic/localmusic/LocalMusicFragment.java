@@ -33,23 +33,9 @@ public class LocalMusicFragment extends Fragment implements LocalMusicContract.V
         View rootView = inflater.inflate(R.layout.fragment_music_local, container, false);
         mMusicRecycler = (RecyclerView) rootView.findViewById(R.id.musicList);
         mSwipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeRefreshLayout);
-        mLayoutManager = new LinearLayoutManager(getContext());
-        mMusicRecycler.setLayoutManager(mLayoutManager);
+        mMusicRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
         mSwipeRefreshLayout.setDistanceToTriggerSync(200);
         mSwipeRefreshLayout.setOnRefreshListener(this);
-        mMusicRecycler.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-                if(mAdapter.getItemCount() != 0) {
-                    if (newState == RecyclerView.SCROLL_STATE_IDLE &&
-                            mLayoutManager.findFirstCompletelyVisibleItemPosition() == 0) {
-                        mSwipeRefreshLayout.setEnabled(true);
-                    } else {
-                        mSwipeRefreshLayout.setEnabled(false);
-                    }
-                }
-            }
-        });
 
         mPresenter.loadMusicList();
         return rootView;

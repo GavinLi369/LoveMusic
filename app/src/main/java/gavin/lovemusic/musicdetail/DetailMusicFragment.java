@@ -137,7 +137,7 @@ public class DetailMusicFragment extends Fragment implements DetailMusicContract
 
     @Override
     public void changePlayToPause() {
-        mPlayButton.setBackgroundResource(R.drawable.play_prey);
+        mPlayButton.setBackgroundResource(R.drawable.play);
     }
 
     @Override
@@ -149,7 +149,7 @@ public class DetailMusicFragment extends Fragment implements DetailMusicContract
     public void updateBgImage(String bgImageUrl) {
         Glide.with(this)
                 .load(bgImageUrl)
-                .bitmapTransform(new BlurTransformation(getContext(), 25, 2))
+                .bitmapTransform(new BlurTransformation(getContext(), 25, 4))
                 .into(mBgImageView);
     }
 

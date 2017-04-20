@@ -124,7 +124,7 @@ public class MainActivity extends AppCompatActivity implements MainViewContract.
     public void changePlaying2Pause() {
         mPlaying = false;
         if(mPlayButton != null) {
-            mPlayButton.setBackgroundResource(R.drawable.play_prey);
+            mPlayButton.setBackgroundResource(R.drawable.play);
         }
     }
 
@@ -171,8 +171,8 @@ public class MainActivity extends AppCompatActivity implements MainViewContract.
     @Override
     public void onViewMinimized() {
         mPlayButton = new ImageButton(this);
-        int height = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 35, getResources().getDisplayMetrics());
-        int width = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 35, getResources().getDisplayMetrics());
+        int height = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 40, getResources().getDisplayMetrics());
+        int width = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 40, getResources().getDisplayMetrics());
         RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(width, height);
         int left = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 280, getResources().getDisplayMetrics());
         int top = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 7, getResources().getDisplayMetrics());
@@ -181,7 +181,7 @@ public class MainActivity extends AppCompatActivity implements MainViewContract.
         if(mPlaying) {
             mPlayButton.setBackground(getResources().getDrawable(R.drawable.pause));
         } else {
-            mPlayButton.setBackground(getResources().getDrawable(R.drawable.play_prey));
+            mPlayButton.setBackground(getResources().getDrawable(R.drawable.play));
         }
         mPlayButton.setOnClickListener(this);
         mDragView.addView(mPlayButton);

@@ -8,7 +8,9 @@
     <color name="titleTextColorDefault">#FFFFFF</color>
     <color name="bodyTextColorDefault">#BDBDBD</color>
 
-    <color name="colorLyricText">#404040</color>
+    <!--Detail-->
+    <color name="colorLyricText">#777777</color>
+    <color name="colorImageMask">#55555555</color>
 
     <!--News-->
     <color name="colorTitle">#FFFFFF</color>

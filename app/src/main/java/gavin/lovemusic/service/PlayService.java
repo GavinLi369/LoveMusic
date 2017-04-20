@@ -66,6 +66,7 @@ public class PlayService extends Service implements MediaPlayer.OnCompletionList
                 listener.onPreparing(music);
 
             mNotificationManager.showNotification(music);
+            mNotificationManager.showResume();
         } catch (IOException e) {
             e.printStackTrace();
             showMusicLoadError();

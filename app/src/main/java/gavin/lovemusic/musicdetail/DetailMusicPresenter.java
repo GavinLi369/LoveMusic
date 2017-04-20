@@ -35,9 +35,8 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
 
     private Music mCurrentMusic;
     private int mCurrentTime = 0;
-    private int mCurrentProgress = 0;
     private boolean mIsPlaying = false;
-    private boolean mIsNetworkMusic = false;
+    private boolean mIsBuffered = true;
 
     public DetailMusicPresenter(DetailMusicContract.View view,
                                 DetailMusicContract.Model model,
@@ -58,17 +57,11 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
         //每隔0.5秒更新一次视图
         new Thread(() -> {
             while(true) {
-                if (mIsPlaying) {
-                    if(mIsNetworkMusic &&
-                            mCurrentProgress <= mCurrentTime) {
-                        mIsPlaying = false;
-                        continue;
-                    }
+                if (mIsPlaying & mIsBuffered) {
                     Message message = new Message();
                     Bundle bundle = new Bundle();
                     bundle.putInt("duration", (int) mCurrentMusic.getDuration());
                     bundle.putInt("progress", mCurrentTime);
-                    bundle.putInt("buffer", mCurrentProgress);
                     message.setData(bundle);
                     mHandler.sendMessage(message);
                     mCurrentTime += 500;
@@ -109,11 +102,11 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
             mIsPlaying = true;
         }
 
+        //TODO 暂停时该方法不再调用
         @Override
         public void onBufferingUpdate(int progress) {
-            mIsNetworkMusic = true;
-            mCurrentProgress = progress;
-            if(progress > mCurrentTime) mIsPlaying = true;
+            mIsBuffered = progress > mCurrentTime;
+            mView.modifySeekBarBuffer(progress);
         }
 
         @Override
@@ -141,8 +134,6 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
             mViewWeakReference.get().modifySeekBar(
                     msg.getData().getInt("duration"),
                     msg.getData().getInt("progress"));
-            mViewWeakReference.get().modifySeekBarBuffer(
-                    msg.getData().getInt("buffer"));
         }
     }
 
@@ -205,9 +196,9 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
                     } else {
                         mView.changeViewColorDefault();
                     }
-                }, throwable -> {
-                    mView.changeViewColorDefault();
-                });
+                }, throwable ->
+                    mView.changeViewColorDefault()
+                );
     }
 
     private void initLyricView() {
@@ -225,9 +216,9 @@ public class DetailMusicPresenter implements DetailMusicContract.Presenter {
                     })
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(lyricRows -> {
-                        mView.changeLyricView(lyricRows);
-                    }, throwable -> {
+                    .subscribe(lyricRows ->
+                        mView.changeLyricView(lyricRows)
+                    , throwable -> {
                         if(throwable instanceof IOException) {
                             mView.showNotFoundLyric();
                         }

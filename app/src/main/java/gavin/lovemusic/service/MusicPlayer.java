@@ -13,7 +13,6 @@ import gavin.lovemusic.entity.Music;
  * Created by GavinLi
  * on 16-9-25.
  */
-//TODO 可能有内存泄漏
 public class MusicPlayer implements MediaPlayer.OnPreparedListener{
     private List<Music> mMusicPlayList = new ArrayList<>();
     private int mIndex;
