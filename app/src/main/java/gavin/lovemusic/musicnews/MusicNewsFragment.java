@@ -38,7 +38,6 @@ public class MusicNewsFragment extends Fragment implements MusicNewsContract.Vie
 
         mRefreshLayout = (SwipeRefreshLayout) root.findViewById(R.id.layout_refresh);
         mRefreshLayout.setOnRefreshListener(() -> mPresenter.loadNews());
-        mRefreshLayout.setDistanceToTriggerSync(200);
 
         if(isShown && !isLoaded) {
             mRefreshLayout.setRefreshing(true);

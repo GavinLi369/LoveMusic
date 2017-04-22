@@ -44,9 +44,8 @@ public class NetworkMusicFragment extends Fragment implements NetworkMusicContra
 
         mAdapter.setOnItemClickListener(this);
         recyclerView.setAdapter(mAdapter);
-
-        mSwipeRefreshLayout.setDistanceToTriggerSync(200);
         mSwipeRefreshLayout.setOnRefreshListener(this);
+
         if(!isLoaded && isShown) {
             isLoaded = true;
             mPresenter.loadMusics();

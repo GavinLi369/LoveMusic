@@ -20,7 +20,6 @@ public class LocalMusicFragment extends Fragment implements LocalMusicContract.V
         LocalRecyclerAdapter.OnItemClickListener, SwipeRefreshLayout.OnRefreshListener{
     private RecyclerView mMusicRecycler;
     private SwipeRefreshLayout mSwipeRefreshLayout;
-    private LinearLayoutManager mLayoutManager;
     private FileScannerDialog mDialog;
 
     private LocalMusicContract.Presenter mPresenter;
@@ -34,7 +33,6 @@ public class LocalMusicFragment extends Fragment implements LocalMusicContract.V
         mMusicRecycler = (RecyclerView) rootView.findViewById(R.id.musicList);
         mSwipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeRefreshLayout);
         mMusicRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
-        mSwipeRefreshLayout.setDistanceToTriggerSync(200);
         mSwipeRefreshLayout.setOnRefreshListener(this);
 
         mPresenter.loadMusicList();
