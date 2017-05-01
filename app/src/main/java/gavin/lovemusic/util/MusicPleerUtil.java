@@ -35,7 +35,8 @@ public class MusicPleerUtil {
      */
     public List<Music> findMusic(String name) throws IOException {
         List<Music> musics = new ArrayList<>();
-        String urlStr = MUSIC_FIND_URL + name.replaceAll("[\\s]+", "+");
+        String urlStr = MUSIC_FIND_URL + name.replaceAll("[\\s]+", "+")
+                .replaceAll("'", "").replaceAll("&", "%26");
         Request request = new Request.Builder()
                 .url(urlStr)
                 .build();
@@ -84,6 +85,7 @@ public class MusicPleerUtil {
     }
 
     public List<Music> findMusic(String name, String artist) throws IOException {
-        return findMusic(name + " " +artist);
+        //歌手放在歌名后有可能搜索不到
+        return findMusic(artist + " " + name);
     }
 }

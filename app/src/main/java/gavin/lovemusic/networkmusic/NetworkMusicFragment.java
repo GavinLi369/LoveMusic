@@ -29,6 +29,9 @@ public class NetworkMusicFragment extends Fragment implements NetworkMusicContra
     private boolean isLoaded = false;
     private boolean isShown = false;
 
+    //防止多次加载数据
+    private boolean mIsMusicLoading = false;
+
     private NetworkMusicContract.Presenter mPresenter;
 
     @Nullable
@@ -48,6 +51,7 @@ public class NetworkMusicFragment extends Fragment implements NetworkMusicContra
 
         if(!isLoaded && isShown) {
             isLoaded = true;
+            mIsMusicLoading = true;
             mPresenter.loadMusics();
         }
         return rootView;
@@ -60,6 +64,7 @@ public class NetworkMusicFragment extends Fragment implements NetworkMusicContra
         if(isVisibleToUser) {
             if(getView() != null && !isLoaded) {
                 isLoaded = true;
+                mIsMusicLoading = true;
                 mPresenter.loadMusics();
             }
             isShown = true;
@@ -75,8 +80,10 @@ public class NetworkMusicFragment extends Fragment implements NetworkMusicContra
         public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
             super.onScrollStateChanged(recyclerView, newState);
             if(newState == RecyclerView.SCROLL_STATE_IDLE &&
-                    lastVisibleItem + 1 == mAdapter.getItemCount())
+                    lastVisibleItem + 1 == mAdapter.getItemCount() && !mIsMusicLoading) {
+                mIsMusicLoading = true;
                 mPresenter.loadMoreMusic();
+            }
         }
 
         @Override
@@ -88,12 +95,14 @@ public class NetworkMusicFragment extends Fragment implements NetworkMusicContra
 
     @Override
     public void showMoreMusics(List<Music> musics) {
+        mIsMusicLoading = false;
         mAdapter.addMusics(musics);
         mAdapter.notifyItemRangeInserted(mAdapter.getItemCount(), musics.size());
     }
 
     @Override
     public void resetMusics(List<Music> musics) {
+        mIsMusicLoading = false;
         mAdapter.setMusics(musics);
         mAdapter.notifyDataSetChanged();
     }
@@ -110,7 +119,14 @@ public class NetworkMusicFragment extends Fragment implements NetworkMusicContra
 
     @Override
     public void showNetworkConnetionError() {
+        mIsMusicLoading = false;
         Toast.makeText(getContext(), "网络连接失败", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void showNoMoreMusic() {
+        mIsMusicLoading = false;
+        Toast.makeText(getContext(), "到底了", Toast.LENGTH_SHORT).show();
     }
 
     @Override

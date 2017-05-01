@@ -52,7 +52,7 @@ public class NetworkMusicPresenter implements NetworkMusicContract.Presenter {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(musics -> {
-                    mView.showMoreMusics(musics);
+                    mView.resetMusics(musics);
                     mView.hideRefreshView();
                 }, throwable -> {
                     if(throwable instanceof IOException) {
@@ -60,6 +60,7 @@ public class NetworkMusicPresenter implements NetworkMusicContract.Presenter {
                         mView.hideRefreshView();
                     }
                 });
+        mIndex = 10;
     }
 
     @Override
@@ -78,7 +79,11 @@ public class NetworkMusicPresenter implements NetworkMusicContract.Presenter {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(musics -> {
-                    mView.showMoreMusics(musics);
+                    if(musics.size() != 0) {
+                        mView.showMoreMusics(musics);
+                    } else {
+                        mView.showNoMoreMusic();
+                    }
                 }, throwable -> {
                     if(throwable instanceof IOException)
                         mView.showNetworkConnetionError();

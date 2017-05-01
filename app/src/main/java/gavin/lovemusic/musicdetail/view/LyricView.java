@@ -17,6 +17,7 @@ import gavin.lovemusic.constant.R;
  * Created by Gavin on 2015/8/24.
  * 歌词View
  */
+//TODO 多行显示
 public class LyricView extends View {
     private Paint paintHL = new Paint();
     private Paint paint = new Paint();
@@ -57,6 +58,7 @@ public class LyricView extends View {
     /**
      * 初始化各项数值
      */
+    //TODO 调整字体大小
     private void init() {
         paintHL.setColor(Color.WHITE);
         paintHL.setTextSize(25);

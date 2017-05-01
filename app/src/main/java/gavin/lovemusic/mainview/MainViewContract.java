@@ -1,5 +1,6 @@
 package gavin.lovemusic.mainview;
 
+import android.support.annotation.ColorInt;
 import android.support.v7.graphics.Palette;
 
 import gavin.lovemusic.BasePresenter;
@@ -15,6 +16,10 @@ public class MainViewContract {
         void changeDragViewColor(Palette.Swatch swatch);
 
         void changeDragViewColorDefault();
+
+        void changeStatusBarColor(@ColorInt int color);
+
+        void changeStatusBarColorDefault();
 
         void changePlaying2Pause();
 

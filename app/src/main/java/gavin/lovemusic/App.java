@@ -22,7 +22,6 @@ public class App extends Application {
     private static String sExternalStorage = Environment.getExternalStorageDirectory().getPath();
     public static final String APP_DIR = sExternalStorage + File.separator + "LoveMusic";
 
-    private DaoSession mCacheSession;
     private DaoSession mMusicSession;
     private DaoSession mLyricSession;
 
@@ -36,7 +35,6 @@ public class App extends Application {
         }
         Logger.init();
 
-        mCacheSession = createDaoSession("cache-db");
         mMusicSession = createDaoSession("music-db");
         mLyricSession = createDaoSession("lyric-db");
     }
@@ -45,10 +43,6 @@ public class App extends Application {
         DaoMaster.DevOpenHelper cacheHelper = new DaoMaster.DevOpenHelper(this, databaseName);
         Database cacheDb = cacheHelper.getWritableDb();
         return new DaoMaster(cacheDb).newSession();
-    }
-
-    public DaoSession getCacheSession() {
-        return mCacheSession;
     }
 
     public DaoSession getMusicSession() {
@@ -63,12 +57,7 @@ public class App extends Application {
      * 检查软件目录是否存在,如果不存在则创建该目录
      */
     private void checkAppDir() throws IOException {
-        File dir = new File(APP_DIR + File.separator + "Cache");
-        if (!dir.exists()) {
-            if(!dir.mkdirs())
-                throw new IOException("App dir can't make");
-        }
-        dir = new File(APP_DIR + File.separator + "Album");
+        File dir = new File(APP_DIR + File.separator + "Album");
         if (!dir.exists()) {
             if(!dir.mkdirs())
                 throw new IOException("App dir can't make");

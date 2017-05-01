@@ -94,10 +94,17 @@ public class NotificationManager {
         NotificationTarget target = new NotificationTarget(
                 mService, contentView, R.id.musicAlbum, notification, NOTIFICATION_ID
         );
-        Glide.with(mService)
-                .load(currentMusic.getImage())
-                .asBitmap()
-                .into(target);
+        if(currentMusic.getImage() != null && !currentMusic.getImage().isEmpty()) {
+            Glide.with(mService)
+                    .load(currentMusic.getImage())
+                    .asBitmap()
+                    .into(target);
+        } else {
+            Glide.with(mService)
+                    .load(R.drawable.defalut_album)
+                    .asBitmap()
+                    .into(target);
+        }
     }
 
     public void showPause() {

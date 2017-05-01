@@ -18,7 +18,7 @@
         android:largeHeap="true">
         <activity
             android:name="gavin.lovemusic.mainview.MainActivity"
-            android:label="@string/app_name" >
+            android:label="@string/app_chinese_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -28,7 +28,8 @@
 
         <service android:name="gavin.lovemusic.service.PlayService"/>
 
-        <activity android:name="gavin.lovemusic.musicnews.NewsActivity"/>
+        <activity android:name="gavin.lovemusic.musicnews.NewsActivity"
+            android:label="@string/app_chinese_name"/>
 
     </application>
 

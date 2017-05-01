@@ -57,8 +57,10 @@ public class MainViewPresenter implements MainViewContract.Presenter, PlayServic
                 .subscribe(swatch -> {
                     if(swatch != null) {
                         mView.changeDragViewColor(swatch);
+                        mView.changeStatusBarColor(swatch.getRgb());
                     } else {
                         mView.changeDragViewColorDefault();
+                        mView.changeStatusBarColorDefault();
                     }
                 }, throwable -> {
                     mView.changeDragViewColorDefault();

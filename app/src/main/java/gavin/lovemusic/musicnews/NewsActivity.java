@@ -4,13 +4,11 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.webkit.JsResult;
 import android.webkit.WebChromeClient;
-import android.webkit.WebResourceError;
-import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.Toast;
+
+import com.orhanobut.logger.Logger;
 
 import gavin.lovemusic.constant.R;
 
@@ -22,16 +20,32 @@ import gavin.lovemusic.constant.R;
 public class NewsActivity extends AppCompatActivity {
     public static final String URL_KEY = "url";
 
+    private WebView mWebView;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_news);
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
 
-        //TODO iframe无法显示
-        WebView webView = (WebView) findViewById(R.id.web_news);
-        webView.getSettings().setJavaScriptEnabled(true);
+        //TODO 华为G6 Android 4.4 iframe点击无响应
+        mWebView = (WebView) findViewById(R.id.web_news);
+        mWebView.getSettings().setJavaScriptEnabled(true);
+        mWebView.getSettings().setDomStorageEnabled(true);
+        mWebView.setWebViewClient(new WebViewClient() {
+            //评论没有自动加载，在这里手动进行加载
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                mWebView.loadUrl("javascript:fetchComment()");
+            }
+        });
         String urlStr = getIntent().getStringExtra(URL_KEY);
-        webView.loadUrl(urlStr);
+        mWebView.loadUrl(urlStr);
+    }
+
+    @Override
+    protected void onDestroy() {
+        if(mWebView != null) mWebView.destroy();
+        super.onDestroy();
     }
 }

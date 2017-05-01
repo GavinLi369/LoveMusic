@@ -1,7 +1,6 @@
 package gavin.lovemusic.networkmusic;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import gavin.lovemusic.BasePresenter;
@@ -27,6 +26,8 @@ public class NetworkMusicContract {
         void hideRefreshView();
 
         void showNetworkConnetionError();
+
+        void showNoMoreMusic();
     }
 
     interface Presenter extends BasePresenter {

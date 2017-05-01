@@ -50,11 +50,12 @@ public class NetworkRecyclerAdapter extends RecyclerView.Adapter<NetworkRecycler
         StringBuilder musicInfo = new StringBuilder();
         musicInfo.append(mMusicList.get(position).getArtist());
         String album = mMusicList.get(position).getAlbum();
-        if(!album.isEmpty())
+        if(album != null && !album.isEmpty())
             musicInfo.append(" - ").append(album);
         holder.musicInfo.setText(musicInfo);
         Glide.with(context)
                 .load(mMusicList.get(position).getImage())
+                .placeholder(R.drawable.defalut_album)
                 .into(holder.album);
     }
 

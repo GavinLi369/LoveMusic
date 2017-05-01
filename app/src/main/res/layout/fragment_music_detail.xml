@@ -27,7 +27,7 @@
         <TextView
             android:id="@+id/currentTime"
             android:layout_width="wrap_content"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
             android:layout_marginStart="15dp"
             android:textColor="#fff"
@@ -47,9 +47,10 @@
         <TextView
             android:id="@+id/duration"
             android:layout_width="wrap_content"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
-            android:layout_marginStart="310dp"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="15dp"
             android:textColor="#fff"
             android:textSize="13sp"
             tools:text="03:20"/>
@@ -75,7 +76,8 @@
             android:layout_width="35dp"
             android:layout_height="35dp"
             android:layout_marginTop="50dp"
-            android:layout_marginStart="240dp"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="90dp"
             android:background="@drawable/next"/>
 
     </RelativeLayout>

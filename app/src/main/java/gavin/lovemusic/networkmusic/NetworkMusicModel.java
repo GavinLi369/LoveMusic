@@ -1,6 +1,9 @@
 package gavin.lovemusic.networkmusic;
 
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -8,8 +11,11 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -17,9 +23,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import gavin.lovemusic.App;
-import gavin.lovemusic.entity.DaoSession;
-import gavin.lovemusic.entity.MusicDao;
+import gavin.lovemusic.database.MusicCacheDb;
 import gavin.lovemusic.entity.Music;
 import gavin.lovemusic.util.MusicPleerUtil;
 
@@ -30,13 +34,14 @@ import gavin.lovemusic.util.MusicPleerUtil;
 public class NetworkMusicModel implements NetworkMusicContract.Model {
     private static final String BILLBOARD_HOT_URL = "http://www.billboard.com/rss/charts/hot-100";
 
-    private Context mContext;
+    private final MusicCacheDb mCacheDb;
+    private static final int CACHE_SIZE = 200;
 
     private MusicPleerUtil mMusicFinder = new MusicPleerUtil();
     private List<Music> mPreMusics = new ArrayList<>();
 
     public NetworkMusicModel(Context context) {
-        this.mContext = context;
+        mCacheDb = new MusicCacheDb(context);
     }
 
     /*
@@ -48,73 +53,100 @@ public class NetworkMusicModel implements NetworkMusicContract.Model {
      */
     @Override
     public List<Music> getHotMusic(int size, int offset) throws IOException {
-        ExecutorService mThreadPool = Executors.newCachedThreadPool();
+        final CountDownLatch latch = new CountDownLatch(size);
+        ExecutorService threadPool = Executors.newFixedThreadPool(size);
 
         //加载热门歌曲列表
-        if(mPreMusics.isEmpty()) initPreMusics(BILLBOARD_HOT_URL);
+        if(mPreMusics.isEmpty()) initPreMusics();
 
         //查找缓存
-        DaoSession daoSession = ((App) mContext.getApplicationContext()).getCacheSession();
-        MusicDao musicDao = daoSession.getMusicDao();
-        Music[] hotMusics = new Music[10];
+        SQLiteDatabase database = mCacheDb.getWritableDatabase();
+        Music[] hotMusics = new Music[size];
         for(int i = offset; i < offset + size; i++) {
+            if(mPreMusics.size() <= i) {
+                latch.countDown();
+                continue;
+            }
             Music preMusic = mPreMusics.get(i);
-            List<Music> cacheMusics = musicDao.queryBuilder()
-                    .where(MusicDao.Properties.Id.eq(preMusic.getId()))
-                    .build()
-                    .list();
-            if(cacheMusics.isEmpty()) {
+            String[] columns = {MusicCacheDb.Entry.ID, MusicCacheDb.Entry.ALBUM,
+                    MusicCacheDb.Entry.IMAGE, MusicCacheDb.Entry.PATH};
+            String selection = MusicCacheDb.Entry.ID + " = ?";
+            String[] selecionArg = {caculateMd5(preMusic.getTitle() + preMusic.getArtist())};
+            Cursor cursor = database.query(MusicCacheDb.Entry.TABLE_NAME,
+                    columns, selection, selecionArg,
+                    null, null, null);
+            if(cursor.moveToFirst()) {
+                //缓存命中
+                preMusic.setAlbum(cursor.getString(
+                        cursor.getColumnIndexOrThrow(MusicCacheDb.Entry.ALBUM)));
+                preMusic.setImage(cursor.getString(
+                        cursor.getColumnIndexOrThrow(MusicCacheDb.Entry.IMAGE)));
+                preMusic.setPath(cursor.getString(
+                        cursor.getColumnIndexOrThrow(MusicCacheDb.Entry.PATH)));
+                hotMusics[i % size] = preMusic;
+                //更新该条数据的Alive
+                updateDatabase(database, cursor, preMusic);
+                latch.countDown();
+            } else {
                 //使用线程池，优化网络数据加载性能
-                final int postion = i % 10;
-                mThreadPool.execute(() -> {
+                final int postion = i % size;
+                threadPool.execute(() -> {
                     try {
                         List<Music> musics = mMusicFinder
                                 .findMusic(preMusic.getTitle(), preMusic.getArtist());
                         if (musics.size() > 0) {
                             hotMusics[postion] = musics.get(0);
-                            List<Music> removeMusics = musicDao.queryBuilder()
-                                    .where(MusicDao.Properties.Id.eq(musics.get(0).getId()))
-                                    .build()
-                                    .list();
-                            if(!removeMusics.isEmpty())
-                                musicDao.deleteInTx(removeMusics);
-                            musicDao.insert(musics.get(0));
+                            //缓存歌曲信息
+                            ContentValues values = new ContentValues();
+                            values.put(MusicCacheDb.Entry.ID,
+                                    caculateMd5(preMusic.getTitle()
+                                            + preMusic.getArtist()));
+                            //为保证统一这里使用PreMusic的歌曲标题和歌手
+                            values.put(MusicCacheDb.Entry.TITLE, preMusic.getTitle());
+                            values.put(MusicCacheDb.Entry.ARTIST, preMusic.getArtist());
+                            values.put(MusicCacheDb.Entry.ALBUM, musics.get(0).getAlbum());
+                            values.put(MusicCacheDb.Entry.IMAGE, musics.get(0).getImage());
+                            values.put(MusicCacheDb.Entry.PATH, musics.get(0).getPath());
+                            values.put(MusicCacheDb.Entry.ALIVE, System.currentTimeMillis());
+                            synchronized (mCacheDb) {
+                                checkAndClearDatabase(database);
+                                database.insert(MusicCacheDb.Entry.TABLE_NAME,
+                                            null, values);
+                            }
+                        } else {
+                            //未找到网络资源
+                            hotMusics[postion] = preMusic;
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
+                    } finally {
+                        latch.countDown();
                     }
                 });
-            } else if(cacheMusics.get(0).getTitle().equals(preMusic.getTitle())) {
-                hotMusics[i] = cacheMusics.get(0);
             }
+            cursor.close();
         }
 
         //等待网络数据加载完成
-        mThreadPool.shutdown();
-        while(true) {
-            if(mThreadPool.isTerminated()) {
-                List<Music> musics = new ArrayList<>();
-                for(Music music : hotMusics) {
-                    if(music != null) musics.add(music);
-                }
-                return musics;
+        List<Music> musics = new ArrayList<>();
+        try {
+            latch.await();
+            for (Music music : hotMusics) {
+                if (music != null) musics.add(music);
             }
-            else {
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
+        database.close();
+        threadPool.shutdown();
+        return musics;
     }
 
-    //TODO 时间花费过长 10s左右
-    private void initPreMusics(String url) throws IOException {
+    private void initPreMusics() throws IOException {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         try {
             DocumentBuilder builder = factory.newDocumentBuilder();
-            Document document = builder.parse(url);
+            Document document = builder.parse(BILLBOARD_HOT_URL);
             Element root = document.getDocumentElement();
             NodeList items = root.getElementsByTagName("item");
             for(int i = 0; i < items.getLength(); i++) {
@@ -138,6 +170,58 @@ public class NetworkMusicModel implements NetworkMusicContract.Model {
         } catch (SAXException e) {
             e.printStackTrace();
             throw new IOException("网络数据出错");
+        }
+    }
+
+    private void updateDatabase(SQLiteDatabase database, Cursor cursor, Music music) {
+        ContentValues values = new ContentValues();
+        values.put(MusicCacheDb.Entry.TITLE, music.getTitle());
+        values.put(MusicCacheDb.Entry.ARTIST, music.getArtist());
+        values.put(MusicCacheDb.Entry.ALBUM, music.getAlbum());
+        values.put(MusicCacheDb.Entry.IMAGE, music.getImage());
+        values.put(MusicCacheDb.Entry.PATH, music.getPath());
+        values.put(MusicCacheDb.Entry.ALIVE, System.currentTimeMillis());
+
+        String selection = MusicCacheDb.Entry.ID + " =?";
+        String[] selectionArg = {cursor.getString(
+                cursor.getColumnIndexOrThrow(MusicCacheDb.Entry.ID))};
+        database.update(MusicCacheDb.Entry.TABLE_NAME, values, selection, selectionArg);
+    }
+
+    /**
+     * 根据使用时间清理database数据
+     */
+    private void checkAndClearDatabase(SQLiteDatabase database) {
+        String[] columns = {MusicCacheDb.Entry.ID, MusicCacheDb.Entry.ALIVE};
+        Cursor cursor = database.query(MusicCacheDb.Entry.TABLE_NAME,
+                columns, null, null,
+                null, null, MusicCacheDb.Entry.ALIVE);
+        if(cursor.moveToFirst()) {
+            for (int i = 0; i < cursor.getCount() - CACHE_SIZE; i++) {
+                String selection = MusicCacheDb.Entry.ID + " = ?";
+                String[] selectionArg = {cursor.getString(
+                        cursor.getColumnIndexOrThrow(MusicCacheDb.Entry.ID))};
+                database.delete(MusicCacheDb.Entry.TABLE_NAME, selection, selectionArg);
+            }
+        }
+        cursor.close();
+    }
+
+    private String caculateMd5(String target) {
+        try {
+            StringBuilder result = new StringBuilder();
+            MessageDigest digest = MessageDigest.getInstance("MD5");
+            byte[] md5 = digest.digest(target.getBytes());
+            for(byte aMd5 : md5) {
+                if((0xFF & aMd5) < 0x10) {
+                    result.append('0');
+                }
+                result.append(Integer.toHexString(0xFF & aMd5));
+            }
+            return result.toString();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 }

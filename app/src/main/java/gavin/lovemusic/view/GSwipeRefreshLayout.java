@@ -15,7 +15,7 @@ import java.lang.reflect.Field;
  *
  * 优化SwipeRefreshLayout下拉刷新
  */
-
+//TODO 解决NestScroll的Bug
 public class GSwipeRefreshLayout extends SwipeRefreshLayout {
     private boolean mHasScrollingChild = false;
     private ScrollingView mScrollingChild = null;

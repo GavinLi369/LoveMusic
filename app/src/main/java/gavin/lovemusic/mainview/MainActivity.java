@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.annotation.ColorInt;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.FragmentTransaction;
@@ -15,10 +16,8 @@ import android.support.v7.graphics.Palette;
 import android.support.v7.widget.Toolbar;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
-import android.util.TypedValue;
 import android.view.KeyEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -31,6 +30,8 @@ import gavin.lovemusic.entity.Music;
 import gavin.lovemusic.service.PlayService;
 import gavinli.slidinglayout.OnViewStatusChangedListener;
 import gavinli.slidinglayout.SlidingLayout;
+
+import static android.os.Build.VERSION.SDK_INT;
 
 /**
  * Created by GavinLi
@@ -47,6 +48,8 @@ public class MainActivity extends AppCompatActivity implements MainViewContract.
 
     private MainViewContract.Presenter mPresenter;
     private PlayService mPlayService;
+
+    private @ColorInt int mStatusBarColor;
 
     private boolean mPlaying = true;
 
@@ -121,10 +124,26 @@ public class MainActivity extends AppCompatActivity implements MainViewContract.
     }
 
     @Override
+    public void changeStatusBarColor(@ColorInt int color) {
+        mStatusBarColor = color;
+        if(SDK_INT >= 21) {
+            getWindow().setStatusBarColor(color);
+        }
+    }
+
+    @Override
+    public void changeStatusBarColorDefault() {
+        mStatusBarColor = getResources().getColor(R.color.playColumnDefault);
+        if(SDK_INT >= 21) {
+            getWindow().setStatusBarColor(mStatusBarColor);
+        }
+    }
+
+    @Override
     public void changePlaying2Pause() {
         mPlaying = false;
         if(mPlayButton != null) {
-            mPlayButton.setBackgroundResource(R.drawable.play);
+            mPlayButton.setImageResource(R.drawable.play);
         }
     }
 
@@ -132,7 +151,7 @@ public class MainActivity extends AppCompatActivity implements MainViewContract.
     public void changePause2Playing() {
         mPlaying = true;
         if(mPlayButton != null) {
-            mPlayButton.setBackgroundResource(R.drawable.pause);
+            mPlayButton.setImageResource(R.drawable.pause);
         }
     }
 
@@ -160,31 +179,30 @@ public class MainActivity extends AppCompatActivity implements MainViewContract.
             mDragView = (RelativeLayout) mSlidingLayout.findViewById(R.id.view_drag);
             mMusicName = (TextView) mSlidingLayout.findViewById(R.id.musicName);
             mArtist = (TextView) mSlidingLayout.findViewById(R.id.artist);
+            mPlayButton = (ImageButton) mSlidingLayout.findViewById(R.id.playButton);
         }
     }
 
     @Override
     public void onViewMaximized() {
-        ((ViewGroup) mPlayButton.getParent()).removeView(mPlayButton);
+        mPlayButton.setVisibility(View.GONE);
+        changeStatusBarColor(mStatusBarColor);
     }
 
     @Override
     public void onViewMinimized() {
-        mPlayButton = new ImageButton(this);
-        int height = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 40, getResources().getDisplayMetrics());
-        int width = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 40, getResources().getDisplayMetrics());
-        RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(width, height);
-        int left = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 280, getResources().getDisplayMetrics());
-        int top = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 7, getResources().getDisplayMetrics());
-        layoutParams.setMargins(left, top, 0, 0);
-        mPlayButton.setLayoutParams(layoutParams);
         if(mPlaying) {
-            mPlayButton.setBackground(getResources().getDrawable(R.drawable.pause));
+            mPlayButton.setImageResource(R.drawable.pause);
         } else {
-            mPlayButton.setBackground(getResources().getDrawable(R.drawable.play));
+            mPlayButton.setImageResource(R.drawable.play);
         }
         mPlayButton.setOnClickListener(this);
-        mDragView.addView(mPlayButton);
+        mPlayButton.setVisibility(View.VISIBLE);
+
+        if(SDK_INT >= 21) {
+            getWindow().setStatusBarColor(getResources().getColor(
+                    R.color.colorPrimaryDark));
+        }
     }
 
     @Override

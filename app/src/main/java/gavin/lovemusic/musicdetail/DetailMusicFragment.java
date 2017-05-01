@@ -137,12 +137,16 @@ public class DetailMusicFragment extends Fragment implements DetailMusicContract
 
     @Override
     public void changePlayToPause() {
-        mPlayButton.setBackgroundResource(R.drawable.play);
+        if(mPlayButton != null) {
+            mPlayButton.setBackgroundResource(R.drawable.play);
+        }
     }
 
     @Override
     public void changePauseToPlay() {
-        mPlayButton.setBackgroundResource(R.drawable.pause);
+        if(mPlayButton != null) {
+            mPlayButton.setBackgroundResource(R.drawable.pause);
+        }
     }
 
     @Override

@@ -61,15 +61,18 @@ public class PlayService extends Service implements MediaPlayer.OnCompletionList
     public synchronized void changeMusic(Music music) {
         isCompleted = false;
         try {
-            mMusicPlayer.start(music);
+            mNotificationManager.showNotification(music);
+            mNotificationManager.showResume();
             for(MusicStatusChangedListener listener : mListeners)
                 listener.onPreparing(music);
 
-            mNotificationManager.showNotification(music);
-            mNotificationManager.showResume();
+            mMusicPlayer.start(music);
         } catch (IOException e) {
             e.printStackTrace();
             showMusicLoadError();
+        } catch (MusicCannotPlayException e) {
+            e.printStackTrace();
+            showMusicCannotPlayError();
         }
     }
 
@@ -106,6 +109,9 @@ public class PlayService extends Service implements MediaPlayer.OnCompletionList
         } catch (IOException e) {
             e.printStackTrace();
             showMusicLoadError();
+        } catch (MusicCannotPlayException e) {
+            e.printStackTrace();
+            showMusicCannotPlayError();
         }
     }
 
@@ -119,6 +125,9 @@ public class PlayService extends Service implements MediaPlayer.OnCompletionList
         } catch (IOException e) {
             e.printStackTrace();
             showMusicLoadError();
+        } catch (MusicCannotPlayException e) {
+            e.printStackTrace();
+            showMusicCannotPlayError();
         }
     }
 
@@ -155,9 +164,13 @@ public class PlayService extends Service implements MediaPlayer.OnCompletionList
             mMusicPlayer.next();
             for (MusicStatusChangedListener listener : mListeners)
                 listener.onPreparing(mMusicPlayer.getCurrentMusic());
+            mNotificationManager.showNotification(mMusicPlayer.getCurrentMusic());
         } catch (IOException e) {
             e.printStackTrace();
             showMusicLoadError();
+        } catch (MusicCannotPlayException e) {
+            e.printStackTrace();
+            showMusicCannotPlayError();
         }
     }
 
@@ -170,6 +183,12 @@ public class PlayService extends Service implements MediaPlayer.OnCompletionList
     void showMusicLoadError() {
         Toast.makeText(this, "资源加载出错", Toast.LENGTH_SHORT).show();
         mNotificationManager.showPause();
+        for(MusicStatusChangedListener listener : mListeners)
+            listener.onPause();
+    }
+
+    void showMusicCannotPlayError() {
+        Toast.makeText(this, "此歌曲暂时无法播放", Toast.LENGTH_SHORT).show();
         for(MusicStatusChangedListener listener : mListeners)
             listener.onPause();
     }

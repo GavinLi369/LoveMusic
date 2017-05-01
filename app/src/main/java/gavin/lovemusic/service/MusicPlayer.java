@@ -34,12 +34,14 @@ public class MusicPlayer implements MediaPlayer.OnPreparedListener{
         mUpdateListener = updateListener;
     }
 
-    public void start(int index) throws IOException {
+    public void start(int index) throws IOException, MusicCannotPlayException {
         mIndex = index;
         mMediaPlayer.reset();
         Music music = mMusicPlayList.get(index);
         mMediaPlayer.setOnPreparedListener(this);
         mMediaPlayer.setOnCompletionListener(mCompletionListener);
+        if(music.getPath() == null || music.getPath().isEmpty())
+            throw new MusicCannotPlayException();
         //网络歌曲异步加载
         mMediaPlayer.setDataSource(music.getPath());
         if(music.getPath().startsWith("http")) {
@@ -59,7 +61,7 @@ public class MusicPlayer implements MediaPlayer.OnPreparedListener{
         mStartedListener.onStarted();
     }
 
-    public void start(Music music) throws IOException {
+    public void start(Music music) throws IOException, MusicCannotPlayException {
         if(mMusicPlayList.contains(music)) {
             start(mMusicPlayList.indexOf(music));
         } else {
@@ -76,7 +78,7 @@ public class MusicPlayer implements MediaPlayer.OnPreparedListener{
         mMediaPlayer.start();
     }
 
-    public void next() throws IOException {
+    public void next() throws IOException, MusicCannotPlayException {
         if(++mIndex != mMusicPlayList.size()) {
             start(mIndex);
         } else {
@@ -84,7 +86,7 @@ public class MusicPlayer implements MediaPlayer.OnPreparedListener{
         }
     }
 
-    public void previous() throws IOException {
+    public void previous() throws IOException, MusicCannotPlayException {
         if(--mIndex != -1) {
             start(mIndex);
         } else {
